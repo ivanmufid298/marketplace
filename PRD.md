@@ -16,6 +16,7 @@ Produk ini bukan marketplace multi-seller. MVP tidak mencakup onboarding seller,
 - Buyer dapat checkout, transfer manual, dan mengunggah bukti pembayaran.
 - Buyer dapat memantau status pesanan secara jelas.
 - Admin dapat mengelola katalog, PO, pembayaran, fulfillment, ongkir, dan materi promosi tanpa mengubah kode.
+- Buyer dapat menghubungi admin melalui widget chat dan setiap percakapan tercatat sebagai interaction.
 
 ### Di luar MVP
 
@@ -197,6 +198,24 @@ Ongkir disalin ke order saat checkout. Perubahan tarif berikutnya tidak boleh me
 
 - CRUD layanan/tarif, aktif/nonaktif, dan gratis ongkir.
 
+### Interactions
+
+- Widget chat tersedia pada halaman buyer.
+- Pesan pertama membuat interaction baru dengan nomor unik.
+- Setiap interaction memiliki buyer/session reference, status, waktu dibuat, waktu pesan terakhir, unread count, dan assignee opsional.
+- Admin dapat mencari, membuka thread, membalas, serta mengubah status interaction menjadi `open` atau `handled`.
+- Cara menentukan apakah beberapa chat berasal dari device/session yang sama ditangani pada backend dan tidak menjadi aturan UI.
+- Riwayat pesan tidak dihapus ketika interaction selesai.
+
+### Reviews
+
+- Buyer yang order-nya sudah `delivered` dapat memberi rating 1–5 dan ulasan teks.
+- Satu `OrderItem` hanya dapat memiliki satu review, tetapi buyer boleh mengeditnya.
+- Detail produk menampilkan rating rata-rata, jumlah review, distribusi bintang, dan daftar ulasan.
+- Review diberi penanda pembelian terverifikasi.
+- Admin dapat memfilter berdasarkan rating/status dan menampilkan atau menyembunyikan review.
+- Review yang disembunyikan tetap disimpan untuk audit dan tidak ikut dalam rating publik.
+
 ## 12. State Machine
 
 Pisahkan status pembayaran dan fulfillment.
@@ -272,6 +291,9 @@ Order menyimpan snapshot subtotal, diskon, ongkir, dan total. Perubahan harga at
 - `Promotion` dan aturan target.
 - `Voucher`, `VoucherRedemption`.
 - `Banner`, `PopupCampaign`.
+- `Interaction`: buyer/session reference, channel, status, assignee, first/last message time, metadata.
+- `InteractionMessage`: interaction, sender type, sender reference, message body, sent/read time.
+- `ProductReview`: order item, product, buyer, rating, review body, moderation status, timestamps.
 - `AdminAuditLog`.
 
 ## 15. Scheduler
@@ -314,6 +336,8 @@ Order menyimpan snapshot subtotal, diskon, ongkir, dan total. Perubahan harga at
 - [ ] Histori/tracking order buyer.
 - [ ] Admin produk, PO, order, pembayaran, dan ongkir.
 - [ ] Promo, voucher, banner, popup, dan scheduler dasar sebagai bagian MVP.
+- [ ] Widget chat buyer dan menu admin Interactions.
+- [ ] Rating/review pada detail produk dan moderasi review di admin.
 - [ ] Statistik bulanan/tahunan.
 - [ ] RLS dan audit log.
 
@@ -322,7 +346,7 @@ Order menyimpan snapshot subtotal, diskon, ongkir, dan total. Perubahan harga at
 - Payment gateway.
 - Integrasi ongkir.
 - Notifikasi WhatsApp/email otomatis.
-- Rating/review dan wishlist tersimpan.
+- Wishlist tersimpan lintas perangkat.
 - Refund otomatis, advanced analytics, dan export laporan.
 
 ## 19. Acceptance Criteria
