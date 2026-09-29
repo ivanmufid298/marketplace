@@ -1,7 +1,7 @@
 # PRD — Toko Online Jastip & Barang Impor
 
 **Status:** Draft untuk diskusi  
-**Versi:** 0.2  
+**Versi:** 0.3  
 **Pembaruan:** 29 September 2026
 
 ## 1. Ringkasan Produk
@@ -22,7 +22,10 @@ Produk ini bukan marketplace multi-seller. MVP tidak mencakup onboarding seller,
 
 - Multi-seller.
 - Payment gateway dan ongkir otomatis.
-- Chat, rating/review, serta notifikasi WhatsApp otomatis.
+- Notifikasi WhatsApp/email otomatis.
+- Wishlist tersimpan lintas perangkat.
+- Sistem deposit/cicilan PO.
+- Refund otomatis, advanced analytics, dan export laporan.
 
 ## 2. Target Pengguna
 
@@ -77,7 +80,9 @@ Target development dan MVP awal adalah biaya nol selama penggunaan masih berada 
 
 Keputusan awal:
 
+- Guest dapat melihat katalog, menggunakan chat, dan menyimpan cart secara lokal.
 - Checkout membutuhkan login agar histori dan tracking konsisten.
+- Cart lokal guest dapat dipindahkan ke akun setelah login dan tetap divalidasi ulang.
 - Route `/admin` dilindungi autentikasi dan pengecekan role di server.
 - RLS memastikan buyer hanya dapat mengakses data miliknya.
 
@@ -88,6 +93,13 @@ Keputusan awal:
 - Memiliki stok fisik.
 - Tidak dapat ditambahkan ke cart jika stok habis.
 - Pengurangan stok memakai reservasi dan transaksi database agar tidak oversold.
+
+### Varian
+
+- Varian sederhana seperti warna atau ukuran termasuk MVP.
+- Setiap varian dapat memiliki SKU, harga override, stok, urutan, dan status aktif.
+- Jika produk memakai varian, stok ready stock dikelola pada varian, bukan digandakan pada produk.
+- Item dengan produk dan varian yang sama digabung menjadi satu baris cart.
 
 ### Pre-order
 
@@ -112,10 +124,14 @@ Produk yang pernah masuk order tidak dihapus permanen agar histori transaksi tet
 - Ready stock dapat dikirim lebih dulu tanpa menunggu item PO.
 - Item PO dapat dikelompokkan lagi jika berasal dari batch atau estimasi tiba yang berbeda.
 - Ongkir dihitung per kelompok pengiriman dan seluruh ongkir ditampilkan sebelum buyer mengonfirmasi checkout.
+- Cart belum menahan stok atau kuota. Reservasi baru dibuat secara atomik saat order berhasil dibuat.
 - Stok/kuota ditahan selama **2 jam** setelah order dibuat.
 - Tanpa bukti pembayaran dalam dua jam, order kedaluwarsa dan reservasi dilepas.
 - Setelah bukti diunggah, reservasi bertahan sampai admin menerima/menolak pembayaran.
+- Jika pembayaran ditolak, reservasi tetap ditahan selama **2 jam** sejak penolakan agar buyer dapat mengunggah ulang.
+- Tanpa unggahan ulang sampai batas tersebut, order menjadi `expired` dan reservasi dilepas otomatis.
 - Kuantitas divalidasi ulang ketika checkout.
+- Penambahan quantity tidak boleh melewati stok atau kuota aktif yang tersedia saat validasi.
 
 ## 8. Alur Buyer
 
@@ -137,7 +153,15 @@ Produk yang pernah masuk order tidak dihapus permanen agar histori transaksi tet
 3. Buyer mengunggah bukti; status menjadi `under_review`.
 4. Admin menerima atau menolak bukti.
 5. Jika diterima, status menjadi `paid` dan fulfillment dimulai.
-6. Jika ditolak, buyer melihat alasan dan dapat mengunggah ulang selama batas waktu yang diizinkan.
+6. Jika ditolak, buyer melihat alasan dan dapat mengunggah ulang dalam **2 jam** sejak penolakan.
+7. Jika buyer mengunggah ulang sebelum batas waktu, status kembali menjadi `under_review`.
+8. Jika tidak ada unggahan ulang sampai batas waktu, status menjadi `expired` dan reservasi dilepas.
+9. Admin tetap dapat membatalkan order secara manual dengan alasan pada tahap mana pun sebelum fulfillment dikirim.
+
+Keputusan MVP:
+
+- Produk ready stock dan PO dibayar penuh dalam satu transaksi.
+- Deposit atau pembayaran bertahap PO tidak termasuk MVP.
 
 Aturan upload:
 
@@ -149,13 +173,15 @@ Aturan upload:
 
 ## 10. Ongkir MVP
 
-MVP memakai tarif yang dikelola manual oleh admin:
+MVP memakai zona dan tarif yang dikelola manual oleh admin:
 
-- Nama layanan dan wilayah tujuan.
-- Tarif dasar/per wilayah.
+- Admin membuat zona pengiriman yang berisi satu atau beberapa kota/provinsi.
+- Setiap zona dapat memiliki beberapa layanan dan tarif.
 - Estimasi pengiriman.
 - Minimal belanja gratis ongkir.
 - Status aktif/nonaktif.
+
+Jika alamat tidak cocok dengan zona aktif, buyer tidak dapat menyelesaikan checkout dan diarahkan menghubungi admin.
 
 Ongkir disalin ke order saat checkout. Perubahan tarif berikutnya tidak boleh mengubah histori order. Integrasi Biteship/RajaOngkir masuk fase berikutnya.
 
@@ -205,6 +231,7 @@ Ongkir disalin ke order saat checkout. Perubahan tarif berikutnya tidak boleh me
 - Setiap interaction memiliki buyer/session reference, status, waktu dibuat, waktu pesan terakhir, unread count, dan assignee opsional.
 - Admin dapat mencari, membuka thread, membalas, serta mengubah status interaction menjadi `open` atau `handled`.
 - Cara menentukan apakah beberapa chat berasal dari device/session yang sama ditangani pada backend dan tidak menjadi aturan UI.
+- Guest memakai session reference anonim. Setelah login, backend boleh mengaitkan interaction dengan buyer tanpa menggabungkan thread secara otomatis.
 - Riwayat pesan tidak dihapus ketika interaction selesai.
 
 ### Reviews
@@ -225,6 +252,7 @@ Pisahkan status pembayaran dan fulfillment.
 ```text
 awaiting_payment → under_review → paid
                          ↘ rejected → under_review
+                                    ↘ expired (2 jam tanpa upload ulang)
 awaiting_payment → expired
 ```
 
@@ -245,6 +273,22 @@ unfulfilled → ordered_abroad → shipped_to_indonesia → arrived_at_warehouse
 
 Jika pembayaran sudah diterima tetapi order dibatalkan, gunakan `refund_pending` dan `refunded`. Semua transisi dicatat dalam histori status.
 
+### Status ringkas order
+
+Untuk tampilan buyer, sistem menurunkan status ringkas dari payment dan seluruh fulfillment group:
+
+`pending_payment`, `payment_review`, `processing`, `partially_shipped`, `completed`, atau `cancelled`.
+
+Status ringkas bukan sumber kebenaran baru dan tidak boleh menggantikan payment status maupun fulfillment status.
+
+### Pembatalan
+
+- Buyer boleh membatalkan order sebelum bukti pembayaran diunggah.
+- Order `awaiting_payment` otomatis dibatalkan ketika reservasi kedaluwarsa.
+- Setelah bukti diunggah, pembatalan diproses admin dan wajib memiliki catatan.
+- Order `paid` yang dibatalkan masuk ke `refund_pending`, lalu `refunded` setelah pengembalian dana dicatat.
+- Fulfillment yang sudah dikirim tidak dapat dibatalkan melalui alur pembatalan biasa.
+
 ## 13. Perhitungan Harga
 
 Urutan usulan:
@@ -258,6 +302,13 @@ Urutan usulan:
 
 Order menyimpan snapshot subtotal, diskon, ongkir, dan total. Perubahan harga atau promo setelah checkout tidak mengubah order lama.
 
+### Aturan stacking MVP
+
+- Satu order menerima maksimal satu promo otomatis dan satu voucher.
+- Voucher memiliki flag `stackable_with_promotion`.
+- Jika beberapa promo otomatis valid, sistem memilih satu promo yang paling menguntungkan buyer.
+- Validasi promo dan voucher dijalankan ulang ketika order dibuat.
+
 ## 14. Data Model Awal
 
 ### Identity
@@ -270,7 +321,7 @@ Order menyimpan snapshot subtotal, diskon, ongkir, dan total. Perubahan harga at
 - `Category`: nama, slug, status, urutan.
 - `Product`: nama, slug, deskripsi, tipe, status, harga dasar, ready stock.
 - `ProductImage`: product, object key, URL, alt text, urutan.
-- `ProductVariant` (opsional): product, nama, SKU, harga override, stok.
+- `ProductVariant`: product, nama, SKU, harga override, stok, urutan, status.
 - `PreorderBatch`: product, waktu buka, deadline, kuota, reserved, sold, ETA, status.
 
 ### Commerce
@@ -287,7 +338,7 @@ Order menyimpan snapshot subtotal, diskon, ongkir, dan total. Perubahan harga at
 
 ### Marketing dan operasional
 
-- `ShippingMethod`, `ShippingRate`.
+- `ShippingZone`, `ShippingZoneArea`, `ShippingMethod`, `ShippingRate`.
 - `Promotion` dan aturan target.
 - `Voucher`, `VoucherRedemption`.
 - `Banner`, `PopupCampaign`.
@@ -328,13 +379,15 @@ Order menyimpan snapshot subtotal, diskon, ongkir, dan total. Perubahan harga at
 ### Wajib
 
 - [ ] Katalog ready stock/PO dengan pencarian dan filter.
-- [ ] Detail produk dan batch PO.
+- [ ] Detail produk, varian warna/ukuran, dan batch PO.
 - [ ] Auth buyer/admin.
-- [ ] Cart, checkout, alamat, dan ongkir manual.
+- [ ] Cart lokal guest, pemindahan cart setelah login, checkout, dan alamat.
+- [ ] Ongkir manual berbasis zona (kota/provinsi).
 - [ ] Reservasi stok/kuota dan order expiry.
 - [ ] Transfer manual dan upload bukti.
-- [ ] Histori/tracking order buyer.
-- [ ] Admin produk, PO, order, pembayaran, dan ongkir.
+- [ ] Pembatalan order sesuai aturan (buyer sebelum upload bukti, admin sesudahnya).
+- [ ] Histori/tracking order buyer dengan status ringkas.
+- [ ] Admin produk, varian, PO, order, pembayaran, dan zona ongkir.
 - [ ] Promo, voucher, banner, popup, dan scheduler dasar sebagai bagian MVP.
 - [ ] Widget chat buyer dan menu admin Interactions.
 - [ ] Rating/review pada detail produk dan moderasi review di admin.
@@ -347,6 +400,7 @@ Order menyimpan snapshot subtotal, diskon, ongkir, dan total. Perubahan harga at
 - Integrasi ongkir.
 - Notifikasi WhatsApp/email otomatis.
 - Wishlist tersimpan lintas perangkat.
+- Sistem deposit/cicilan PO.
 - Refund otomatis, advanced analytics, dan export laporan.
 
 ## 19. Acceptance Criteria
@@ -360,15 +414,15 @@ Order menyimpan snapshot subtotal, diskon, ongkir, dan total. Perubahan harga at
 - Produk arsip tetap muncul pada histori order.
 - Perubahan status penting menyimpan waktu dan aktor.
 
-## 20. Keputusan Terbuka
+## 20. Keputusan Produk MVP
 
-1. Checkout wajib login atau boleh guest?
-2. Apakah varian warna/ukuran diperlukan sejak MVP?
-3. Ongkir berdasarkan kota/provinsi, zona, atau flat nasional?
-4. PO dibayar penuh atau memakai deposit?
-5. Siapa boleh membatalkan dan pada tahap apa?
-6. Apakah promo otomatis dan voucher boleh ditumpuk?
-7. Apakah notifikasi web cukup untuk MVP?
+1. Guest boleh browsing, chat, dan memakai cart lokal, tetapi wajib login sebelum membuat order.
+2. Varian sederhana warna/ukuran masuk MVP.
+3. Ongkir dikelola admin berdasarkan zona yang berisi kota/provinsi.
+4. Produk PO dibayar penuh; deposit tidak masuk MVP.
+5. Buyer hanya dapat membatalkan sebelum bukti pembayaran diunggah. Tahap berikutnya memerlukan proses admin.
+6. Maksimal satu promo otomatis dan satu voucher dapat dipakai jika voucher mengizinkan stacking.
+7. Notifikasi dalam aplikasi cukup untuk MVP; WhatsApp/email masuk fase berikutnya.
 
 ---
 
