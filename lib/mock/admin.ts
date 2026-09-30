@@ -2,15 +2,8 @@
 // UI copy (labels, buttons, messages) lives in content/id.json, not here.
 
 export type PaymentStatus = "pending" | "success" | "failed";
+/** One row of the payments table; derived from an order. */
 export type Payment = { id: string; name: string; total: string; time: string; status: PaymentStatus };
-
-export const initialPayments: Payment[] = [
-  { id: "MKP-837291", name: "Nadia Putri", total: "Rp408.000", time: "Hari ini, 14.05", status: "pending" },
-  { id: "MKP-837284", name: "Raka Pratama", total: "Rp667.000", time: "Hari ini, 13.42", status: "success" },
-  { id: "MKP-837279", name: "Dinda Ayu", total: "Rp218.000", time: "Hari ini, 12.18", status: "pending" },
-  { id: "MKP-837265", name: "Bima Akbar", total: "Rp477.000", time: "Hari ini, 10.54", status: "failed" },
-  { id: "MKP-837251", name: "Sarah Anjani", total: "Rp347.000", time: "Kemarin, 20.16", status: "success" },
-];
 
 export type InteractionStatus = "open" | "handled";
 export type InteractionMessage = { from: "customer" | "admin"; text: string; time: string };

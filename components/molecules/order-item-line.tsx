@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { money, spritePosition } from "@/lib/format";
 import { t } from "@/lib/i18n";
-import type { MyReview, Product } from "@/lib/mock/store";
+import type { MyReview } from "@/lib/mock/orders";
+import type { Product } from "@/lib/mock/store";
 import { Button } from "../atoms/button";
 import { ReviewForm } from "./review-form";
 import { stars } from "./review-summary";

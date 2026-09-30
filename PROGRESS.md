@@ -27,19 +27,19 @@ Belum ada item yang berstatus Selesai karena backend (Supabase, R2) belum dikerj
 | Reservasi stok/kuota dan order expiry | Belum | Aturan 2 jam dan batas upload ulang 2 jam belum diimplementasikan. |
 | Transfer manual dan upload bukti | UI | Simulasi saja: cek ukuran 5 MB, file tidak tersimpan, MIME type belum divalidasi. |
 | Pembatalan order | Belum | |
-| Histori dan tracking order buyer | UI sebagian | Menu "Pesanan saya" (ikon paket di header dan tab "Pesanan" di navigasi bawah mobile) membuka panel berisi daftar pesanan dengan status ringkas. Datanya contoh. Belum ada halaman `/orders` dan `/orders/[orderNumber]`, rincian status per kelompok pengiriman, dan tombol batalkan. |
-| Admin: produk, varian, PO, order, pembayaran, zona ongkir | UI sebagian | Produk, pesanan, pembayaran (terima/tolak), dan ongkir ada. Belum ada halaman batch PO dan varian. Tolak pembayaran belum meminta alasan. Status pembayaran di halaman Pesanan dan halaman Pembayaran masih data terpisah, jadi terima/tolak di Pembayaran belum mengubah Pesanan. |
+| Histori dan tracking order buyer | UI sebagian | Menu "Pesanan saya" (ikon paket di header, tab "Pesanan" di navigasi bawah mobile) menampilkan pesanan pembeli dengan status Menunggu pembayaran, Barang sedang dikirim, Selesai, atau Dibatalkan. Checkout membuat pesanan baru, dan tombol "Pesanan selesai" (dengan konfirmasi) muncul saat barang sedang dikirim. Belum ada halaman `/orders` dan `/orders/[orderNumber]`, dan pembeli belum bisa membatalkan pesanan. |
+| Admin: produk, varian, PO, order, pembayaran, zona ongkir | UI sebagian | Produk, pesanan, pembayaran, dan ongkir ada. Belum ada batch PO dan varian. Tolak pembayaran belum meminta alasan. Pembayaran dan Pesanan memakai data yang sama: menerima pembayaran mengubah status pesanan menjadi "Barang sedang dikirim". |
 | Promo, voucher, banner, popup, scheduler dasar | UI sebagian | Layar admin dan form scheduler ada, tetapi form belum menyimpan. Storefront belum menampilkan banner, popup, atau input voucher. |
 | Widget chat buyer dan menu admin Interactions | UI | Chat storefront dan inbox admin berjalan, tetapi belum terhubung satu sama lain. |
-| Rating/review dan moderasi di admin | UI sebagian | Moderasi di admin ada. Buyer bisa menulis dan mengubah ulasan (rating 1–5 dan teks) dari menu "Pesanan saya", hanya untuk item di pesanan berstatus "Sudah diterima". Ulasan baru tersimpan di memori browser dan belum muncul di admin maupun detail produk, yang masih placeholder yang sama untuk semua produk. |
+| Rating/review dan moderasi di admin | UI sebagian | Moderasi di admin ada. Pembeli bisa menulis dan mengubah ulasan (rating 1–5 dan teks) dari "Pesanan saya", hanya untuk item di pesanan berstatus Selesai. Ulasan baru tersimpan di memori browser dan belum muncul di admin maupun detail produk, yang masih placeholder yang sama untuk semua produk. |
 | Statistik bulanan/tahunan | UI | Grafik dan angka masih statis. |
 | Analitik kunjungan dan jumlah dilihat per produk | UI | Grafik "Statistik pengunjung" (bulanan/tahunan) dan kartu "Kunjungan toko" (total kunjungan dan sebaran perangkat) di dashboard dan jumlah dilihat (ikon mata) per produk di etalase admin. Angkanya data contoh. Belum ada pencatatan di storefront, sesi anonim, deteksi tipe perangkat, dan filter bot. |
 | RLS dan audit log | Belum | |
 
 ## Selesai sejauh ini
 
-- Menu **Pesanan** di admin (`/admin/orders`): daftar pesanan dengan cari dan filter status, dan detail pesanan berisi pelanggan, status pembayaran, kelompok pengiriman, total, serta riwayat status. Status pengiriman diubah per kelompok mengikuti alur ready stock dan PO di PRD, hanya setelah pembayaran lunas. Admin bisa membatalkan pesanan dengan alasan wajib selama belum ada barang yang dikirim, dan mencatat refund untuk pesanan yang sudah dibayar. Data contoh, tersimpan di memori browser.
-- Menu "Pesanan saya" di storefront (header desktop dan navigasi bawah mobile) dengan form ulasan untuk pesanan yang sudah diterima. Tab navigasi bawah kini menyala berdasarkan panel yang terbuka, tidak lagi "menempel" setelah panel ditutup.
+- Status pesanan disederhanakan jadi tiga langkah otomatis: **Pending** → **Barang sedang dikirim** (saat admin menerima pembayaran) → **Selesai** (saat pembeli menekan "Pesanan selesai"), ditambah **Dibatalkan**. Halaman admin Pesanan (`/admin/orders`) menampilkan satu kolom Status, tanpa kolom pembayaran, dengan detail berisi stepper tiga langkah, barang, riwayat, serta tombol batalkan (alasan wajib) dan catat refund untuk pesanan yang sudah dibayar. Halaman Pembayaran, Pesanan, dan "Pesanan saya" membaca data yang sama lewat `lib/orders-store.ts`, dan checkout pembeli membuat pesanan baru di sana.
+- Menu "Pesanan saya" di storefront (header desktop dan navigasi bawah mobile) dengan form ulasan untuk pesanan yang selesai. Tab navigasi bawah menyala sesuai panel yang terbuka.
 - Ikon chat diganti ke bentuk bubble standar (storefront dan menu Interactions di admin). Tombol "Tandai selesai" di inbox admin versi mobile kini memakai ikon ceklis saat thread terbuka dan ikon undo saat thread sudah selesai.
 - Keputusan produk MVP difinalkan di PRD v0.3.
 - Prototype HTML statis dimigrasikan ke Next.js App Router (storefront di `/`, admin di `/admin/*`). Prototype asli disimpan di `prototype/`.
@@ -62,6 +62,8 @@ Urutan mengikuti dependensi teknis:
 
 Utang teknis yang sudah diketahui:
 
+- Pesanan disimpan di `localStorage` lewat `lib/orders-store.ts` agar storefront dan admin berbagi data saat demo. Ganti dengan query database. Ada tombol "Reset data contoh" di sidebar admin untuk mengembalikan data awal.
+- Status order MVP hanya tiga langkah. Status pengiriman per kelompok dan alur PO yang rinci dari PRD ditunda sampai dibutuhkan.
 - Konversi CSS prototype ke utility Tailwind, komponen demi komponen.
 - Gabungkan `Button` dan `AdminButton` (serta atom lain yang terpisah per konteks) setelah CSS dikonversi ke Tailwind.
 - Nama toko berbeda per produk di data contoh (`shop`) tidak sesuai dengan model single seller.

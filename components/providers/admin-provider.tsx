@@ -1,19 +1,18 @@
 "use client";
 
-import { createContext, useCallback, useContext, useRef, useState, type ReactNode } from "react";
-import { formatDateTime } from "@/lib/format";
+import { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactNode } from "react";
 import { t } from "@/lib/i18n";
-import { canCancel, canFulfill, nextStatus } from "@/lib/order-flow";
+import { toPayment } from "@/lib/order-flow";
+import * as ordersStore from "@/lib/orders-store";
 import {
   initialInteractions,
-  initialPayments,
   initialReviews,
   type Interaction,
   type Payment,
   type PaymentStatus,
   type Review,
 } from "@/lib/mock/admin";
-import { initialOrders, type AdminOrder, type HistoryEntry } from "@/lib/mock/orders";
+import type { Order } from "@/lib/mock/orders";
 
 export type ModalType = "product" | "promo" | "voucher" | "banner" | "popup" | "shipping";
 
@@ -27,12 +26,11 @@ type AdminContextValue = {
   replyInteraction: (id: string, text: string) => void;
   reviews: Review[];
   toggleReview: (id: number) => void;
-  orders: AdminOrder[];
-  /** Moves one fulfillment group to its next step. Only works once the order is paid. */
-  advanceGroup: (orderNumber: string, groupId: string) => void;
-  /** Cancels an order that has nothing shipped. Returns false (with a toast) when the note is empty or cancelling is not allowed. */
+  orders: Order[];
+  /** Cancels an order. Returns false (with a toast) when the reason is empty or the order can no longer be cancelled. */
   cancelOrder: (orderNumber: string, note: string) => boolean;
   markRefunded: (orderNumber: string) => void;
+  resetData: () => void;
   modal: ModalType | null;
   openModal: (type: ModalType) => void;
   closeModal: () => void;
@@ -44,9 +42,6 @@ type AdminContextValue = {
 
 const AdminContext = createContext<AdminContextValue | null>(null);
 
-/** A status-history row stamped with the current time and the acting admin. */
-const historyEntry = (partial: Omit<HistoryEntry, "at" | "actor">): HistoryEntry => ({ at: formatDateTime(), actor: t("admin.orders.actor"), ...partial });
-
 export function useAdmin() {
   const ctx = useContext(AdminContext);
   if (!ctx) throw new Error("useAdmin must be used inside <AdminProvider>");
@@ -54,11 +49,10 @@ export function useAdmin() {
 }
 
 export function AdminProvider({ children }: { children: ReactNode }) {
-  const [payments, setPayments] = useState(initialPayments);
+  const orders = ordersStore.useOrders();
   const [interactions, setInteractions] = useState(initialInteractions);
   const [activeInteractionId, setActiveInteractionId] = useState<string | null>(initialInteractions[0].id);
   const [reviews, setReviews] = useState(initialReviews);
-  const [orders, setOrders] = useState(initialOrders);
   const [modal, setModal] = useState<ModalType | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [toast, setToast] = useState("");
@@ -70,10 +64,14 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     timer.current = setTimeout(() => setToast(""), 1800);
   }, []);
 
+  // Orders that were cancelled before any money arrived have no payment to verify.
+  const payments = useMemo(() => orders.filter((o) => o.cancelNote === undefined || o.payment === "success").map(toPayment), [orders]);
+
   const setPaymentStatus = useCallback(
     (id: string, status: PaymentStatus) => {
-      setPayments((prev) => prev.map((p) => (p.id === id ? { ...p, status } : p)));
-      showToast(status === "success" ? t("admin.payments.toastAccepted") : t("admin.payments.toastRejected"));
+      const number = id.replace("MKP-", "");
+      const ok = status === "success" ? ordersStore.acceptPayment(number) : ordersStore.rejectPayment(number);
+      if (ok) showToast(status === "success" ? t("admin.payments.toastAccepted") : t("admin.payments.toastRejected"));
     },
     [showToast],
   );
@@ -113,71 +111,36 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     [reviews, showToast],
   );
 
-  const updateOrder = useCallback((orderNumber: string, update: (order: AdminOrder) => AdminOrder) => {
-    setOrders((prev) => prev.map((o) => (o.number === orderNumber ? update(o) : o)));
-  }, []);
-
-  const advanceGroup = useCallback(
-    (orderNumber: string, groupId: string) => {
-      const order = orders.find((o) => o.number === orderNumber);
-      const group = order?.groups.find((g) => g.id === groupId);
-      if (!order || !group || !canFulfill(order)) return;
-      const next = nextStatus(group);
-      if (!next) return;
-      updateOrder(orderNumber, (o) => ({
-        ...o,
-        groups: o.groups.map((g) => (g.id === groupId ? { ...g, status: next } : g)),
-        history: [...o.history, historyEntry({ scope: "fulfillment", group: t(`admin.orders.kind.${group.kind}`), from: group.status, to: next })],
-      }));
-      showToast(t("admin.orders.toast.advanced"));
-    },
-    [orders, showToast, updateOrder],
-  );
-
   const cancelOrder = useCallback(
     (orderNumber: string, note: string) => {
-      const order = orders.find((o) => o.number === orderNumber);
-      const reason = note.trim();
-      if (!order || !canCancel(order)) return false;
-      if (!reason) {
+      if (!note.trim()) {
         showToast(t("admin.orders.toast.needNote"));
         return false;
       }
-      const wasPaid = order.paymentStatus === "paid";
-      updateOrder(orderNumber, (o) => ({
-        ...o,
-        cancelNote: reason,
-        paymentStatus: wasPaid ? "refund_pending" : o.paymentStatus,
-        groups: o.groups.map((g) => ({ ...g, status: "cancelled" })),
-        history: [
-          ...o.history,
-          historyEntry({ scope: "order", to: "cancelled", note: reason }),
-          ...(wasPaid ? [historyEntry({ scope: "payment", from: "paid", to: "refund_pending" })] : []),
-        ],
-      }));
-      showToast(t("admin.orders.toast.cancelled"));
-      return true;
+      const ok = ordersStore.cancelOrder(orderNumber, note);
+      if (ok) showToast(t("admin.orders.toast.cancelled"));
+      return ok;
     },
-    [orders, showToast, updateOrder],
+    [showToast],
   );
 
   const markRefunded = useCallback(
     (orderNumber: string) => {
-      updateOrder(orderNumber, (o) =>
-        o.paymentStatus === "refund_pending"
-          ? { ...o, paymentStatus: "refunded", history: [...o.history, historyEntry({ scope: "payment", from: "refund_pending", to: "refunded" })] }
-          : o,
-      );
-      showToast(t("admin.orders.toast.refunded"));
+      if (ordersStore.markRefunded(orderNumber)) showToast(t("admin.orders.toast.refunded"));
     },
-    [showToast, updateOrder],
+    [showToast],
   );
+
+  const resetData = useCallback(() => {
+    ordersStore.resetOrders();
+    showToast(t("admin.shell.resetDone"));
+  }, [showToast]);
 
   return (
     <AdminContext.Provider
       value={{
         payments, setPaymentStatus, interactions, activeInteractionId, selectInteraction, toggleInteractionStatus, replyInteraction,
-        reviews, toggleReview, orders, advanceGroup, cancelOrder, markRefunded, modal, openModal: setModal, closeModal: () => setModal(null), sidebarOpen, setSidebarOpen, toast, showToast,
+        reviews, toggleReview, orders, cancelOrder, markRefunded, resetData, modal, openModal: setModal, closeModal: () => setModal(null), sidebarOpen, setSidebarOpen, toast, showToast,
       }}
     >
       {children}

@@ -36,17 +36,12 @@
 .admin .order-info b{display:block;font-size:12px;color:var(--muted);margin-bottom:3px}
 .admin .order-block{margin-top:22px}
 .admin .order-block>h3{font-size:14px;margin:0 0 10px}
-.admin .group-card{border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin-bottom:12px;background:#fff}
-.admin .group-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:8px}
 .admin .group-items{list-style:none;margin:0 0 12px;padding:0;display:grid;gap:4px;font-size:13px}
 .admin .group-items li{display:flex;justify-content:space-between;gap:12px}
 .admin .stepper{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px}
 .admin .step-chip{border-radius:999px;padding:4px 10px;font-size:11px;font-weight:700;background:var(--cream);color:var(--muted)}
 .admin .step-chip.done{background:#e7f6ef;color:var(--green)}
 .admin .step-chip.current{background:var(--wine);color:#fff}
-.admin .group-action{display:flex;align-items:center;gap:12px;margin-top:12px;flex-wrap:wrap}
-.admin .group-action .btn:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
-.admin .group-done{margin:10px 0 0;color:var(--green)}
 .admin .order-totals{display:grid;gap:4px;font-size:13px;border-top:1px solid var(--line);padding-top:12px;margin-top:14px}
 .admin .order-totals div{display:flex;justify-content:space-between}
 .admin .order-totals .grand{font-weight:800;color:var(--wine);font-size:15px}
@@ -59,3 +54,8 @@
 .admin .cancel-area{margin-top:24px;border-top:1px solid var(--line);padding-top:16px}
 .admin .cancel-actions{display:flex;gap:10px;margin-top:12px}
 @media(max-width:760px){.admin .order-info{grid-template-columns:1fr}}
+.admin .reset-link{width:100%;border:0;background:transparent;cursor:pointer;text-align:left;font:inherit;font-size:13px}
+.admin .reset-link:hover{color:#fff}
+.admin .mobile-only{display:none}
+@media(max-width:760px){.admin .orders-table{min-width:0}.admin .orders-table th,.admin .orders-table td{padding:12px 9px}.admin .orders-table .hide-mobile{display:none}.admin .orders-table .mobile-only{display:block}}
+@media(max-width:760px){.admin .orders-table td:first-child strong{white-space:nowrap}}

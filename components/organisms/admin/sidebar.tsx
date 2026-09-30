@@ -10,7 +10,7 @@ import { useAdmin } from "../../providers/admin-provider";
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { sidebarOpen, setSidebarOpen, interactions } = useAdmin();
+  const { sidebarOpen, setSidebarOpen, interactions, resetData } = useAdmin();
   const unread = interactions.filter((i) => i.status === "open" && i.unread > 0).length;
 
   return (
@@ -42,6 +42,10 @@ export function Sidebar() {
           <Icon name="external" width={18} />
           {t("admin.shell.viewStore")}
         </Link>
+        <button type="button" className="store-link reset-link" onClick={resetData}>
+          <Icon name="undo" width={18} />
+          {t("admin.shell.resetData")}
+        </button>
       </div>
     </aside>
   );

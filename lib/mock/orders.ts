@@ -1,150 +1,121 @@
-// Placeholder admin orders. Replaced by database queries once the backend exists.
-// Status vocabulary follows PRD section 12; UI copy lives in content/id.json.
+// Placeholder orders shared by the storefront ("Pesanan saya") and the admin (Pesanan, Pembayaran).
+// Replaced by database queries once the backend exists. UI copy lives in content/id.json.
 
-export type OrderPaymentStatus = "awaiting_payment" | "under_review" | "paid" | "rejected" | "expired" | "refund_pending" | "refunded";
+export type PaymentState = "pending" | "success" | "failed";
 
-export type ReadyStatus = "unfulfilled" | "processing" | "packed" | "shipped" | "delivered" | "cancelled";
-export type PoStatus =
-  | "unfulfilled"
-  | "ordered_abroad"
-  | "shipped_to_indonesia"
-  | "arrived_at_warehouse"
-  | "packed"
-  | "shipped_to_buyer"
-  | "delivered"
-  | "cancelled";
-export type FulfillmentStatus = ReadyStatus | PoStatus;
-export type FulfillmentKind = "ready" | "po";
+export type OrderItem = { productId: number; qty: number; price: number };
 
-export type OrderLine = { name: string; qty: number; price: number };
+export type HistoryEvent = "created" | "payment_accepted" | "payment_rejected" | "received" | "cancelled" | "refunded";
 
-/** Items shipped together. A ready-stock group ships without waiting for PO items. */
-export type FulfillmentGroup = {
-  id: string;
-  kind: FulfillmentKind;
-  /** Estimated arrival, PO groups only. */
-  eta?: string;
-  shippingMethod: string;
-  shippingFee: number;
-  status: FulfillmentStatus;
-  items: OrderLine[];
-};
+export type HistoryEntry = { at: string; event: HistoryEvent; actor: string; note?: string };
 
-export type HistoryEntry = {
-  at: string;
-  /** Which status changed: payment, one fulfillment group, or the order as a whole. */
-  scope: "payment" | "fulfillment" | "order";
-  from?: string;
-  to: string;
-  actor: string;
-  note?: string;
-  /** Group label for fulfillment entries. */
-  group?: string;
-};
-
-export type AdminOrder = {
+export type Order = {
   number: string;
-  date: string;
+  buyerId: string;
   buyer: string;
   phone: string;
   address: string;
-  paymentStatus: OrderPaymentStatus;
-  groups: FulfillmentGroup[];
+  date: string;
+  items: OrderItem[];
+  shippingMethod: string;
+  shippingFee: number;
+  payment: PaymentState;
+  /** Set when the buyer taps "Pesanan selesai". */
+  received: boolean;
+  /** Present when the order was cancelled; holds the admin's reason. */
   cancelNote?: string;
+  /** Only for cancelled orders that had been paid. */
+  refund?: "pending" | "done";
   history: HistoryEntry[];
 };
 
-export const initialOrders: AdminOrder[] = [
+/** The buyer the storefront is pretending to be logged in as, until real auth exists. */
+export const CURRENT_BUYER = { id: "nadia", name: "Nadia Putri", phone: "0811-5550-0312", address: "Jl. Cempaka No. 21, Jakarta Selatan 12140" };
+
+const ADMIN = "Admin";
+
+export const seedOrders: Order[] = [
   {
-    number: "837325", date: "30 Sep 2026", buyer: "Aulia Rahma", phone: "0812-5550-0125", address: "Jl. Kenanga No. 12, Bandung 40123",
-    paymentStatus: "paid",
-    groups: [
-      { id: "g1", kind: "po", eta: "20 Okt 2026", shippingMethod: "Reguler", shippingFee: 18000, status: "ordered_abroad", items: [{ name: "Sneakers Rosé", qty: 1, price: 459000 }, { name: "Tote Canvas Everyday", qty: 1, price: 129000 }] },
-    ],
+    number: "837325", buyerId: "aulia", buyer: "Aulia Rahma", phone: "0812-5550-0125", address: "Jl. Kenanga No. 12, Bandung 40123", date: "30 Sep 2026",
+    items: [{ productId: 5, qty: 1, price: 459000 }, { productId: 2, qty: 1, price: 129000 }], shippingMethod: "Reguler", shippingFee: 18000,
+    payment: "success", received: false,
     history: [
-      { at: "30 Sep 2026, 09.12", scope: "payment", from: "awaiting_payment", to: "under_review", actor: "Aulia Rahma" },
-      { at: "30 Sep 2026, 09.40", scope: "payment", from: "under_review", to: "paid", actor: "Admin" },
-      { at: "30 Sep 2026, 11.05", scope: "fulfillment", group: "Pre-order", from: "unfulfilled", to: "ordered_abroad", actor: "Admin", note: "Dipesan ke supplier batch Oktober" },
+      { at: "30 Sep 2026, 09.12", event: "created", actor: "Aulia Rahma" },
+      { at: "30 Sep 2026, 09.40", event: "payment_accepted", actor: ADMIN },
     ],
   },
   {
-    number: "837320", date: "29 Sep 2026", buyer: "Bima Akbar", phone: "0813-5550-0320", address: "Jl. Melati Raya No. 8, Surabaya 60111",
-    paymentStatus: "paid",
-    groups: [
-      { id: "g1", kind: "ready", shippingMethod: "Reguler", shippingFee: 18000, status: "shipped", items: [{ name: "Mug Blush Daily", qty: 1, price: 89000 }] },
-      { id: "g2", kind: "po", eta: "15 Okt 2026", shippingMethod: "Reguler", shippingFee: 18000, status: "ordered_abroad", items: [{ name: "Dewy Skin Set", qty: 2, price: 279000 }] },
-    ],
+    number: "837320", buyerId: "bima", buyer: "Bima Akbar", phone: "0813-5550-0320", address: "Jl. Melati Raya No. 8, Surabaya 60111", date: "29 Sep 2026",
+    items: [{ productId: 1, qty: 1, price: 89000 }, { productId: 6, qty: 2, price: 279000 }], shippingMethod: "Reguler", shippingFee: 18000,
+    payment: "success", received: false,
     history: [
-      { at: "29 Sep 2026, 13.20", scope: "payment", from: "awaiting_payment", to: "under_review", actor: "Bima Akbar" },
-      { at: "29 Sep 2026, 13.55", scope: "payment", from: "under_review", to: "paid", actor: "Admin" },
-      { at: "29 Sep 2026, 15.10", scope: "fulfillment", group: "Ready stock", from: "unfulfilled", to: "processing", actor: "Admin" },
-      { at: "29 Sep 2026, 16.30", scope: "fulfillment", group: "Ready stock", from: "processing", to: "packed", actor: "Admin" },
-      { at: "30 Sep 2026, 08.45", scope: "fulfillment", group: "Ready stock", from: "packed", to: "shipped", actor: "Admin", note: "Resi JNE 0098765432" },
-      { at: "29 Sep 2026, 15.20", scope: "fulfillment", group: "Pre-order", from: "unfulfilled", to: "ordered_abroad", actor: "Admin" },
+      { at: "29 Sep 2026, 13.20", event: "created", actor: "Bima Akbar" },
+      { at: "29 Sep 2026, 13.55", event: "payment_accepted", actor: ADMIN },
     ],
   },
   {
-    number: "837312", date: "30 Sep 2026", buyer: "Nadia Putri", phone: "0811-5550-0312", address: "Jl. Cempaka No. 21, Jakarta Selatan 12140",
-    paymentStatus: "awaiting_payment",
-    groups: [
-      { id: "g1", kind: "ready", shippingMethod: "Reguler", shippingFee: 18000, status: "unfulfilled", items: [{ name: "Mug Blush Daily", qty: 2, price: 89000 }] },
-    ],
-    history: [],
+    number: "837315", buyerId: "dinda", buyer: "Dinda Ayu", phone: "0822-5550-0288", address: "Jl. Dahlia No. 3, Malang 65145", date: "30 Sep 2026",
+    items: [{ productId: 3, qty: 1, price: 649000 }], shippingMethod: "Express", shippingFee: 32000,
+    payment: "pending", received: false,
+    history: [{ at: "30 Sep 2026, 12.18", event: "created", actor: "Dinda Ayu" }],
   },
   {
-    number: "837301", date: "29 Sep 2026", buyer: "Raka Pratama", phone: "0856-5550-0301", address: "Jl. Anggrek No. 5, Yogyakarta 55281",
-    paymentStatus: "under_review",
-    groups: [
-      { id: "g1", kind: "ready", shippingMethod: "Express", shippingFee: 32000, status: "unfulfilled", items: [{ name: "Headphone Merlot", qty: 1, price: 649000 }] },
-    ],
-    history: [{ at: "29 Sep 2026, 18.02", scope: "payment", from: "awaiting_payment", to: "under_review", actor: "Raka Pratama" }],
+    number: "837312", buyerId: "nadia", buyer: "Nadia Putri", phone: CURRENT_BUYER.phone, address: CURRENT_BUYER.address, date: "30 Sep 2026",
+    items: [{ productId: 1, qty: 2, price: 89000 }], shippingMethod: "Reguler", shippingFee: 18000,
+    payment: "pending", received: false,
+    history: [{ at: "30 Sep 2026, 14.05", event: "created", actor: "Nadia Putri" }],
   },
   {
-    number: "837288", date: "27 Sep 2026", buyer: "Dinda Ayu", phone: "0822-5550-0288", address: "Jl. Dahlia No. 3, Malang 65145",
-    paymentStatus: "paid",
-    groups: [
-      { id: "g1", kind: "ready", shippingMethod: "Reguler", shippingFee: 18000, status: "processing", items: [{ name: "Lampu Meja Lumi", qty: 1, price: 329000 }, { name: "Dewy Skin Set", qty: 1, price: 279000 }] },
-    ],
+    number: "837301", buyerId: "nadia", buyer: "Nadia Putri", phone: CURRENT_BUYER.phone, address: CURRENT_BUYER.address, date: "29 Sep 2026",
+    items: [{ productId: 3, qty: 1, price: 649000 }], shippingMethod: "Express", shippingFee: 32000,
+    payment: "pending", received: false,
+    history: [{ at: "29 Sep 2026, 18.02", event: "created", actor: "Nadia Putri" }],
+  },
+  {
+    number: "837288", buyerId: "nadia", buyer: "Nadia Putri", phone: CURRENT_BUYER.phone, address: CURRENT_BUYER.address, date: "27 Sep 2026",
+    items: [{ productId: 4, qty: 1, price: 329000 }, { productId: 6, qty: 1, price: 279000 }], shippingMethod: "Reguler", shippingFee: 18000,
+    payment: "success", received: false,
     history: [
-      { at: "27 Sep 2026, 10.15", scope: "payment", from: "awaiting_payment", to: "under_review", actor: "Dinda Ayu" },
-      { at: "27 Sep 2026, 10.50", scope: "payment", from: "under_review", to: "paid", actor: "Admin" },
-      { at: "28 Sep 2026, 09.00", scope: "fulfillment", group: "Ready stock", from: "unfulfilled", to: "processing", actor: "Admin" },
+      { at: "27 Sep 2026, 10.15", event: "created", actor: "Nadia Putri" },
+      { at: "27 Sep 2026, 10.50", event: "payment_accepted", actor: ADMIN },
     ],
   },
   {
-    number: "837270", date: "22 Sep 2026", buyer: "Nadia Putri", phone: "0811-5550-0312", address: "Jl. Cempaka No. 21, Jakarta Selatan 12140",
-    paymentStatus: "paid",
-    groups: [
-      { id: "g1", kind: "ready", shippingMethod: "Reguler", shippingFee: 18000, status: "delivered", items: [{ name: "Tote Canvas Everyday", qty: 1, price: 129000 }, { name: "Sneakers Rosé", qty: 1, price: 459000 }] },
-    ],
+    number: "837270", buyerId: "nadia", buyer: "Nadia Putri", phone: CURRENT_BUYER.phone, address: CURRENT_BUYER.address, date: "22 Sep 2026",
+    items: [{ productId: 2, qty: 1, price: 129000 }, { productId: 5, qty: 1, price: 459000 }], shippingMethod: "Reguler", shippingFee: 18000,
+    payment: "success", received: true,
     history: [
-      { at: "22 Sep 2026, 11.00", scope: "payment", from: "under_review", to: "paid", actor: "Admin" },
-      { at: "23 Sep 2026, 10.00", scope: "fulfillment", group: "Ready stock", from: "packed", to: "shipped", actor: "Admin", note: "Resi JNE 0011223344" },
-      { at: "25 Sep 2026, 14.30", scope: "fulfillment", group: "Ready stock", from: "shipped", to: "delivered", actor: "Admin" },
+      { at: "22 Sep 2026, 10.30", event: "created", actor: "Nadia Putri" },
+      { at: "22 Sep 2026, 11.00", event: "payment_accepted", actor: ADMIN },
+      { at: "25 Sep 2026, 14.30", event: "received", actor: "Nadia Putri" },
     ],
   },
   {
-    number: "837240", date: "15 Sep 2026", buyer: "Dinda Ayu", phone: "0822-5550-0288", address: "Jl. Dahlia No. 3, Malang 65145",
-    paymentStatus: "paid",
-    groups: [
-      { id: "g1", kind: "ready", shippingMethod: "Reguler", shippingFee: 18000, status: "delivered", items: [{ name: "Dewy Skin Set", qty: 1, price: 279000 }] },
-    ],
+    number: "837240", buyerId: "nadia", buyer: "Nadia Putri", phone: CURRENT_BUYER.phone, address: CURRENT_BUYER.address, date: "15 Sep 2026",
+    items: [{ productId: 6, qty: 1, price: 279000 }], shippingMethod: "Reguler", shippingFee: 18000,
+    payment: "success", received: true,
     history: [
-      { at: "15 Sep 2026, 12.00", scope: "payment", from: "under_review", to: "paid", actor: "Admin" },
-      { at: "19 Sep 2026, 16.00", scope: "fulfillment", group: "Ready stock", from: "shipped", to: "delivered", actor: "Admin" },
+      { at: "15 Sep 2026, 11.40", event: "created", actor: "Nadia Putri" },
+      { at: "15 Sep 2026, 12.00", event: "payment_accepted", actor: ADMIN },
+      { at: "19 Sep 2026, 16.00", event: "received", actor: "Nadia Putri" },
     ],
   },
   {
-    number: "837199", date: "9 Sep 2026", buyer: "Maya Sari", phone: "0878-5550-0199", address: "Jl. Flamboyan No. 17, Semarang 50134",
-    paymentStatus: "refund_pending",
+    number: "837199", buyerId: "maya", buyer: "Maya Sari", phone: "0878-5550-0199", address: "Jl. Flamboyan No. 17, Semarang 50134", date: "9 Sep 2026",
+    items: [{ productId: 1, qty: 1, price: 89000 }], shippingMethod: "Reguler", shippingFee: 18000,
+    payment: "success", received: false, refund: "pending",
     cancelNote: "Barang rusak saat pemeriksaan, pembeli setuju dana dikembalikan.",
-    groups: [
-      { id: "g1", kind: "ready", shippingMethod: "Reguler", shippingFee: 18000, status: "cancelled", items: [{ name: "Mug Blush Daily", qty: 1, price: 89000 }] },
-    ],
     history: [
-      { at: "9 Sep 2026, 14.00", scope: "payment", from: "under_review", to: "paid", actor: "Admin" },
-      { at: "10 Sep 2026, 09.30", scope: "order", from: "processing", to: "cancelled", actor: "Admin", note: "Barang rusak saat pemeriksaan, pembeli setuju dana dikembalikan." },
-      { at: "10 Sep 2026, 09.30", scope: "payment", from: "paid", to: "refund_pending", actor: "Admin" },
+      { at: "9 Sep 2026, 13.40", event: "created", actor: "Maya Sari" },
+      { at: "9 Sep 2026, 14.00", event: "payment_accepted", actor: ADMIN },
+      { at: "10 Sep 2026, 09.30", event: "cancelled", actor: ADMIN, note: "Barang rusak saat pemeriksaan, pembeli setuju dana dikembalikan." },
     ],
   },
 ];
+
+/** A review is one per order item, keyed `${order.number}:${productId}`. */
+export type MyReview = { rating: number; text: string };
+
+export const INITIAL_MY_REVIEWS: Record<string, MyReview> = {
+  "837240:6": { rating: 5, text: "Teksturnya ringan dan kulit terasa lembap seharian. Packing rapi, pengiriman cepat." },
+};

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { t } from "@/lib/i18n";
-import type { MyReview } from "@/lib/mock/store";
+import type { MyReview } from "@/lib/mock/orders";
 import { Button } from "../atoms/button";
 import { StarRatingInput } from "./star-rating-input";
 

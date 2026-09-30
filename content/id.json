@@ -134,19 +134,23 @@
     },
     "orders": {
       "title": "Pesanan saya",
-      "hint": "Ulasan bisa ditulis setelah pesanan berstatus diterima.",
+      "hint": "Ulasan bisa ditulis setelah pesanan selesai.",
       "empty": "Kamu belum punya pesanan.",
       "orderLabel": "Order #MKP-{number}",
       "itemQty": "{qty} barang",
       "shipping": "Ongkos kirim",
       "total": "Total",
       "status": {
-        "pending_payment": "Menunggu pembayaran",
-        "payment_review": "Menunggu verifikasi",
-        "processing": "Sedang diproses",
-        "partially_shipped": "Sebagian dikirim",
-        "completed": "Sudah diterima",
+        "pending": "Menunggu pembayaran",
+        "shipping": "Barang sedang dikirim",
+        "completed": "Selesai",
         "cancelled": "Dibatalkan"
+      },
+      "complete": {
+        "button": "Pesanan selesai",
+        "question": "Semua barang sudah kamu terima?",
+        "yes": "Ya, selesai",
+        "no": "Belum"
       },
       "review": {
         "write": "Tulis ulasan",
@@ -198,7 +202,8 @@
       "reviewUpdated": "Ulasanmu diperbarui",
       "reviewNeedRating": "Pilih rating dulu",
       "reviewNeedText": "Tulis ulasanmu dulu",
-      "thanks": "Terima kasih sudah berbelanja"
+      "thanks": "Terima kasih sudah berbelanja",
+      "orderCompleted": "Terima kasih, pesanan ditandai selesai"
     }
   },
   "admin": {
@@ -214,7 +219,9 @@
       "profileName": "Admin",
       "profileRole": "Super admin",
       "openMenu": "Buka menu",
-      "fallbackTitle": "Admin"
+      "fallbackTitle": "Admin",
+      "resetData": "Reset data contoh",
+      "resetDone": "Data contoh dikembalikan ke awal"
     },
     "nav": {
       "dashboard": "Dashboard",
@@ -332,7 +339,7 @@
     },
     "orders": {
       "title": "Pesanan",
-      "text": "Pantau pesanan dan ubah status pengiriman tiap kelompok barang.",
+      "text": "Pantau status pesanan. Status berubah otomatis: pembayaran diterima, lalu pembeli menandai selesai.",
       "searchPlaceholder": "Cari nomor order atau pelanggan…",
       "filterAll": "Semua status",
       "empty": "Tidak ada pesanan yang cocok.",
@@ -344,82 +351,53 @@
         "customer": "Pelanggan",
         "items": "Item",
         "total": "Total",
-        "payment": "Pembayaran",
         "status": "Status",
         "action": "Aksi"
       },
-      "summary": {
-        "pending_payment": "Menunggu pembayaran",
-        "payment_review": "Menunggu verifikasi",
-        "processing": "Sedang diproses",
-        "partially_shipped": "Sebagian dikirim",
+      "status": {
+        "pending": "Pending",
+        "shipping": "Barang sedang dikirim",
         "completed": "Selesai",
         "cancelled": "Dibatalkan"
-      },
-      "payment": {
-        "awaiting_payment": "Menunggu pembayaran",
-        "under_review": "Sedang diverifikasi",
-        "paid": "Lunas",
-        "rejected": "Bukti ditolak",
-        "expired": "Kedaluwarsa",
-        "refund_pending": "Menunggu refund",
-        "refunded": "Sudah direfund"
-      },
-      "fulfillment": {
-        "unfulfilled": "Belum diproses",
-        "processing": "Diproses",
-        "packed": "Dikemas",
-        "shipped": "Dikirim",
-        "delivered": "Diterima",
-        "cancelled": "Dibatalkan",
-        "ordered_abroad": "Dipesan dari luar negeri",
-        "shipped_to_indonesia": "Dikirim ke Indonesia",
-        "arrived_at_warehouse": "Tiba di gudang",
-        "shipped_to_buyer": "Dikirim ke pembeli"
-      },
-      "kind": {
-        "ready": "Ready stock",
-        "po": "Pre-order"
       },
       "modal": {
         "subtitle": "{date} · {buyer}",
         "customer": "Pelanggan",
         "address": "Alamat pengiriman",
-        "payment": "Pembayaran",
-        "paymentHint": "Verifikasi bukti transfer dilakukan di menu Pembayaran.",
+        "statusHeading": "Status pesanan",
+        "statusHint": "Status berubah otomatis: menjadi \"Barang sedang dikirim\" saat pembayaran diterima di menu Pembayaran, dan \"Selesai\" saat pembeli menandai pesanan selesai.",
         "openPayments": "Buka Pembayaran",
-        "groups": "Pengiriman",
-        "eta": "Estimasi tiba {eta}",
+        "items": "Barang",
         "shippingLine": "{method} · ongkir {fee}",
-        "advance": "Ubah ke {status}",
-        "locked": "Pengiriman baru bisa diproses setelah pembayaran lunas.",
-        "finished": "Sudah diterima pembeli",
-        "groupCancelled": "Kelompok ini dibatalkan.",
         "subtotal": "Subtotal",
         "shipping": "Ongkos kirim",
         "total": "Total",
         "history": "Riwayat status",
         "historyEmpty": "Belum ada perubahan status.",
-        "historyLine": "{from} → {to}",
-        "historyFirst": "Menjadi {to}",
         "by": "oleh {actor}",
         "cancelOrder": "Batalkan pesanan",
-        "cancelBlocked": "Pesanan tidak bisa dibatalkan karena sebagian barang sudah dikirim.",
         "cancelHeading": "Alasan pembatalan",
         "cancelPlaceholder": "Tulis alasan pembatalan (wajib)",
         "cancelConfirm": "Ya, batalkan pesanan",
         "cancelBack": "Kembali",
         "cancelledNote": "Alasan pembatalan: {note}",
         "refundPending": "Dana perlu dikembalikan ke pembeli.",
+        "refundDone": "Dana sudah dikembalikan ke pembeli.",
         "markRefunded": "Tandai sudah direfund"
       },
+      "events": {
+        "created": "Pesanan dibuat",
+        "payment_accepted": "Pembayaran diterima",
+        "payment_rejected": "Pembayaran ditolak",
+        "received": "Pesanan ditandai selesai oleh pembeli",
+        "cancelled": "Pesanan dibatalkan",
+        "refunded": "Refund dicatat"
+      },
       "toast": {
-        "advanced": "Status pengiriman diperbarui",
         "cancelled": "Pesanan dibatalkan",
         "needNote": "Isi alasan pembatalan dulu",
         "refunded": "Refund dicatat"
-      },
-      "actor": "Admin"
+      }
     },
     "interactions": {
       "title": "Customer interactions",

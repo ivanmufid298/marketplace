@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { t } from "@/lib/i18n";
-import { deriveSummary, type OrderSummary } from "@/lib/order-flow";
+import { deriveStatus, type OrderStatus } from "@/lib/order-flow";
 import { OrderRow } from "../../molecules/order-row";
 import { SearchField } from "../../molecules/search-field";
 import { SectionTop } from "../../molecules/section-top";
@@ -11,7 +11,7 @@ import { useAdmin } from "../../providers/admin-provider";
 import { OrderDetailModal } from "./order-detail-modal";
 
 const ALL = "all";
-const SUMMARIES: OrderSummary[] = ["pending_payment", "payment_review", "processing", "partially_shipped", "completed", "cancelled"];
+const STATUSES: OrderStatus[] = ["pending", "shipping", "completed", "cancelled"];
 
 export function OrdersManager() {
   const { orders } = useAdmin();
@@ -19,9 +19,9 @@ export function OrdersManager() {
   const [status, setStatus] = useState(ALL);
   const [openNumber, setOpenNumber] = useState<string | null>(null);
 
-  const statusOptions = [{ value: ALL, label: t("admin.orders.filterAll") }, ...SUMMARIES.map((s) => ({ value: s, label: t(`admin.orders.summary.${s}`) }))];
+  const statusOptions = [{ value: ALL, label: t("admin.orders.filterAll") }, ...STATUSES.map((s) => ({ value: s, label: t(`admin.orders.status.${s}`) }))];
   const q = query.trim().toLowerCase();
-  const list = orders.filter((o) => (status === ALL || deriveSummary(o) === status) && (!q || `${o.number} ${o.buyer}`.toLowerCase().includes(q)));
+  const list = orders.filter((o) => (status === ALL || deriveStatus(o) === status) && (!q || `${o.number} ${o.buyer}`.toLowerCase().includes(q)));
 
   return (
     <section className="view active">
@@ -32,14 +32,13 @@ export function OrdersManager() {
       </div>
       <div className="table-card">
         <div className="table-wrap">
-          <table>
+          <table className="orders-table">
             <thead>
               <tr>
                 <th>{t("admin.orders.cols.order")}</th>
-                <th>{t("admin.orders.cols.customer")}</th>
-                <th>{t("admin.orders.cols.items")}</th>
-                <th>{t("admin.orders.cols.total")}</th>
-                <th>{t("admin.orders.cols.payment")}</th>
+                <th className="hide-mobile">{t("admin.orders.cols.customer")}</th>
+                <th className="hide-mobile">{t("admin.orders.cols.items")}</th>
+                <th className="hide-mobile">{t("admin.orders.cols.total")}</th>
                 <th>{t("admin.orders.cols.status")}</th>
                 <th>{t("admin.orders.cols.action")}</th>
               </tr>
@@ -47,7 +46,7 @@ export function OrdersManager() {
             <tbody>
               {list.map((o) => <OrderRow key={o.number} order={o} onOpen={() => setOpenNumber(o.number)} />)}
               {!list.length && (
-                <tr><td colSpan={7} className="sub" style={{ textAlign: "center", padding: 28 }}>{t("admin.orders.empty")}</td></tr>
+                <tr><td colSpan={6} className="sub" style={{ textAlign: "center", padding: 28 }}>{t("admin.orders.empty")}</td></tr>
               )}
             </tbody>
           </table>

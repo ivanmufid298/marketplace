@@ -145,7 +145,7 @@ Produk yang pernah masuk order tidak dihapus permanen agar histori transaksi tet
 8. Sistem menampilkan rekening, nominal transfer, dan batas waktu pembayaran.
 9. Buyer transfer dan mengunggah bukti.
 10. Buyer menunggu verifikasi serta memantau status order dari menu **Pesanan Saya** (header pada desktop, navigasi bawah pada mobile).
-11. Setelah pesanan diterima (`delivered`), buyer menulis rating dan ulasan untuk tiap item dari menu Pesanan Saya.
+11. Setelah barang diterima, buyer menekan **Pesanan selesai** (status `completed`), lalu dapat menulis rating dan ulasan untuk tiap item dari menu Pesanan Saya.
 
 ## 9. Pembayaran Manual
 
@@ -215,10 +215,9 @@ Ongkir disalin ke order saat checkout. Perubahan tarif berikutnya tidak boleh me
 
 - Cari/filter order dan lihat detail/bukti transfer.
 - Terima/tolak pembayaran dengan catatan.
-- Perbarui fulfillment status dan lihat histori status.
-- Status pengiriman diubah per kelompok pengiriman, satu langkah ke depan sesuai alur pada bagian 12, dan hanya setelah pembayaran berstatus `paid`.
-- Admin dapat membatalkan order dengan catatan wajib selama belum ada kelompok pengiriman yang dikirim. Order yang sudah `paid` masuk ke `refund_pending`, lalu admin menandai `refunded` setelah dana dikembalikan.
-- Status ringkas order (bagian 12) selalu diturunkan dari status pembayaran dan seluruh kelompok pengiriman, tidak diedit langsung.
+- Lihat detail order dan histori status.
+- Status order tidak diedit manual. Ia berubah otomatis: `pending` → `shipping` saat admin menerima pembayaran → `completed` saat buyer menekan "Pesanan selesai" (bagian 12).
+- Admin dapat membatalkan order dengan catatan wajib selama buyer belum menandai selesai. Order yang sudah dibayar masuk ke `refund_pending`, lalu admin menandai `refunded` setelah dana dikembalikan.
 
 ### Promo dan voucher
 
@@ -251,8 +250,8 @@ Ongkir disalin ke order saat checkout. Perubahan tarif berikutnya tidak boleh me
 
 ### Reviews
 
-- Buyer yang order-nya sudah `delivered` dapat memberi rating 1–5 dan ulasan teks.
-- Rating wajib dipilih dan teks ulasan wajib diisi. Ulasan ditulis dari menu Pesanan Saya pada item order yang sudah `delivered`.
+- Buyer yang order-nya sudah `completed` dapat memberi rating 1–5 dan ulasan teks.
+- Rating wajib dipilih dan teks ulasan wajib diisi. Ulasan ditulis dari menu Pesanan Saya pada item order yang sudah `completed`.
 - Satu `OrderItem` hanya dapat memiliki satu review, tetapi buyer boleh mengeditnya.
 - Detail produk menampilkan rating rata-rata, jumlah review, distribusi bintang, dan daftar ulasan.
 - Review diberi penanda pembelian terverifikasi.
@@ -261,7 +260,23 @@ Ongkir disalin ke order saat checkout. Perubahan tarif berikutnya tidak boleh me
 
 ## 12. State Machine
 
-Pisahkan status pembayaran dan fulfillment.
+Untuk MVP, admin dan buyer melihat satu status order yang sederhana (bagian "Status order MVP"). Alur pembayaran dan fulfillment yang rinci di bawahnya adalah rencana lanjutan, dipakai ketika pengiriman per kelompok dan pre-order perlu dilacak lebih detail.
+
+### Status order MVP
+
+Status diturunkan dari data, bukan diedit manual:
+
+| Status | Label | Kapan |
+|---|---|---|
+| `pending` | Pending (buyer: Menunggu pembayaran) | Default. Pembayaran belum diterima admin: bukti belum diunggah, sedang diperiksa, atau ditolak. |
+| `shipping` | Barang sedang dikirim | Otomatis saat admin menerima pembayaran di menu Pembayaran. |
+| `completed` | Selesai | Saat buyer menekan "Pesanan selesai". Hanya bisa dilakukan jika status sudah `shipping`. |
+| `cancelled` | Dibatalkan | Admin membatalkan dengan catatan wajib, sebelum buyer menandai selesai. |
+
+- Menolak pembayaran tidak mengubah status: order tetap `pending`.
+- Order yang sudah dibayar lalu dibatalkan masuk ke `refund_pending`, lalu `refunded` setelah admin mencatat pengembalian dana.
+- Ulasan baru bisa ditulis setelah status `completed`.
+- Setiap perubahan dicatat di histori beserta pelakunya.
 
 ### Payment
 
@@ -291,7 +306,7 @@ Jika pembayaran sudah diterima tetapi order dibatalkan, gunakan `refund_pending`
 
 ### Status ringkas order
 
-Untuk tampilan buyer, sistem menurunkan status ringkas dari payment dan seluruh fulfillment group:
+Rencana lanjutan, setelah status per kelompok pengiriman aktif. Untuk tampilan buyer, sistem menurunkan status ringkas dari payment dan seluruh fulfillment group:
 
 `pending_payment`, `payment_review`, `processing`, `partially_shipped`, `completed`, atau `cancelled`.
 

@@ -1,14 +1,18 @@
+"use client";
+
+import { useState } from "react";
 import { money } from "@/lib/format";
 import { t } from "@/lib/i18n";
-import type { MyReview, Order, OrderStatus, Product } from "@/lib/mock/store";
+import type { MyReview, Order } from "@/lib/mock/orders";
+import type { Product } from "@/lib/mock/store";
+import { deriveStatus, total, type OrderStatus } from "@/lib/order-flow";
 import { StatusPill, type PillTone } from "../atoms/badges";
+import { Button } from "../atoms/button";
 import { OrderItemLine } from "./order-item-line";
 
 const STATUS_TONE: Record<OrderStatus, PillTone> = {
-  pending_payment: "pending",
-  payment_review: "pending",
-  processing: "progress",
-  partially_shipped: "progress",
+  pending: "pending",
+  shipping: "progress",
   completed: "success",
   cancelled: "danger",
 };
@@ -18,14 +22,16 @@ type OrderCardProps = {
   products: Product[];
   reviews: Record<string, MyReview>;
   onSaveReview: (productId: number, review: MyReview) => boolean;
+  onComplete: () => void;
 };
 
-export function OrderCard({ order, products, reviews, onSaveReview }: OrderCardProps) {
+export function OrderCard({ order, products, reviews, onSaveReview, onComplete }: OrderCardProps) {
+  const [confirming, setConfirming] = useState(false);
+  const status = deriveStatus(order);
   const lines = order.items.flatMap((item) => {
     const product = products.find((p) => p.id === item.productId);
     return product ? [{ product, qty: item.qty }] : [];
   });
-  const subtotal = lines.reduce((sum, l) => sum + l.product.price * l.qty, 0);
 
   return (
     <article className="order-card">
@@ -34,22 +40,37 @@ export function OrderCard({ order, products, reviews, onSaveReview }: OrderCardP
           <b>{t("store.orders.orderLabel", { number: order.number })}</b>
           <small>{order.date}</small>
         </div>
-        <StatusPill tone={STATUS_TONE[order.status]}>{t(`store.orders.status.${order.status}`)}</StatusPill>
+        <StatusPill tone={STATUS_TONE[status]}>{t(`store.orders.status.${status}`)}</StatusPill>
       </div>
       {lines.map(({ product, qty }) => (
         <OrderItemLine
           key={product.id}
           product={product}
           qty={qty}
-          canReview={order.status === "completed"}
+          canReview={status === "completed"}
           review={reviews[`${order.number}:${product.id}`]}
           onSaveReview={(review) => onSaveReview(product.id, review)}
         />
       ))}
       <div className="order-foot">
-        <span>{t("store.orders.shipping")} {money(order.shippingCost)}</span>
-        <span>{t("store.orders.total")} <b>{money(subtotal + order.shippingCost)}</b></span>
+        <span>{t("store.orders.shipping")} {money(order.shippingFee)}</span>
+        <span>{t("store.orders.total")} <b>{money(total(order))}</b></span>
       </div>
+      {status === "shipping" && (
+        <div className="order-complete">
+          {confirming ? (
+            <>
+              <p>{t("store.orders.complete.question")}</p>
+              <div className="review-form-actions">
+                <Button variant="secondary" onClick={() => setConfirming(false)}>{t("store.orders.complete.no")}</Button>
+                <Button onClick={onComplete}>{t("store.orders.complete.yes")}</Button>
+              </div>
+            </>
+          ) : (
+            <Button onClick={() => setConfirming(true)}>{t("store.orders.complete.button")}</Button>
+          )}
+        </div>
+      )}
     </article>
   );
 }

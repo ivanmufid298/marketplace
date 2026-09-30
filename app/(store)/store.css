@@ -49,3 +49,6 @@
 .store .my-review-head{display:flex;justify-content:space-between;align-items:center;font-weight:750;color:var(--wine)}
 .store .my-review p{margin:6px 0 8px;color:#624c54}
 .store .link-btn{border:0;background:transparent;padding:0;color:var(--wine);font-weight:800;font-size:13px;text-decoration:underline}
+.store .order-complete{margin-top:12px;border-top:1px solid var(--line);padding-top:12px}
+.store .order-complete>button{width:100%}
+.store .order-complete p{margin:0 0 10px;font-weight:700;color:var(--wine)}

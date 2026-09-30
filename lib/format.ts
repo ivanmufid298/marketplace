@@ -20,3 +20,6 @@ export const formatDateTime = (date: Date = new Date()) => {
   const get = (type: string) => parts.find((p) => p.type === type)?.value ?? "";
   return `${get("day")} ${get("month")} ${get("year")}, ${get("hour")}.${get("minute")}`;
 };
+
+/** e.g. "30 Sep 2026" in Asia/Jakarta. */
+export const formatDate = (date: Date = new Date()) => formatDateTime(date).split(",")[0];

@@ -2,7 +2,9 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { t } from "@/lib/i18n";
-import { INITIAL_MY_REVIEWS, products, SHIPPING_OPTIONS, type MyReview, type Product, type ShippingValue, type SortMode } from "@/lib/mock/store";
+import { CURRENT_BUYER, INITIAL_MY_REVIEWS, type MyReview, type Order } from "@/lib/mock/orders";
+import { products, SHIPPING_OPTIONS, type Product, type ShippingValue, type SortMode } from "@/lib/mock/store";
+import * as ordersStore from "@/lib/orders-store";
 
 /** Sentinel for "no category filter". Display text comes from content/id.json. */
 export const ALL_CATEGORIES = "all";
@@ -61,6 +63,10 @@ type StoreContextValue = {
   toast: string;
   showToast: (msg: string) => void;
   scrollToProducts: () => void;
+  /** Orders of the signed-in buyer, newest first. */
+  orders: Order[];
+  /** Buyer taps "Pesanan selesai" on a paid order. */
+  completeOrder: (orderNumber: string) => void;
   myReviews: Record<string, MyReview>;
   /** Saves the review of one order item. Returns false (with a toast) when rating or text is missing. */
   saveReview: (orderNumber: string, productId: number, review: MyReview) => boolean;
@@ -92,6 +98,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const interactionId = useRef<string | null>(null);
   const proofFile = useRef<File | null>(null);
   const [myReviews, setMyReviews] = useState(INITIAL_MY_REVIEWS);
+  const allOrders = ordersStore.useOrders();
+  const orders = useMemo(() => allOrders.filter((o) => o.buyerId === CURRENT_BUYER.id), [allOrders]);
   const [toast, setToast] = useState("");
   const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
@@ -215,9 +223,22 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       showToast(t("store.toast.needProof"));
       return;
     }
-    setOrderNumber(String(Date.now()).slice(-6));
+    const method = SHIPPING_OPTIONS.find((o) => o.value === shipping) ?? SHIPPING_OPTIONS[0];
+    const number = ordersStore.createOrder({
+      buyerId: CURRENT_BUYER.id,
+      buyer: address.fullName.trim() || CURRENT_BUYER.name,
+      phone: address.phone.trim() || CURRENT_BUYER.phone,
+      address: [address.address, address.city, address.postcode].map((part) => part.trim()).filter(Boolean).join(", "),
+      items: cart.flatMap((line) => {
+        const product = products.find((p) => p.id === line.id);
+        return product ? [{ productId: product.id, qty: line.qty, price: product.price }] : [];
+      }),
+      shippingMethod: method.label,
+      shippingFee: method.cost,
+    });
+    setOrderNumber(number);
     setCheckoutStep(4);
-  }, [showToast]);
+  }, [address, cart, shipping, showToast]);
 
   const finishOrder = useCallback(() => {
     setCart([]);
@@ -241,6 +262,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const scrollToProducts = useCallback(() => document.getElementById("products")?.scrollIntoView({ behavior: "smooth" }), []);
+
+  const completeOrder = useCallback(
+    (orderNumber: string) => {
+      if (ordersStore.confirmReceived(orderNumber)) showToast(t("store.toast.orderCompleted"));
+    },
+    [showToast],
+  );
 
   const saveReview = useCallback(
     (orderNumber: string, productId: number, review: MyReview) => {
@@ -302,7 +330,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     checkoutStep, goCheckoutStep, startCheckout,
     address, setAddressField: (k, v) => setAddress((a) => ({ ...a, [k]: v })),
     shipping, setShipping, shippingCost, proofName, setProof, placeOrder, orderNumber, finishOrder,
-    chatMessages, sendChat, toast, showToast, scrollToProducts, myReviews, saveReview,
+    chatMessages, sendChat, toast, showToast, scrollToProducts, orders, completeOrder, myReviews, saveReview,
   };
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;

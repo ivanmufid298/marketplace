@@ -2,7 +2,7 @@
 
 Prototype UI/UX toko online **single seller** untuk produk ready stock, jastip, dan pre-order barang impor. Repository ini memuat halaman customer serta dashboard admin dengan tampilan responsif untuk mobile dan desktop.
 
-> Status saat ini: UI sudah dimigrasikan ke **Next.js App Router** (roadmap langkah 1), tetapi masih memakai data contoh di memori browser yang kembali ke kondisi awal saat halaman dimuat ulang. Belum ada backend, autentikasi, database, object storage, maupun proses pembayaran sungguhan. Prototype HTML statis yang asli disimpan di folder `prototype/` sebagai referensi visual.
+> Status saat ini: UI sudah dimigrasikan ke **Next.js App Router** (roadmap langkah 1), tetapi masih memakai data contoh di memori browser yang kembali ke kondisi awal saat halaman dimuat ulang. Belum ada backend, autentikasi, database, object storage, maupun proses pembayaran sungguhan. Pengecualian: pesanan disimpan di `localStorage` browser dan dibaca bersama oleh storefront dan admin, jadi alur pembayaran diterima → barang dikirim → pesanan selesai bisa dicoba dari awal sampai akhir. Tombol "Reset data contoh" di sidebar admin mengembalikan data awal. Prototype HTML statis yang asli disimpan di folder `prototype/` sebagai referensi visual.
 
 ## Fitur prototype
 
@@ -78,6 +78,8 @@ content/
 lib/
 ├── i18n.ts               # t("store.cart.title", { ... })
 ├── mock/                 # data contoh (pengganti database sementara)
+├── orders-store.ts       # penyimpanan pesanan bersama (localStorage) untuk storefront dan admin
+├── order-flow.ts         # status pesanan (pending, shipping, completed, cancelled) dan total
 └── format.ts, admin-nav.ts
 public/assets/            # sprite foto produk demo
 prototype/                # prototype HTML statis asli (referensi visual)
