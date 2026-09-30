@@ -2,7 +2,7 @@
 
 Prototype UI/UX toko online **single seller** untuk produk ready stock, jastip, dan pre-order barang impor. Repository ini memuat halaman customer serta dashboard admin dengan tampilan responsif untuk mobile dan desktop.
 
-> Status saat ini: prototype frontend statis. Seluruh data masih berupa contoh di dalam JavaScript dan akan kembali ke kondisi awal saat halaman dimuat ulang. Belum ada backend, autentikasi, database, object storage, maupun proses pembayaran sungguhan.
+> Status saat ini: UI sudah dimigrasikan ke **Next.js App Router** (roadmap langkah 1), tetapi masih memakai data contoh di memori browser yang kembali ke kondisi awal saat halaman dimuat ulang. Belum ada backend, autentikasi, database, object storage, maupun proses pembayaran sungguhan. Prototype HTML statis yang asli disimpan di folder `prototype/` sebagai referensi visual.
 
 ## Fitur prototype
 
@@ -32,35 +32,54 @@ Interaksi seperti menyimpan form, mengunggah file, mengubah pembayaran, membalas
 
 ## Menjalankan secara lokal
 
-Project prototype tidak membutuhkan proses build. Jalankan folder `dist` dengan static web server:
+Membutuhkan Node.js 20 atau lebih baru.
 
 ```bash
-npx serve dist
+npm install
+npm run dev      # http://localhost:3000
 ```
 
-Alternatif menggunakan Python:
+Perintah lain:
 
 ```bash
-python3 -m http.server 8080 --directory dist
+npm run build    # production build
+npm run start    # jalankan hasil build
+npm run lint     # type check (tsc --noEmit)
 ```
 
-Kemudian buka:
+- Marketplace: `http://localhost:3000/`
+- Admin: `http://localhost:3000/admin`
 
-- Marketplace: `http://localhost:8080/`
-- Admin: `http://localhost:8080/admin/`
-
-## Struktur prototype
+## Struktur project
 
 ```text
-dist/
-├── index.html          # Marketplace customer
-├── admin/
-│   └── index.html      # Dashboard admin
-└── assets/
-    └── products.png    # Sprite foto produk demo
+app/
+├── layout.tsx            # root layout + globals.css (Tailwind theme)
+├── globals.css
+├── (store)/              # storefront customer
+│   ├── layout.tsx
+│   ├── page.tsx
+│   └── store.css
+└── admin/                # dashboard admin (satu route per menu)
+    ├── layout.tsx
+    ├── admin.css
+    └── page.tsx, products/, payments/, interactions/, reviews/,
+        promos/, vouchers/, content/, shipping/
+components/
+├── store/                # header, hero, produk, cart, checkout, chat, dll.
+└── admin/                # shell, modal, select, switch, provider
+lib/                      # data contoh dan helper format
+public/assets/            # sprite foto produk demo
+prototype/                # prototype HTML statis asli (referensi visual)
 ```
 
-CSS, markup, data contoh, dan JavaScript halaman masih ditempatkan dalam file HTML masing-masing agar prototype mudah dijalankan dan dibagikan.
+### Catatan styling
+
+Tailwind CSS v4 sudah terpasang dan token warna tersedia lewat `@theme` di `app/globals.css`, tetapi Preflight sengaja tidak dimuat. Tampilan saat ini masih memakai CSS prototype yang di-scope ke `.store` dan `.admin` (`app/(store)/store.css`, `app/admin/admin.css`) agar hasilnya identik dengan prototype. Konversi ke utility class Tailwind dilakukan bertahap, komponen demi komponen.
+
+### State contoh
+
+Keranjang, wishlist, checkout, chat, pembayaran, interactions, dan review disimpan di React context (`StoreProvider` dan `AdminProvider`). Saat backend tersedia, ganti context ini dengan data dari Supabase melalui Server Component, Route Handler, atau Server Action.
 
 ## Target implementasi
 
@@ -132,7 +151,7 @@ Nama endpoint masih dapat berubah. Aturan bisnis penting seperti pembuatan order
 
 ## Roadmap implementasi
 
-1. Migrasikan design system dan UI ke Next.js serta Tailwind.
+1. ~~Migrasikan design system dan UI ke Next.js serta Tailwind.~~ UI sudah dimigrasikan ke Next.js. Konversi CSS prototype ke utility Tailwind masih bertahap.
 2. Implementasikan Supabase Auth, profile, role buyer/admin, dan proteksi route.
 3. Implementasikan kategori, produk, varian, foto produk, dan batch PO.
 4. Implementasikan cart, reservasi stok/kuota, order expiry, checkout, dan fulfillment group.

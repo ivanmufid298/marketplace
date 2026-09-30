@@ -1,0 +1,27 @@
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+
+/* Preflight is intentionally skipped while the legacy prototype CSS is in use. */
+
+@theme {
+  --color-ivory: #fffaf0;
+  --color-cream: #f8f0df;
+  --color-pink: #f7b8c7;
+  --color-pink-soft: #fbd7df;
+  --color-rose: #df7895;
+  --color-wine: #72203d;
+  --color-wine-deep: #51142a;
+  --color-ink: #2e2024;
+  --color-muted: #7b686e;
+  --color-line: #eadfd3;
+  --font-serif: Georgia, "Times New Roman", serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+}
