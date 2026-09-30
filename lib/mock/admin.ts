@@ -76,22 +76,32 @@ export const DASHBOARD_METRICS = [
   { key: "products", icon: "products", value: "246", trend: "↑ 14 produk baru", down: false },
 ] as const;
 
-export const CHART_AXIS = ["0", "75 jt", "150 jt"] as const;
+const MONTH_LABELS = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun"];
+const YEAR_LABELS = ["2021", "2022", "2023", "2024", "2025", "2026"];
 
-export const CHART_DATA = {
-  monthly: {
-    points: "0,205 120,166 240,182 360,112 480,130 600,72",
-    area: "M0 205 L120 166 L240 182 L360 112 L480 130 L600 72 L600 240 L0 240 Z",
-    labels: ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun"],
-    dots: [[0, 205], [120, 166], [240, 182], [360, 112], [480, 130], [600, 72]],
-  },
-  yearly: {
-    points: "0,210 120,185 240,150 360,125 480,92 600,50",
-    area: "M0 210 L120 185 L240 150 L360 125 L480 92 L600 50 L600 240 L0 240 Z",
-    labels: ["2021", "2022", "2023", "2024", "2025", "2026"],
-    dots: [[0, 210], [120, 185], [240, 150], [360, 125], [480, 92], [600, 50]],
-  },
-} as const;
+export type ChartPeriod = {
+  values: number[];
+  labels: string[];
+  /** Value at the top of the y axis. */
+  max: number;
+  /** Y axis labels from bottom to top. */
+  axis: string[];
+};
+
+export type ChartSeries = { monthly: ChartPeriod; yearly: ChartPeriod };
+
+// Sales in million rupiah.
+export const SALES_SERIES: ChartSeries = {
+  monthly: { values: [21.9, 46.3, 36.3, 80, 68.8, 105], labels: MONTH_LABELS, max: 150, axis: ["0", "75 jt", "150 jt"] },
+  yearly: { values: [18.8, 34, 56.3, 71.9, 92.5, 118.8], labels: YEAR_LABELS, max: 150, axis: ["0", "75 jt", "150 jt"] },
+};
+
+// Store visits. The last monthly value matches VISIT_STATS.visits; the last yearly value is the 2026 total so far
+// (sum of the six monthly values).
+export const VISIT_SERIES: ChartSeries = {
+  monthly: { values: [9200, 11800, 10400, 14600, 16100, 18420], labels: MONTH_LABELS, max: 20000, axis: ["0", "10 rb", "20 rb"] },
+  yearly: { values: [9000, 21000, 38000, 52000, 66000, 80520], labels: YEAR_LABELS, max: 100000, axis: ["0", "50 rb", "100 rb"] },
+};
 
 export const SHIPPING_SERVICES = [
   { name: "Reguler", note: "Estimasi 2–4 hari", base: "18000", free: "300000" },

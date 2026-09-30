@@ -191,7 +191,7 @@ Ongkir disalin ke order saat checkout. Perubahan tarif berikutnya tidak boleh me
 
 - Ringkasan penjualan, order, pembayaran menunggu verifikasi, dan produk aktif.
 - Statistik penjualan bulanan/tahunan.
-- Analitik kunjungan: total kunjungan dan sebaran tipe perangkat.
+- Analitik kunjungan: total kunjungan, sebaran tipe perangkat, dan grafik statistik pengunjung bulanan/tahunan.
 - Jumlah dilihat per produk (pembukaan detail produk) pada halaman etalase admin, ditampilkan sebagai angka dengan ikon mata.
 - Pembayaran terbaru dan aksi cepat.
 

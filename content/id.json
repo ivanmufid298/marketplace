@@ -237,6 +237,11 @@
         "banner": "Ganti banner",
         "bannerSub": "Beranda toko"
       },
+      "visitChart": {
+        "title": "Statistik pengunjung",
+        "subMonthly": "Januari–Juni 2026",
+        "subYearly": "2021–2026"
+      },
       "visits": {
         "title": "Kunjungan toko",
         "period": "30 hari terakhir",

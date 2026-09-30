@@ -4,9 +4,10 @@ import { VISIT_STATS } from "@/lib/mock/admin";
 import { Icon } from "../../atoms/icon";
 import { DeviceBar } from "../../molecules/device-bar";
 
+/** Summary card next to the visitor chart: total visits and the device split. */
 export function VisitStats() {
   return (
-    <article className="card visit-card">
+    <article className="card">
       <div className="card-head">
         <div>
           <h3>{t("admin.dashboard.visits.title")}</h3>

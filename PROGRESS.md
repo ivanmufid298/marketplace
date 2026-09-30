@@ -33,7 +33,7 @@ Belum ada item yang berstatus Selesai karena backend (Supabase, R2) belum dikerj
 | Widget chat buyer dan menu admin Interactions | UI | Chat storefront dan inbox admin berjalan, tetapi belum terhubung satu sama lain. |
 | Rating/review dan moderasi di admin | UI sebagian | Moderasi di admin ada. Review di detail produk masih placeholder yang sama untuk semua produk, dan buyer belum bisa menulis review. |
 | Statistik bulanan/tahunan | UI | Grafik dan angka masih statis. |
-| Analitik kunjungan dan jumlah dilihat per produk | UI | Kartu "Kunjungan toko" (total kunjungan dan sebaran perangkat) di dashboard dan jumlah dilihat (ikon mata) per produk di etalase admin. Angkanya data contoh. Belum ada pencatatan di storefront, sesi anonim, deteksi tipe perangkat, dan filter bot. |
+| Analitik kunjungan dan jumlah dilihat per produk | UI | Grafik "Statistik pengunjung" (bulanan/tahunan) dan kartu "Kunjungan toko" (total kunjungan dan sebaran perangkat) di dashboard dan jumlah dilihat (ikon mata) per produk di etalase admin. Angkanya data contoh. Belum ada pencatatan di storefront, sesi anonim, deteksi tipe perangkat, dan filter bot. |
 | RLS dan audit log | Belum | |
 
 ## Selesai sejauh ini
@@ -42,7 +42,7 @@ Belum ada item yang berstatus Selesai karena backend (Supabase, R2) belum dikerj
 - Prototype HTML statis dimigrasikan ke Next.js App Router (storefront di `/`, admin di `/admin/*`). Prototype asli disimpan di `prototype/`.
 - Tailwind CSS v4 terpasang dengan token warna. Tampilan masih memakai CSS prototype yang di-scope ke `.store` dan `.admin`.
 - Komponen disusun ulang dengan atomic design (atoms, molecules, organisms, templates). Hasil render HTML diverifikasi identik dengan sebelum refactor.
-- UI analitik kunjungan di dashboard admin dan jumlah dilihat per produk di etalase (data contoh). Aturan pencatatan ditulis di PRD v0.4.
+- UI analitik kunjungan di dashboard admin (grafik statistik pengunjung, total kunjungan, sebaran perangkat) dan jumlah dilihat per produk di etalase (data contoh). Grafik penjualan dan pengunjung memakai komponen `LineChart` yang sama, dihitung dari deret angka. Aturan pencatatan ditulis di PRD v0.4.
 - Seluruh teks UI dipindahkan ke `content/id.json` dan dipanggil lewat `t("key")` dengan key yang diperiksa TypeScript. Data contoh dipisah ke `lib/mock/`.
 
 ## Sedang dan berikutnya
