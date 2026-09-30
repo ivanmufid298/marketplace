@@ -216,6 +216,9 @@ Ongkir disalin ke order saat checkout. Perubahan tarif berikutnya tidak boleh me
 - Cari/filter order dan lihat detail/bukti transfer.
 - Terima/tolak pembayaran dengan catatan.
 - Perbarui fulfillment status dan lihat histori status.
+- Status pengiriman diubah per kelompok pengiriman, satu langkah ke depan sesuai alur pada bagian 12, dan hanya setelah pembayaran berstatus `paid`.
+- Admin dapat membatalkan order dengan catatan wajib selama belum ada kelompok pengiriman yang dikirim. Order yang sudah `paid` masuk ke `refund_pending`, lalu admin menandai `refunded` setelah dana dikembalikan.
+- Status ringkas order (bagian 12) selalu diturunkan dari status pembayaran dan seluruh kelompok pengiriman, tidak diedit langsung.
 
 ### Promo dan voucher
 

@@ -220,6 +220,7 @@
       "dashboard": "Dashboard",
       "sectionSales": "Penjualan",
       "products": "Etalase",
+      "orders": "Pesanan",
       "payments": "Pembayaran",
       "interactions": "Interactions",
       "reviews": "Reviews",
@@ -233,6 +234,7 @@
     "titles": {
       "dashboard": "Dashboard",
       "products": "Etalase Produk",
+      "orders": "Pesanan",
       "payments": "Pembayaran",
       "interactions": "Interactions",
       "reviews": "Reviews",
@@ -327,6 +329,97 @@
       "toastDetail": "Detail pesanan {id}",
       "toastAccepted": "Pembayaran diterima",
       "toastRejected": "Pembayaran ditolak"
+    },
+    "orders": {
+      "title": "Pesanan",
+      "text": "Pantau pesanan dan ubah status pengiriman tiap kelompok barang.",
+      "searchPlaceholder": "Cari nomor order atau pelanggan…",
+      "filterAll": "Semua status",
+      "empty": "Tidak ada pesanan yang cocok.",
+      "orderLabel": "Order #MKP-{number}",
+      "itemCount": "{count} item",
+      "detail": "Detail",
+      "cols": {
+        "order": "Order",
+        "customer": "Pelanggan",
+        "items": "Item",
+        "total": "Total",
+        "payment": "Pembayaran",
+        "status": "Status",
+        "action": "Aksi"
+      },
+      "summary": {
+        "pending_payment": "Menunggu pembayaran",
+        "payment_review": "Menunggu verifikasi",
+        "processing": "Sedang diproses",
+        "partially_shipped": "Sebagian dikirim",
+        "completed": "Selesai",
+        "cancelled": "Dibatalkan"
+      },
+      "payment": {
+        "awaiting_payment": "Menunggu pembayaran",
+        "under_review": "Sedang diverifikasi",
+        "paid": "Lunas",
+        "rejected": "Bukti ditolak",
+        "expired": "Kedaluwarsa",
+        "refund_pending": "Menunggu refund",
+        "refunded": "Sudah direfund"
+      },
+      "fulfillment": {
+        "unfulfilled": "Belum diproses",
+        "processing": "Diproses",
+        "packed": "Dikemas",
+        "shipped": "Dikirim",
+        "delivered": "Diterima",
+        "cancelled": "Dibatalkan",
+        "ordered_abroad": "Dipesan dari luar negeri",
+        "shipped_to_indonesia": "Dikirim ke Indonesia",
+        "arrived_at_warehouse": "Tiba di gudang",
+        "shipped_to_buyer": "Dikirim ke pembeli"
+      },
+      "kind": {
+        "ready": "Ready stock",
+        "po": "Pre-order"
+      },
+      "modal": {
+        "subtitle": "{date} · {buyer}",
+        "customer": "Pelanggan",
+        "address": "Alamat pengiriman",
+        "payment": "Pembayaran",
+        "paymentHint": "Verifikasi bukti transfer dilakukan di menu Pembayaran.",
+        "openPayments": "Buka Pembayaran",
+        "groups": "Pengiriman",
+        "eta": "Estimasi tiba {eta}",
+        "shippingLine": "{method} · ongkir {fee}",
+        "advance": "Ubah ke {status}",
+        "locked": "Pengiriman baru bisa diproses setelah pembayaran lunas.",
+        "finished": "Sudah diterima pembeli",
+        "groupCancelled": "Kelompok ini dibatalkan.",
+        "subtotal": "Subtotal",
+        "shipping": "Ongkos kirim",
+        "total": "Total",
+        "history": "Riwayat status",
+        "historyEmpty": "Belum ada perubahan status.",
+        "historyLine": "{from} → {to}",
+        "historyFirst": "Menjadi {to}",
+        "by": "oleh {actor}",
+        "cancelOrder": "Batalkan pesanan",
+        "cancelBlocked": "Pesanan tidak bisa dibatalkan karena sebagian barang sudah dikirim.",
+        "cancelHeading": "Alasan pembatalan",
+        "cancelPlaceholder": "Tulis alasan pembatalan (wajib)",
+        "cancelConfirm": "Ya, batalkan pesanan",
+        "cancelBack": "Kembali",
+        "cancelledNote": "Alasan pembatalan: {note}",
+        "refundPending": "Dana perlu dikembalikan ke pembeli.",
+        "markRefunded": "Tandai sudah direfund"
+      },
+      "toast": {
+        "advanced": "Status pengiriman diperbarui",
+        "cancelled": "Pesanan dibatalkan",
+        "needNote": "Isi alasan pembatalan dulu",
+        "refunded": "Refund dicatat"
+      },
+      "actor": "Admin"
     },
     "interactions": {
       "title": "Customer interactions",

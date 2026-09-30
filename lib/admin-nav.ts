@@ -23,6 +23,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     section: "admin.nav.sectionSales",
     items: [
       { href: "/admin/products", label: "admin.nav.products", title: "admin.titles.products", icon: "products" },
+      { href: "/admin/orders", label: "admin.nav.orders", title: "admin.titles.orders", icon: "package" },
       { href: "/admin/payments", label: "admin.nav.payments", title: "admin.titles.payments", icon: "payments" },
       { href: "/admin/interactions", label: "admin.nav.interactions", title: "admin.titles.interactions", icon: "chat" },
       { href: "/admin/reviews", label: "admin.nav.reviews", title: "admin.titles.reviews", icon: "reviews" },

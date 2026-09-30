@@ -17,7 +17,7 @@ export function StatusPill({ tone, children }: { tone: PillTone; children: React
   return <span className={`pill ${tone}`}>{children}</span>;
 }
 
-export type StatusTone = "pending" | "success" | "failed";
+export type StatusTone = "pending" | "success" | "failed" | "progress" | "neutral";
 
 /** Coloured status pill used in admin tables. */
 export function StatusBadge({ tone, children }: { tone: StatusTone; children: ReactNode }) {
