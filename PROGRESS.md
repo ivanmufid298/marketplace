@@ -40,6 +40,8 @@ Belum ada item yang berstatus Selesai karena backend (Supabase, R2) belum dikerj
 - Keputusan produk MVP difinalkan di PRD v0.3.
 - Prototype HTML statis dimigrasikan ke Next.js App Router (storefront di `/`, admin di `/admin/*`). Prototype asli disimpan di `prototype/`.
 - Tailwind CSS v4 terpasang dengan token warna. Tampilan masih memakai CSS prototype yang di-scope ke `.store` dan `.admin`.
+- Komponen disusun ulang dengan atomic design (atoms, molecules, organisms, templates). Hasil render HTML diverifikasi identik dengan sebelum refactor.
+- Seluruh teks UI dipindahkan ke `content/id.json` dan dipanggil lewat `t("key")` dengan key yang diperiksa TypeScript. Data contoh dipisah ke `lib/mock/`.
 
 ## Sedang dan berikutnya
 
@@ -56,6 +58,7 @@ Urutan mengikuti dependensi teknis:
 Utang teknis yang sudah diketahui:
 
 - Konversi CSS prototype ke utility Tailwind, komponen demi komponen.
+- Gabungkan `Button` dan `AdminButton` (serta atom lain yang terpisah per konteks) setelah CSS dikonversi ke Tailwind.
 - Nama toko berbeda per produk di data contoh (`shop`) tidak sesuai dengan model single seller.
 - Kategori contoh (Rumah, Elektronik) belum mencerminkan fokus aksesori dan barang bergaya feminin.
 - Project Vercel perlu Framework Preset diubah ke Next.js dan Output Directory dikosongkan.

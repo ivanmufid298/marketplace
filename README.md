@@ -65,13 +65,51 @@ app/
     ├── admin.css
     └── page.tsx, products/, payments/, interactions/, reviews/,
         promos/, vouchers/, content/, shipping/
-components/
-├── store/                # header, hero, produk, cart, checkout, chat, dll.
-└── admin/                # shell, modal, select, switch, provider
-lib/                      # data contoh dan helper format
+components/               # atomic design
+├── atoms/                # Icon, Button, Chip, Switch, Toast, badge, dll.
+├── molecules/            # ProductCard, CartRow, Field, Select, PaymentRow, dll.
+├── organisms/
+│   ├── store/            # Header, Hero, ProductSection, CartDrawer, CheckoutFlow, dll.
+│   └── admin/            # Sidebar, Topbar, SalesChart, AdminModal, InteractionInbox, dll.
+├── templates/            # StoreTemplate, AdminTemplate (kerangka halaman)
+└── providers/            # StoreProvider, AdminProvider (state contoh)
+content/
+└── id.json               # seluruh teks UI (Bahasa Indonesia)
+lib/
+├── i18n.ts               # t("store.cart.title", { ... })
+├── mock/                 # data contoh (pengganti database sementara)
+└── format.ts, admin-nav.ts
 public/assets/            # sprite foto produk demo
 prototype/                # prototype HTML statis asli (referensi visual)
 ```
+
+### Konvensi komponen (atomic design)
+
+| Lapisan | Isi | Aturan |
+|---|---|---|
+| atoms | elemen terkecil: tombol, ikon, badge, switch | Tidak mengimpor teks. Semua teks datang lewat props atau children. |
+| molecules | gabungan atom dengan satu fungsi: kartu produk, baris keranjang, field form | Boleh memakai `t()` untuk teks bawaannya. Tidak membaca state global, aksi datang lewat props. |
+| organisms | bagian halaman yang utuh: header, keranjang, tabel pembayaran | Boleh membaca context (`useStore`, `useAdmin`) dan memakai `t()`. |
+| templates | kerangka halaman dan provider | Menyusun organisms, tanpa logika bisnis. |
+| `app/` | route | Tipis: hanya menyusun organisms dan template. |
+
+Catatan: `Button` dan `AdminButton` dipisah karena CSS lama storefront dan admin memakai nama class berbeda. Keduanya bisa digabung setelah CSS dikonversi ke Tailwind.
+
+### Teks UI (`content/id.json`)
+
+Teks tidak ditulis langsung di komponen. Semua label, placeholder, pesan toast, dan metadata halaman ada di [content/id.json](content/id.json) dan dipanggil lewat key:
+
+```tsx
+import { t } from "@/lib/i18n";
+
+t("store.cart.title");                       // "Keranjang"
+t("store.cart.subtotal", { count: 3 });      // "Subtotal · 3 barang"
+```
+
+- Key diperiksa saat compile: key yang salah akan membuat `tsc` gagal, dan editor memberi autocomplete.
+- Placeholder memakai format `{nama}`.
+- Yang **bukan** teks UI tidak masuk JSON: data produk, review, nomor rekening, dan kampanye. Itu data bisnis yang nanti berasal dari database, sekarang ada di `lib/mock/`. Nomor rekening tidak boleh disimpan di source code (PRD bagian 9).
+- Untuk menambah bahasa (mis. Inggris), buat `content/en.json` dengan struktur yang sama lalu pilih berdasarkan locale. Saat itu pertimbangkan `next-intl`.
 
 ### Catatan styling
 
@@ -79,7 +117,7 @@ Tailwind CSS v4 sudah terpasang dan token warna tersedia lewat `@theme` di `app/
 
 ### State contoh
 
-Keranjang, wishlist, checkout, chat, pembayaran, interactions, dan review disimpan di React context (`StoreProvider` dan `AdminProvider`). Saat backend tersedia, ganti context ini dengan data dari Supabase melalui Server Component, Route Handler, atau Server Action.
+Keranjang, wishlist, checkout, chat, pembayaran, interactions, dan review disimpan di React context (`StoreProvider` dan `AdminProvider` di `components/providers/`). Saat backend tersedia, ganti context ini dengan data dari Supabase melalui Server Component, Route Handler, atau Server Action.
 
 ## Target implementasi
 

@@ -1,0 +1,452 @@
+{
+  "common": {
+    "brand": "BRAND NAME",
+    "close": "Tutup",
+    "back": "Kembali",
+    "cancel": "Batal",
+    "save": "Simpan",
+    "send": "Kirim",
+    "settingsUpdated": "Pengaturan diperbarui"
+  },
+  "store": {
+    "meta": {
+      "title": "Marketplace — Temukan favorit barumu",
+      "description": "Toko online barang jastip dan impor dengan palet pink dan ivory."
+    },
+    "header": {
+      "notice": "Gratis ongkir untuk pesanan pertama · Minimal belanja Rp150.000",
+      "searchLabel": "Cari produk",
+      "searchPlaceholder": "Cari produk, kategori, atau toko…",
+      "account": "Akun",
+      "openCart": "Buka keranjang"
+    },
+    "hero": {
+      "eyebrow": "Pilihan minggu ini",
+      "titleLine1": "Hal baik,",
+      "titleLine2": "pilihan cantik.",
+      "text": "Temukan barang pilihan untuk keseharianmu, dikurasi dari toko lokal dengan rasa yang istimewa.",
+      "cta": "Jelajahi koleksi",
+      "badge": "Mulai dari Rp89.000",
+      "imageAlt": "Tas kanvas warna ivory"
+    },
+    "categories": {
+      "navLabel": "Kategori",
+      "all": "Semua"
+    },
+    "hotPromo": {
+      "kicker": "Penawaran terbatas",
+      "title": "Hot Promo",
+      "subtitle": "Harga spesial sebelum kehabisan.",
+      "remaining": "{promo} · Sisa {stock}"
+    },
+    "products": {
+      "title": "Pilihan untukmu",
+      "subtitle": "Produk menarik yang siap jadi favorit baru.",
+      "empty": "Produk yang kamu cari belum ditemukan.",
+      "lowStock": "🔥 Tinggal {stock}",
+      "save": "Simpan {name}",
+      "rating": "★ {rating}",
+      "sort": {
+        "popular": "Terpopuler",
+        "low": "Harga terendah",
+        "high": "Harga tertinggi"
+      }
+    },
+    "cart": {
+      "title": "Keranjang",
+      "emptyLine1": "Keranjangmu masih kosong.",
+      "emptyLine2": "Pilih sesuatu yang kamu suka.",
+      "subtotal": "Subtotal · {count} barang",
+      "total": "Total sementara",
+      "checkout": "Lanjut checkout",
+      "decrease": "Kurangi {name}",
+      "increase": "Tambah {name}",
+      "remove": "Hapus {name}"
+    },
+    "detail": {
+      "stockLow": "🔥 Stok terbatas · tinggal {stock}",
+      "stockOk": "Stok tersedia · {stock}",
+      "reviewsTitle": "Ulasan pembeli",
+      "verified": "✓ Pembelian terverifikasi",
+      "reviewCount": "{count} ulasan",
+      "wishlistAdd": "Simpan ke wishlist",
+      "wishlistRemove": "Hapus dari wishlist",
+      "addToCart": "Tambah ke keranjang"
+    },
+    "checkout": {
+      "title": "Checkout",
+      "steps": {
+        "address": "Alamat",
+        "shipping": "Pengiriman",
+        "payment": "Pembayaran"
+      },
+      "address": {
+        "title": "Alamat pengiriman",
+        "note": "Pastikan pesanan sampai ke tangan yang tepat.",
+        "fullName": "Nama lengkap",
+        "fullNamePlaceholder": "Nama penerima",
+        "phone": "Nomor WhatsApp",
+        "phonePlaceholder": "08xxxxxxxxxx",
+        "address": "Alamat lengkap",
+        "addressPlaceholder": "Nama jalan, nomor rumah, RT/RW",
+        "city": "Kota / Kabupaten",
+        "cityPlaceholder": "Contoh: Jakarta Selatan",
+        "postcode": "Kode pos",
+        "postcodePlaceholder": "12345",
+        "courierNote": "Catatan untuk kurir",
+        "optional": "(opsional)",
+        "courierNotePlaceholder": "Contoh: Titip ke satpam",
+        "next": "Pilih pengiriman"
+      },
+      "shipping": {
+        "title": "Pilih pengiriman",
+        "note": "Estimasi dihitung untuk alamat yang kamu isi.",
+        "next": "Lanjut bayar"
+      },
+      "payment": {
+        "title": "Transfer pembayaran",
+        "note": "Tidak ada biaya payment gateway. Transfer sesuai total, lalu unggah bukti pembayaran.",
+        "copyAccount": "Salin nomor rekening",
+        "uploadTitle": "Unggah bukti transfer",
+        "uploadHint": "JPG, PNG, atau PDF · Maksimal 5 MB",
+        "placeOrder": "Buat pesanan"
+      },
+      "summary": {
+        "subtotal": "Subtotal",
+        "shipping": "Ongkos kirim",
+        "total": "Total pembayaran"
+      },
+      "success": {
+        "title": "Pesanan berhasil dibuat",
+        "note": "Bukti pembayaran sudah diterima dan akan diverifikasi admin.",
+        "orderLabel": "Order #MKP-{number}",
+        "status": "Status",
+        "statusValue": "Menunggu verifikasi",
+        "eta": "Estimasi verifikasi",
+        "etaValue": "1×24 jam",
+        "backToShop": "Kembali belanja"
+      }
+    },
+    "categorySheet": {
+      "title": "Pilih kategori",
+      "all": "Semua produk"
+    },
+    "mobileNav": {
+      "label": "Navigasi utama",
+      "home": "Home",
+      "category": "Kategori",
+      "wishlist": "Wishlist",
+      "cart": "Keranjang"
+    },
+    "chat": {
+      "open": "Chat dengan admin",
+      "label": "Chat admin",
+      "title": "Chat Admin",
+      "subtitle": "Biasanya membalas dalam beberapa menit",
+      "close": "Tutup chat",
+      "placeholder": "Tulis pesan…",
+      "welcome": "Halo! Ada yang bisa kami bantu?",
+      "metaAdmin": "Admin · sekarang",
+      "metaUser": "Kamu · sekarang",
+      "metaSystem": "Sistem · sekarang",
+      "autoReply": "Pesanmu sudah masuk dengan nomor {id}. Admin akan segera membalas ya."
+    },
+    "footer": {
+      "text": "Draft marketplace · Belanja nyaman, pilihan menyenangkan."
+    },
+    "toast": {
+      "wishlistAdded": "Disimpan ke wishlist",
+      "wishlistRemoved": "Dihapus dari wishlist",
+      "wishlistEmpty": "Wishlist kamu masih kosong",
+      "cartAdded": "Produk ditambahkan ke keranjang",
+      "stockMax": "Jumlah sudah mencapai stok tersedia",
+      "fillAddress": "Lengkapi alamat pengiriman dulu",
+      "fileTooBig": "Ukuran file maksimal 5 MB",
+      "needProof": "Unggah bukti transfer dulu",
+      "accountCopied": "Nomor rekening disalin",
+      "thanks": "Terima kasih sudah berbelanja"
+    }
+  },
+  "admin": {
+    "meta": {
+      "title": "Admin Marketplace",
+      "description": "Dashboard admin untuk mengelola etalase, promo, pembayaran, pengiriman, banner, dan campaign."
+    },
+    "shell": {
+      "panel": "ADMIN PANEL",
+      "viewStore": "Lihat marketplace",
+      "subtitle": "Ringkasan performa marketplace hari ini",
+      "notifications": "Notifikasi",
+      "profileName": "Admin",
+      "profileRole": "Super admin",
+      "openMenu": "Buka menu",
+      "fallbackTitle": "Admin"
+    },
+    "nav": {
+      "dashboard": "Dashboard",
+      "sectionSales": "Penjualan",
+      "products": "Etalase",
+      "payments": "Pembayaran",
+      "interactions": "Interactions",
+      "reviews": "Reviews",
+      "sectionMarketing": "Marketing",
+      "promos": "Promo",
+      "vouchers": "Voucher",
+      "content": "Banner & Popup",
+      "sectionSettings": "Pengaturan",
+      "shipping": "Ongkir"
+    },
+    "titles": {
+      "dashboard": "Dashboard",
+      "products": "Etalase Produk",
+      "payments": "Pembayaran",
+      "interactions": "Interactions",
+      "reviews": "Reviews",
+      "promos": "Promo & Scheduler",
+      "vouchers": "Voucher",
+      "content": "Banner & Popup",
+      "shipping": "Pengaturan Ongkir"
+    },
+    "status": {
+      "pending": "Menunggu",
+      "success": "Diterima",
+      "failed": "Ditolak"
+    },
+    "dashboard": {
+      "metrics": {
+        "sales": "Total penjualan",
+        "orders": "Pesanan",
+        "pending": "Menunggu verifikasi",
+        "products": "Produk aktif"
+      },
+      "chart": {
+        "title": "Statistik penjualan",
+        "monthly": "Bulanan",
+        "yearly": "Tahunan",
+        "subMonthly": "Januari–Juni 2026",
+        "subYearly": "2021–2026"
+      },
+      "quick": {
+        "title": "Aksi cepat",
+        "product": "Tambah produk",
+        "productSub": "Ke etalase",
+        "promo": "Buat promo",
+        "promoSub": "Dengan jadwal",
+        "voucher": "Buat voucher",
+        "voucherSub": "Kode diskon",
+        "banner": "Ganti banner",
+        "bannerSub": "Beranda toko"
+      },
+      "recentPayments": "Pembayaran terbaru",
+      "viewAll": "Lihat semua"
+    },
+    "table": {
+      "order": "Order",
+      "customer": "Pelanggan",
+      "total": "Total",
+      "time": "Waktu",
+      "transfer": "Transfer",
+      "proof": "Bukti",
+      "status": "Status",
+      "action": "Aksi"
+    },
+    "products": {
+      "title": "Etalase produk",
+      "text": "Atur produk, stok, harga, dan status tampil.",
+      "add": "＋ Tambah produk",
+      "searchPlaceholder": "Cari produk…",
+      "allCategories": "Semua kategori",
+      "stock": "Stok {stock}",
+      "edit": "Edit",
+      "active": "Aktif",
+      "toastEdit": "Mode edit produk dibuka",
+      "toastStatus": "Status produk diubah"
+    },
+    "payments": {
+      "title": "Verifikasi pembayaran",
+      "text": "Tinjau bukti transfer dan perbarui status pesanan.",
+      "filterAll": "Semua status",
+      "manualTransfer": "Transfer manual",
+      "viewProof": "Lihat bukti",
+      "accept": "Terima",
+      "reject": "Tolak",
+      "detail": "Detail",
+      "toastProof": "Preview bukti transfer dibuka",
+      "toastDetail": "Detail pesanan {id}",
+      "toastAccepted": "Pembayaran diterima",
+      "toastRejected": "Pembayaran ditolak"
+    },
+    "interactions": {
+      "title": "Customer interactions",
+      "text": "Setiap percakapan masuk dicatat sebagai interaction terpisah.",
+      "filterAll": "Semua interaction",
+      "filterOpen": "Belum ditangani",
+      "filterHandled": "Selesai",
+      "search": "Cari interaction…",
+      "backToList": "Kembali ke daftar chat",
+      "statusOpen": "Belum ditangani",
+      "statusHandled": "Selesai",
+      "markHandled": "Tandai selesai",
+      "reopen": "Buka kembali",
+      "replyPlaceholder": "Balas pesan customer…",
+      "senderAdmin": "Admin",
+      "senderCustomer": "Customer",
+      "now": "sekarang",
+      "toastHandled": "Interaction diselesaikan",
+      "toastReopened": "Interaction dibuka kembali"
+    },
+    "reviews": {
+      "title": "Product reviews",
+      "text": "Sortir rating dan kelola ulasan yang tampil pada halaman produk.",
+      "ratingAll": "Semua rating",
+      "ratingOption": "{n} bintang",
+      "statusAll": "Semua status",
+      "visible": "Ditampilkan",
+      "hidden": "Disembunyikan",
+      "averageRating": "Rating rata-rata",
+      "averageNote": "Dari {count} ulasan",
+      "pendingModeration": "Menunggu moderasi",
+      "pendingNote": "Perlu ditinjau",
+      "buyer": "Buyer",
+      "product": "Produk",
+      "rating": "Rating",
+      "review": "Ulasan",
+      "verifiedBuyer": "Verified buyer",
+      "hide": "Sembunyikan",
+      "show": "Tampilkan",
+      "toastShown": "Ulasan ditampilkan",
+      "toastHidden": "Ulasan disembunyikan"
+    },
+    "promos": {
+      "title": "Promo & scheduler",
+      "text": "Buat promo langsung atau jadwalkan waktu tayangnya.",
+      "add": "＋ Tambah promo",
+      "toggle": "Aktifkan promo",
+      "on": "Aktif",
+      "off": "Nonaktif"
+    },
+    "vouchers": {
+      "title": "Voucher",
+      "text": "Kelola kode promo dan batas pemakaiannya.",
+      "add": "＋ Tambah voucher",
+      "active": "Aktif"
+    },
+    "content": {
+      "title": "Banner & popup",
+      "text": "Atur materi promosi yang tampil di halaman marketplace.",
+      "addPopup": "＋ Popup",
+      "addBanner": "＋ Banner",
+      "edit": "Edit",
+      "bannerKicker": "HERO BANNER",
+      "popupKicker": "POPUP CAMPAIGN"
+    },
+    "shipping": {
+      "title": "Pengaturan ongkir",
+      "text": "Atur layanan, estimasi, dan tarif dasar pengiriman.",
+      "add": "＋ Tambah layanan",
+      "baseRate": "Tarif dasar",
+      "freeMin": "Gratis ongkir min.",
+      "toggle": "Aktifkan {name}"
+    },
+    "modal": {
+      "saved": "Data berhasil disimpan",
+      "fallbackTitle": "Tambah",
+      "titles": {
+        "product": "Tambah produk",
+        "promo": "Tambah promo",
+        "voucher": "Tambah voucher",
+        "banner": "Kelola banner",
+        "popup": "Kelola popup campaign",
+        "shipping": "Tambah layanan ongkir"
+      },
+      "scheduler": {
+        "title": "Gunakan scheduler",
+        "hint": "Tayang otomatis sesuai jadwal",
+        "start": "Mulai",
+        "end": "Berakhir"
+      },
+      "options": {
+        "percentage": "Persentase",
+        "nominal": "Nominal",
+        "freeShipping": "Gratis ongkir",
+        "allProducts": "Semua produk",
+        "someCategories": "Kategori tertentu",
+        "someProducts": "Produk tertentu",
+        "statusActive": "Aktif",
+        "statusDraft": "Draft",
+        "triggerOpen": "Page dibuka",
+        "triggerDelay": "Setelah 5 detik",
+        "triggerExit": "Saat akan keluar",
+        "oncePerSession": "Satu kali per sesi",
+        "oncePerDay": "Satu kali per hari",
+        "always": "Selalu",
+        "allPages": "Semua halaman",
+        "homeOnly": "Homepage saja",
+        "productPages": "Halaman produk"
+      },
+      "product": {
+        "name": "Nama produk",
+        "namePlaceholder": "Contoh: Tote Canvas Everyday",
+        "category": "Kategori",
+        "price": "Harga",
+        "pricePlaceholder": "129000",
+        "stock": "Stok",
+        "stockPlaceholder": "20",
+        "status": "Status",
+        "description": "Deskripsi",
+        "descriptionPlaceholder": "Deskripsi singkat produk"
+      },
+      "promo": {
+        "name": "Nama promo",
+        "namePlaceholder": "Contoh: Weekend Sale",
+        "type": "Tipe diskon",
+        "value": "Nilai diskon",
+        "valuePlaceholder": "15%",
+        "appliesTo": "Berlaku untuk"
+      },
+      "voucher": {
+        "code": "Kode voucher",
+        "codePlaceholder": "HEMAT25",
+        "kind": "Jenis potongan",
+        "value": "Nilai",
+        "valuePlaceholder": "25%",
+        "minSpend": "Minimal belanja",
+        "minSpendPlaceholder": "200000",
+        "quota": "Kuota penggunaan",
+        "quotaPlaceholder": "500"
+      },
+      "banner": {
+        "title": "Judul banner",
+        "titlePlaceholder": "Hal baik, pilihan cantik.",
+        "subtitle": "Subjudul",
+        "subtitlePlaceholder": "Teks pendukung banner",
+        "image": "Upload gambar",
+        "ctaText": "Teks tombol",
+        "ctaTextPlaceholder": "Jelajahi koleksi",
+        "ctaTarget": "Tujuan tombol",
+        "ctaTargetPlaceholder": "/kategori/fashion"
+      },
+      "popup": {
+        "name": "Nama campaign",
+        "namePlaceholder": "Payday Poster",
+        "poster": "Upload poster",
+        "trigger": "Muncul saat",
+        "frequency": "Frekuensi",
+        "target": "Halaman tujuan"
+      },
+      "shipping": {
+        "name": "Nama layanan",
+        "namePlaceholder": "Contoh: Instant",
+        "baseRate": "Tarif dasar",
+        "baseRatePlaceholder": "25000",
+        "eta": "Estimasi",
+        "etaPlaceholder": "1–3 jam",
+        "freeMin": "Gratis ongkir minimal belanja",
+        "freeMinPlaceholder": "500000"
+      }
+    },
+    "ui": {
+      "selectPlaceholder": "Pilih opsi"
+    }
+  }
+}

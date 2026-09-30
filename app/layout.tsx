@@ -1,10 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
+import { t } from "@/lib/i18n";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Marketplace — Temukan favorit barumu",
-  description: "Toko online barang jastip dan impor dengan palet pink dan ivory.",
+  title: t("store.meta.title"),
+  description: t("store.meta.description"),
 };
 
 export const viewport: Viewport = {
