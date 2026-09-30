@@ -10,7 +10,7 @@
 .admin .interaction-item .sub,.admin .interaction-preview{display:block}
 .admin .visit-card{margin-top:18px}
 .admin .visit-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:32px;align-items:center}
-.admin .visit-numbers{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.admin .visit-numbers{display:grid;gap:16px}
 .admin .visit-label{display:flex;align-items:center;gap:7px;color:var(--muted);font-size:13px}
 .admin .visit-label svg{width:16px;color:var(--wine)}
 .admin .visit-numbers strong{display:block;font-size:28px;margin:8px 0 4px}

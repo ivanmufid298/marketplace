@@ -20,10 +20,6 @@ export function VisitStats() {
             <strong>{formatNumber(VISIT_STATS.visits)}</strong>
             <span className="trend">{VISIT_STATS.trend}</span>
           </div>
-          <div>
-            <span className="visit-label"><Icon name="users" />{t("admin.dashboard.visits.unique")}</span>
-            <strong>{formatNumber(VISIT_STATS.unique)}</strong>
-          </div>
         </div>
         <div className="visit-devices">
           <b>{t("admin.dashboard.visits.devicesTitle")}</b>

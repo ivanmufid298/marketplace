@@ -19,8 +19,7 @@ export function AdminProductCard({ product: p, onEdit, onToggleStatus }: AdminPr
         <span className="sub">{p.cat}</span>
         <div className="product-meta"><b>Rp{p.price}</b><span>{t("admin.products.stock", { stock: p.stock })}</span></div>
         <div className="product-stats">
-          <span><Icon name="pointer" />{t("admin.products.clicks", { count: formatNumber(p.clicks) })}</span>
-          <span>{t("admin.products.mobileShare", { pct: p.mobileShare })}</span>
+          <span><Icon name="eye" />{t("admin.products.views", { count: formatNumber(p.views) })}</span>
         </div>
         <div className="product-actions">
           <AdminButton small onClick={onEdit}>{t("admin.products.edit")}</AdminButton>

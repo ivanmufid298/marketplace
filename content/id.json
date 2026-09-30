@@ -241,7 +241,6 @@
         "title": "Kunjungan toko",
         "period": "30 hari terakhir",
         "total": "Total kunjungan",
-        "unique": "Pengunjung unik",
         "devicesTitle": "Perangkat pengunjung",
         "note": "Dihitung per sesi anonim. Bot tidak ikut dihitung dan hanya tipe perangkat yang disimpan.",
         "device": {
@@ -270,8 +269,7 @@
       "searchPlaceholder": "Cari produk…",
       "allCategories": "Semua kategori",
       "stock": "Stok {stock}",
-      "clicks": "{count} klik",
-      "mobileShare": "{pct}% dari mobile",
+      "views": "{count} dilihat",
       "edit": "Edit",
       "active": "Aktif",
       "toastEdit": "Mode edit produk dibuka",

@@ -191,16 +191,16 @@ Ongkir disalin ke order saat checkout. Perubahan tarif berikutnya tidak boleh me
 
 - Ringkasan penjualan, order, pembayaran menunggu verifikasi, dan produk aktif.
 - Statistik penjualan bulanan/tahunan.
-- Analitik kunjungan: total kunjungan, pengunjung unik, dan sebaran tipe perangkat.
-- Jumlah klik per produk (pembukaan detail produk) pada halaman etalase admin, dengan persentase dari mobile.
+- Analitik kunjungan: total kunjungan dan sebaran tipe perangkat.
+- Jumlah dilihat per produk (pembukaan detail produk) pada halaman etalase admin, ditampilkan sebagai angka dengan ikon mata.
 - Pembayaran terbaru dan aksi cepat.
 
 ### Aturan analitik kunjungan
 
-- Satu kunjungan dihitung per sesi anonim (cookie sesi), bukan per muat ulang halaman. Pengunjung unik dihitung dari sesi berbeda pada periode yang sama.
+- Satu kunjungan dihitung per sesi anonim (cookie sesi), bukan per muat ulang halaman.
 - Hanya **tipe perangkat** (`mobile`, `desktop`, `tablet`) yang disimpan, diturunkan dari User-Agent atau Client Hints di server. User-Agent mentah, alamat IP, dan fingerprint perangkat tidak disimpan.
 - Trafik bot dan crawler dikeluarkan dari hitungan berdasarkan User-Agent.
-- Klik produk dihitung saat buyer membuka detail produk, satu kali per sesi per produk dalam jendela waktu singkat agar tidak terinflasi oleh klik berulang.
+- Produk dihitung "dilihat" saat buyer membuka detail produk, satu kali per sesi per produk dalam jendela waktu singkat agar tidak terinflasi oleh pembukaan berulang. Sebaran perangkat hanya ditampilkan untuk kunjungan toko, tidak per produk.
 - Halaman `/admin` tidak ikut dihitung sebagai kunjungan.
 - Data bersifat agregat untuk admin dan tidak terhubung ke identitas buyer.
 
@@ -357,7 +357,7 @@ Order menyimpan snapshot subtotal, diskon, ongkir, dan total. Perubahan harga at
 - `InteractionMessage`: interaction, sender type, sender reference, message body, sent/read time.
 - `ProductReview`: order item, product, buyer, rating, review body, moderation status, timestamps.
 - `SiteVisit`: session reference anonim, tipe perangkat, path, waktu.
-- `ProductClick`: product, session reference anonim, tipe perangkat, waktu.
+- `ProductView`: product, session reference anonim, waktu.
 - `AdminAuditLog`.
 
 ## 15. Scheduler
@@ -405,7 +405,7 @@ Order menyimpan snapshot subtotal, diskon, ongkir, dan total. Perubahan harga at
 - [ ] Widget chat buyer dan menu admin Interactions.
 - [ ] Rating/review pada detail produk dan moderasi review di admin.
 - [ ] Statistik bulanan/tahunan.
-- [ ] Analitik kunjungan dan klik produk dengan sebaran tipe perangkat.
+- [ ] Analitik kunjungan (dengan sebaran tipe perangkat) dan jumlah dilihat per produk.
 - [ ] RLS dan audit log.
 
 ### Fase berikutnya
