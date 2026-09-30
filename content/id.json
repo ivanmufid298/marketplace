@@ -237,6 +237,19 @@
         "banner": "Ganti banner",
         "bannerSub": "Beranda toko"
       },
+      "visits": {
+        "title": "Kunjungan toko",
+        "period": "30 hari terakhir",
+        "total": "Total kunjungan",
+        "unique": "Pengunjung unik",
+        "devicesTitle": "Perangkat pengunjung",
+        "note": "Dihitung per sesi anonim. Bot tidak ikut dihitung dan hanya tipe perangkat yang disimpan.",
+        "device": {
+          "mobile": "Mobile",
+          "desktop": "Desktop",
+          "tablet": "Tablet"
+        }
+      },
       "recentPayments": "Pembayaran terbaru",
       "viewAll": "Lihat semua"
     },
@@ -257,6 +270,8 @@
       "searchPlaceholder": "Cari produk…",
       "allCategories": "Semua kategori",
       "stock": "Stok {stock}",
+      "clicks": "{count} klik",
+      "mobileShare": "{pct}% dari mobile",
       "edit": "Edit",
       "active": "Aktif",
       "toastEdit": "Mode edit produk dibuka",

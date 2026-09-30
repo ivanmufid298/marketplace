@@ -1,5 +1,7 @@
 export const money = (n: number) => "Rp" + n.toLocaleString("id-ID");
 
+export const formatNumber = (n: number) => n.toLocaleString("id-ID");
+
 const SPRITE_POSITIONS = [
   "0 0",
   "50% 0",

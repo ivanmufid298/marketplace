@@ -4,7 +4,7 @@ import { useState } from "react";
 import { t } from "@/lib/i18n";
 import { adminProducts, PRODUCT_CATEGORIES } from "@/lib/mock/admin";
 import { AdminButton } from "../../atoms/admin-button";
-import { Icon } from "../../atoms/icon";
+import { AdminProductCard } from "../../molecules/admin-product-card";
 import { SearchField } from "../../molecules/search-field";
 import { SectionTop } from "../../molecules/section-top";
 import { Select } from "../../molecules/select";
@@ -30,18 +30,12 @@ export function ProductCatalog() {
       </div>
       <div className="product-grid" style={{ marginTop: 18 }}>
         {list.map((p) => (
-          <article className="product" key={p.name}>
-            <div className="product-visual"><Icon name="products" strokeWidth={1.5} /></div>
-            <div className="product-body">
-              <h3>{p.name}</h3>
-              <span className="sub">{p.cat}</span>
-              <div className="product-meta"><b>Rp{p.price}</b><span>{t("admin.products.stock", { stock: p.stock })}</span></div>
-              <div className="product-actions">
-                <AdminButton small onClick={() => showToast(t("admin.products.toastEdit"))}>{t("admin.products.edit")}</AdminButton>
-                <AdminButton variant="soft" small onClick={() => showToast(t("admin.products.toastStatus"))}>{t("admin.products.active")}</AdminButton>
-              </div>
-            </div>
-          </article>
+          <AdminProductCard
+            key={p.name}
+            product={p}
+            onEdit={() => showToast(t("admin.products.toastEdit"))}
+            onToggleStatus={() => showToast(t("admin.products.toastStatus"))}
+          />
         ))}
       </div>
     </section>

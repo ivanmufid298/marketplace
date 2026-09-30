@@ -44,14 +44,29 @@ export const initialReviews: Review[] = [
 
 export const REVIEW_STATS = { average: "4.8 ★", count: 382, pending: 7 };
 
+// `clicks` counts opens of the product detail; `mobileShare` is the percentage of those clicks from phones.
 export const adminProducts = [
-  { name: "Mug Blush Daily", cat: "Rumah", price: "89.000", stock: "24" },
-  { name: "Tote Canvas Everyday", cat: "Fashion", price: "129.000", stock: "18" },
-  { name: "Headphone Merlot", cat: "Elektronik", price: "649.000", stock: "9" },
-  { name: "Lampu Meja Lumi", cat: "Rumah", price: "329.000", stock: "12" },
-  { name: "Sneakers Rosé", cat: "Fashion", price: "459.000", stock: "16" },
-  { name: "Dewy Skin Set", cat: "Kecantikan", price: "279.000", stock: "21" },
+  { name: "Mug Blush Daily", cat: "Rumah", price: "89.000", stock: "24", clicks: 1284, mobileShare: 72 },
+  { name: "Tote Canvas Everyday", cat: "Fashion", price: "129.000", stock: "18", clicks: 2046, mobileShare: 78 },
+  { name: "Headphone Merlot", cat: "Elektronik", price: "649.000", stock: "9", clicks: 893, mobileShare: 54 },
+  { name: "Lampu Meja Lumi", cat: "Rumah", price: "329.000", stock: "12", clicks: 467, mobileShare: 49 },
+  { name: "Sneakers Rosé", cat: "Fashion", price: "459.000", stock: "16", clicks: 1710, mobileShare: 81 },
+  { name: "Dewy Skin Set", cat: "Kecantikan", price: "279.000", stock: "21", clicks: 1352, mobileShare: 76 },
 ];
+
+export type DeviceType = "mobile" | "desktop" | "tablet";
+
+// Visits are counted per anonymous session; bots are excluded and only the coarse device type is kept.
+export const VISIT_STATS = {
+  visits: 18420,
+  unique: 7315,
+  trend: "↑ 9,4% dari periode lalu",
+  devices: [
+    { type: "mobile", pct: 68 },
+    { type: "desktop", pct: 27 },
+    { type: "tablet", pct: 5 },
+  ] satisfies { type: DeviceType; pct: number }[],
+};
 
 export const PRODUCT_CATEGORIES = ["Rumah", "Fashion", "Elektronik", "Kecantikan"];
 

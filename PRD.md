@@ -1,8 +1,8 @@
 # PRD — Toko Online Jastip & Barang Impor
 
 **Status:** Draft untuk diskusi  
-**Versi:** 0.3  
-**Pembaruan:** 29 September 2026
+**Versi:** 0.4  
+**Pembaruan:** 30 September 2026
 
 ## 1. Ringkasan Produk
 
@@ -191,7 +191,18 @@ Ongkir disalin ke order saat checkout. Perubahan tarif berikutnya tidak boleh me
 
 - Ringkasan penjualan, order, pembayaran menunggu verifikasi, dan produk aktif.
 - Statistik penjualan bulanan/tahunan.
+- Analitik kunjungan: total kunjungan, pengunjung unik, dan sebaran tipe perangkat.
+- Jumlah klik per produk (pembukaan detail produk) pada halaman etalase admin, dengan persentase dari mobile.
 - Pembayaran terbaru dan aksi cepat.
+
+### Aturan analitik kunjungan
+
+- Satu kunjungan dihitung per sesi anonim (cookie sesi), bukan per muat ulang halaman. Pengunjung unik dihitung dari sesi berbeda pada periode yang sama.
+- Hanya **tipe perangkat** (`mobile`, `desktop`, `tablet`) yang disimpan, diturunkan dari User-Agent atau Client Hints di server. User-Agent mentah, alamat IP, dan fingerprint perangkat tidak disimpan.
+- Trafik bot dan crawler dikeluarkan dari hitungan berdasarkan User-Agent.
+- Klik produk dihitung saat buyer membuka detail produk, satu kali per sesi per produk dalam jendela waktu singkat agar tidak terinflasi oleh klik berulang.
+- Halaman `/admin` tidak ikut dihitung sebagai kunjungan.
+- Data bersifat agregat untuk admin dan tidak terhubung ke identitas buyer.
 
 ### Produk dan PO
 
@@ -345,6 +356,8 @@ Order menyimpan snapshot subtotal, diskon, ongkir, dan total. Perubahan harga at
 - `Interaction`: buyer/session reference, channel, status, assignee, first/last message time, metadata.
 - `InteractionMessage`: interaction, sender type, sender reference, message body, sent/read time.
 - `ProductReview`: order item, product, buyer, rating, review body, moderation status, timestamps.
+- `SiteVisit`: session reference anonim, tipe perangkat, path, waktu.
+- `ProductClick`: product, session reference anonim, tipe perangkat, waktu.
 - `AdminAuditLog`.
 
 ## 15. Scheduler
@@ -392,6 +405,7 @@ Order menyimpan snapshot subtotal, diskon, ongkir, dan total. Perubahan harga at
 - [ ] Widget chat buyer dan menu admin Interactions.
 - [ ] Rating/review pada detail produk dan moderasi review di admin.
 - [ ] Statistik bulanan/tahunan.
+- [ ] Analitik kunjungan dan klik produk dengan sebaran tipe perangkat.
 - [ ] RLS dan audit log.
 
 ### Fase berikutnya
