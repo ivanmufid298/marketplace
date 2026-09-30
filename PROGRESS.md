@@ -27,17 +27,19 @@ Belum ada item yang berstatus Selesai karena backend (Supabase, R2) belum dikerj
 | Reservasi stok/kuota dan order expiry | Belum | Aturan 2 jam dan batas upload ulang 2 jam belum diimplementasikan. |
 | Transfer manual dan upload bukti | UI | Simulasi saja: cek ukuran 5 MB, file tidak tersimpan, MIME type belum divalidasi. |
 | Pembatalan order | Belum | |
-| Histori dan tracking order buyer | Belum | Belum ada halaman `/orders`. |
+| Histori dan tracking order buyer | UI sebagian | Menu "Pesanan saya" (ikon paket di header dan tab "Pesanan" di navigasi bawah mobile) membuka panel berisi daftar pesanan dengan status ringkas. Datanya contoh. Belum ada halaman `/orders` dan `/orders/[orderNumber]`, rincian status per kelompok pengiriman, dan tombol batalkan. |
 | Admin: produk, varian, PO, order, pembayaran, zona ongkir | UI sebagian | Produk, pembayaran (terima/tolak), dan ongkir ada. Belum ada halaman order, batch PO, dan varian. Tolak pembayaran belum meminta alasan. |
 | Promo, voucher, banner, popup, scheduler dasar | UI sebagian | Layar admin dan form scheduler ada, tetapi form belum menyimpan. Storefront belum menampilkan banner, popup, atau input voucher. |
 | Widget chat buyer dan menu admin Interactions | UI | Chat storefront dan inbox admin berjalan, tetapi belum terhubung satu sama lain. |
-| Rating/review dan moderasi di admin | UI sebagian | Moderasi di admin ada. Review di detail produk masih placeholder yang sama untuk semua produk, dan buyer belum bisa menulis review. |
+| Rating/review dan moderasi di admin | UI sebagian | Moderasi di admin ada. Buyer bisa menulis dan mengubah ulasan (rating 1–5 dan teks) dari menu "Pesanan saya", hanya untuk item di pesanan berstatus "Sudah diterima". Ulasan baru tersimpan di memori browser dan belum muncul di admin maupun detail produk, yang masih placeholder yang sama untuk semua produk. |
 | Statistik bulanan/tahunan | UI | Grafik dan angka masih statis. |
 | Analitik kunjungan dan jumlah dilihat per produk | UI | Grafik "Statistik pengunjung" (bulanan/tahunan) dan kartu "Kunjungan toko" (total kunjungan dan sebaran perangkat) di dashboard dan jumlah dilihat (ikon mata) per produk di etalase admin. Angkanya data contoh. Belum ada pencatatan di storefront, sesi anonim, deteksi tipe perangkat, dan filter bot. |
 | RLS dan audit log | Belum | |
 
 ## Selesai sejauh ini
 
+- Menu "Pesanan saya" di storefront (header desktop dan navigasi bawah mobile) dengan form ulasan untuk pesanan yang sudah diterima. Tab navigasi bawah kini menyala berdasarkan panel yang terbuka, tidak lagi "menempel" setelah panel ditutup.
+- Ikon chat diganti ke bentuk bubble standar (storefront dan menu Interactions di admin). Tombol "Tandai selesai" di inbox admin versi mobile kini memakai ikon ceklis saat thread terbuka dan ikon undo saat thread sudah selesai.
 - Keputusan produk MVP difinalkan di PRD v0.3.
 - Prototype HTML statis dimigrasikan ke Next.js App Router (storefront di `/`, admin di `/admin/*`). Prototype asli disimpan di `prototype/`.
 - Tailwind CSS v4 terpasang dengan token warna. Tampilan masih memakai CSS prototype yang di-scope ke `.store` dan `.admin`.

@@ -27,6 +27,7 @@ export function Header() {
           />
           <div className="actions">
             <IconButton label={t("store.header.account")}><Icon name="user" /></IconButton>
+            <IconButton label={t("store.header.orders")} onClick={() => openPanel("orders")}><Icon name="package" /></IconButton>
             <IconButton label={t("store.header.openCart")} onClick={() => openPanel("drawer")}>
               <Icon name="cart" />
               <span className="count">{cartCount}</span>

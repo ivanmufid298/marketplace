@@ -2,20 +2,21 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { t } from "@/lib/i18n";
-import { products, SHIPPING_OPTIONS, type Product, type ShippingValue, type SortMode } from "@/lib/mock/store";
+import { INITIAL_MY_REVIEWS, products, SHIPPING_OPTIONS, type MyReview, type Product, type ShippingValue, type SortMode } from "@/lib/mock/store";
 
 /** Sentinel for "no category filter". Display text comes from content/id.json. */
 export const ALL_CATEGORIES = "all";
 
-export type PanelId = "drawer" | "detail" | "checkout" | "categorySheet" | "chat";
+export type PanelId = "drawer" | "detail" | "checkout" | "categorySheet" | "chat" | "orders";
 export type CartLine = { id: number; qty: number };
 export type Address = { fullName: string; phone: string; address: string; city: string; postcode: string; note: string };
 export type ChatMessage = { from: "user" | "admin"; text: string; meta: string };
+export type MobileNavMode = "home" | "category" | "saved" | "orders" | "cart";
 
 const EMPTY_ADDRESS: Address = { fullName: "", phone: "", address: "", city: "", postcode: "", note: "" };
 const REQUIRED_ADDRESS_FIELDS: (keyof Address)[] = ["fullName", "phone", "address", "city", "postcode"];
 const MAX_PROOF_BYTES = 5 * 1024 * 1024;
-const ALL_PANELS_CLOSED: Record<PanelId, boolean> = { drawer: false, detail: false, checkout: false, categorySheet: false, chat: false };
+const ALL_PANELS_CLOSED: Record<PanelId, boolean> = { drawer: false, detail: false, checkout: false, categorySheet: false, chat: false, orders: false };
 
 type StoreContextValue = {
   products: Product[];
@@ -41,8 +42,7 @@ type StoreContextValue = {
   openPanel: (id: PanelId) => void;
   closePanel: (id: PanelId) => void;
   togglePanel: (id: PanelId) => void;
-  mobileTab: string;
-  mobileNav: (mode: string) => void;
+  mobileNav: (mode: MobileNavMode) => void;
   checkoutStep: number;
   goCheckoutStep: (step: number) => void;
   startCheckout: () => void;
@@ -61,6 +61,9 @@ type StoreContextValue = {
   toast: string;
   showToast: (msg: string) => void;
   scrollToProducts: () => void;
+  myReviews: Record<string, MyReview>;
+  /** Saves the review of one order item. Returns false (with a toast) when rating or text is missing. */
+  saveReview: (orderNumber: string, productId: number, review: MyReview) => boolean;
 };
 
 const StoreContext = createContext<StoreContextValue | null>(null);
@@ -80,7 +83,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [cart, setCart] = useState<CartLine[]>([]);
   const [selected, setSelected] = useState<Product | null>(null);
   const [panels, setPanels] = useState(ALL_PANELS_CLOSED);
-  const [mobileTab, setMobileTab] = useState("home");
   const [checkoutStep, setCheckoutStep] = useState(1);
   const [address, setAddress] = useState<Address>(EMPTY_ADDRESS);
   const [shipping, setShipping] = useState<ShippingValue>("regular");
@@ -89,6 +91,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([{ from: "admin", text: t("store.chat.welcome"), meta: t("store.chat.metaAdmin") }]);
   const interactionId = useRef<string | null>(null);
   const proofFile = useRef<File | null>(null);
+  const [myReviews, setMyReviews] = useState(INITIAL_MY_REVIEWS);
   const [toast, setToast] = useState("");
   const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
@@ -239,39 +242,50 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const scrollToProducts = useCallback(() => document.getElementById("products")?.scrollIntoView({ behavior: "smooth" }), []);
 
+  const saveReview = useCallback(
+    (orderNumber: string, productId: number, review: MyReview) => {
+      if (review.rating < 1) {
+        showToast(t("store.toast.reviewNeedRating"));
+        return false;
+      }
+      if (!review.text) {
+        showToast(t("store.toast.reviewNeedText"));
+        return false;
+      }
+      const key = `${orderNumber}:${productId}`;
+      showToast(myReviews[key] ? t("store.toast.reviewUpdated") : t("store.toast.reviewSent"));
+      setMyReviews((prev) => ({ ...prev, [key]: review }));
+      return true;
+    },
+    [myReviews, showToast],
+  );
+
   const mobileNav = useCallback(
-    (mode: string) => {
-      if (mode === "category") {
-        setPanel("categorySheet", true);
-        return;
-      }
-      setMobileTab(mode);
-      if (mode === "cart") {
-        setPanel("drawer", true);
-        return;
-      }
+    (mode: MobileNavMode) => {
+      if (mode === "category") return setPanel("categorySheet", true);
+      if (mode === "cart") return setPanel("drawer", true);
+      if (mode === "orders") return setPanel("orders", true);
       if (mode === "saved") {
         setSavedOnly(true);
         setCategoryState(ALL_CATEGORIES);
         setTimeout(scrollToProducts, 0);
         if (!liked.size) showToast(t("store.toast.wishlistEmpty"));
+        return;
       }
-      if (mode === "home") {
-        setSavedOnly(false);
-        setCategoryState(ALL_CATEGORIES);
-        setQuery("");
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      }
+      setSavedOnly(false);
+      setCategoryState(ALL_CATEGORIES);
+      setQuery("");
+      window.scrollTo({ top: 0, behavior: "smooth" });
     },
     [liked.size, scrollToProducts, setPanel, showToast],
   );
 
   useEffect(() => {
-    document.body.style.overflow = panels.drawer || panels.detail || panels.checkout || panels.categorySheet ? "hidden" : "";
+    document.body.style.overflow = panels.drawer || panels.detail || panels.checkout || panels.categorySheet || panels.orders ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
     };
-  }, [panels.drawer, panels.detail, panels.checkout, panels.categorySheet]);
+  }, [panels.drawer, panels.detail, panels.checkout, panels.categorySheet, panels.orders]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -284,11 +298,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const value: StoreContextValue = {
     products, visibleProducts, category, setCategory, query, setQuery, sort, setSort, savedOnly, liked, toggleLike,
     cart, cartCount, subtotal, addToCart, changeQty, removeFromCart, selected, openDetail,
-    panels, openPanel, closePanel, togglePanel, mobileTab, mobileNav,
+    panels, openPanel, closePanel, togglePanel, mobileNav,
     checkoutStep, goCheckoutStep, startCheckout,
     address, setAddressField: (k, v) => setAddress((a) => ({ ...a, [k]: v })),
     shipping, setShipping, shippingCost, proofName, setProof, placeOrder, orderNumber, finishOrder,
-    chatMessages, sendChat, toast, showToast, scrollToProducts,
+    chatMessages, sendChat, toast, showToast, scrollToProducts, myReviews, saveReview,
   };
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;

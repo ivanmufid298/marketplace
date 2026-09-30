@@ -79,8 +79,16 @@ export function InteractionInbox() {
               </div>
             </div>
             {active && (
-              <AdminButton variant="soft" small onClick={() => toggleInteractionStatus(active.id)}>
-                {active.status === "open" ? t("admin.interactions.markHandled") : t("admin.interactions.reopen")}
+              <AdminButton
+                variant="soft"
+                small
+                aria-label={active.status === "open" ? t("admin.interactions.markHandled") : t("admin.interactions.reopen")}
+                title={active.status === "open" ? t("admin.interactions.markHandled") : t("admin.interactions.reopen")}
+                onClick={() => toggleInteractionStatus(active.id)}
+              >
+                {/* On mobile only the icon shows: a check to finish, an undo arrow to reopen. */}
+                <Icon name={active.status === "open" ? "check" : "undo"} />
+                <span className="btn-label">{active.status === "open" ? t("admin.interactions.markHandled") : t("admin.interactions.reopen")}</span>
               </AdminButton>
             )}
           </div>

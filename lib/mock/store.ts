@@ -61,3 +61,30 @@ export const PRODUCT_REVIEWS = {
     { name: "Sarah A.", rating: 4, when: "1 minggu lalu", text: "Barang bagus dan admin responsif. Pengiriman sedikit lebih lama dari perkiraan." },
   ],
 };
+
+// Buyer-facing order status, derived from payment and fulfillment status (PRD section 12).
+export type OrderStatus = "pending_payment" | "payment_review" | "processing" | "partially_shipped" | "completed" | "cancelled";
+
+export type Order = {
+  number: string;
+  date: string;
+  status: OrderStatus;
+  shippingCost: number;
+  items: { productId: number; qty: number }[];
+};
+
+export const ORDERS: Order[] = [
+  { number: "837312", date: "30 Sep 2026", status: "pending_payment", shippingCost: 18000, items: [{ productId: 1, qty: 2 }] },
+  { number: "837301", date: "29 Sep 2026", status: "payment_review", shippingCost: 32000, items: [{ productId: 3, qty: 1 }] },
+  { number: "837288", date: "27 Sep 2026", status: "processing", shippingCost: 18000, items: [{ productId: 4, qty: 1 }, { productId: 6, qty: 1 }] },
+  { number: "837270", date: "22 Sep 2026", status: "completed", shippingCost: 18000, items: [{ productId: 2, qty: 1 }, { productId: 5, qty: 1 }] },
+  { number: "837240", date: "15 Sep 2026", status: "completed", shippingCost: 18000, items: [{ productId: 6, qty: 1 }] },
+  { number: "837199", date: "9 Sep 2026", status: "cancelled", shippingCost: 18000, items: [{ productId: 1, qty: 1 }] },
+];
+
+/** A review is one per order item, keyed `${order.number}:${productId}`. */
+export type MyReview = { rating: number; text: string };
+
+export const INITIAL_MY_REVIEWS: Record<string, MyReview> = {
+  "837240:6": { rating: 5, text: "Teksturnya ringan dan kulit terasa lembap seharian. Packing rapi, pengiriman cepat." },
+};

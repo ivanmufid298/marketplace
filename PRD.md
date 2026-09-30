@@ -144,7 +144,8 @@ Produk yang pernah masuk order tidak dihapus permanen agar histori transaksi tet
 7. Sistem mereservasi stok/kuota.
 8. Sistem menampilkan rekening, nominal transfer, dan batas waktu pembayaran.
 9. Buyer transfer dan mengunggah bukti.
-10. Buyer menunggu verifikasi serta memantau status order.
+10. Buyer menunggu verifikasi serta memantau status order dari menu **Pesanan Saya** (header pada desktop, navigasi bawah pada mobile).
+11. Setelah pesanan diterima (`delivered`), buyer menulis rating dan ulasan untuk tiap item dari menu Pesanan Saya.
 
 ## 9. Pembayaran Manual
 
@@ -248,6 +249,7 @@ Ongkir disalin ke order saat checkout. Perubahan tarif berikutnya tidak boleh me
 ### Reviews
 
 - Buyer yang order-nya sudah `delivered` dapat memberi rating 1–5 dan ulasan teks.
+- Rating wajib dipilih dan teks ulasan wajib diisi. Ulasan ditulis dari menu Pesanan Saya pada item order yang sudah `delivered`.
 - Satu `OrderItem` hanya dapat memiliki satu review, tetapi buyer boleh mengeditnya.
 - Detail produk menampilkan rating rata-rata, jumlah review, distribusi bintang, dan daftar ulasan.
 - Review diberi penanda pembelian terverifikasi.

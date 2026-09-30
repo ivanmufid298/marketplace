@@ -18,6 +18,7 @@
       "searchLabel": "Cari produk",
       "searchPlaceholder": "Cari produk, kategori, atau toko…",
       "account": "Akun",
+      "orders": "Pesanan saya",
       "openCart": "Buka keranjang"
     },
     "hero": {
@@ -131,11 +132,40 @@
       "title": "Pilih kategori",
       "all": "Semua produk"
     },
+    "orders": {
+      "title": "Pesanan saya",
+      "hint": "Ulasan bisa ditulis setelah pesanan berstatus diterima.",
+      "empty": "Kamu belum punya pesanan.",
+      "orderLabel": "Order #MKP-{number}",
+      "itemQty": "{qty} barang",
+      "shipping": "Ongkos kirim",
+      "total": "Total",
+      "status": {
+        "pending_payment": "Menunggu pembayaran",
+        "payment_review": "Menunggu verifikasi",
+        "processing": "Sedang diproses",
+        "partially_shipped": "Sebagian dikirim",
+        "completed": "Sudah diterima",
+        "cancelled": "Dibatalkan"
+      },
+      "review": {
+        "write": "Tulis ulasan",
+        "edit": "Ubah ulasan",
+        "yours": "Ulasanmu",
+        "ratingLabel": "Rating",
+        "ratingStar": "{n} bintang",
+        "placeholder": "Ceritakan pengalamanmu dengan produk ini…",
+        "textLabel": "Ulasan",
+        "submit": "Kirim ulasan",
+        "update": "Simpan perubahan"
+      }
+    },
     "mobileNav": {
       "label": "Navigasi utama",
       "home": "Home",
       "category": "Kategori",
       "wishlist": "Wishlist",
+      "orders": "Pesanan",
       "cart": "Keranjang"
     },
     "chat": {
@@ -164,6 +194,10 @@
       "fileTooBig": "Ukuran file maksimal 5 MB",
       "needProof": "Unggah bukti transfer dulu",
       "accountCopied": "Nomor rekening disalin",
+      "reviewSent": "Terima kasih, ulasanmu terkirim",
+      "reviewUpdated": "Ulasanmu diperbarui",
+      "reviewNeedRating": "Pilih rating dulu",
+      "reviewNeedText": "Tulis ulasanmu dulu",
       "thanks": "Terima kasih sudah berbelanja"
     }
   },

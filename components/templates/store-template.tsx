@@ -7,6 +7,7 @@ import { DetailPanel } from "../organisms/store/detail-panel";
 import { Footer } from "../organisms/store/footer";
 import { Header } from "../organisms/store/header";
 import { MobileNav } from "../organisms/store/mobile-nav";
+import { OrdersPanel } from "../organisms/store/orders-panel";
 import { StoreToast } from "../organisms/store/store-toast";
 import { StoreProvider } from "../providers/store-provider";
 
@@ -19,6 +20,7 @@ export function StoreTemplate({ children }: { children: ReactNode }) {
         {children}
         <Footer />
         <CartDrawer />
+        <OrdersPanel />
         <DetailPanel />
         <CheckoutFlow />
         <CategorySheet />
