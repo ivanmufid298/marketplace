@@ -151,14 +151,7 @@ Nama endpoint masih dapat berubah. Aturan bisnis penting seperti pembuatan order
 
 ## Roadmap implementasi
 
-1. ~~Migrasikan design system dan UI ke Next.js serta Tailwind.~~ UI sudah dimigrasikan ke Next.js. Konversi CSS prototype ke utility Tailwind masih bertahap.
-2. Implementasikan Supabase Auth, profile, role buyer/admin, dan proteksi route.
-3. Implementasikan kategori, produk, varian, foto produk, dan batch PO.
-4. Implementasikan cart, reservasi stok/kuota, order expiry, checkout, dan fulfillment group.
-5. Implementasikan pembayaran manual, riwayat bukti transfer, serta penyimpanan privat di R2.
-6. Implementasikan order management, interaction, review, promo, voucher, banner, popup, dan scheduler.
-7. Terapkan RLS, audit log, rate limiting, observability, serta automated testing.
-8. Deploy production melalui Cloudflare Workers.
+Urutan pengerjaan dan status tiap item MVP dicatat di [PROGRESS.md](PROGRESS.md).
 
 ## Ketentuan keamanan minimum
 
@@ -172,4 +165,4 @@ Nama endpoint masih dapat berubah. Aturan bisnis penting seperti pembuatan order
 
 ## Dokumen produk
 
-Aturan bisnis, scope MVP, state machine, data model awal, dan acceptance criteria tersedia di [PRD.md](PRD.md).
+Aturan bisnis, scope MVP, state machine, data model awal, dan acceptance criteria tersedia di [PRD.md](PRD.md). Status pengerjaan ada di [PROGRESS.md](PROGRESS.md).
