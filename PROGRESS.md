@@ -21,8 +21,8 @@ Belum ada item yang berstatus Selesai karena backend (Supabase, R2) belum dikerj
 |---|---|---|
 | Katalog ready stock/PO dengan pencarian dan filter | UI sebagian | Katalog, pencarian, filter kategori, dan sort harga ada. Belum ada tipe ready stock vs PO. Sort "Terpopuler" belum mengurutkan apa pun. |
 | Detail produk, varian, dan batch PO | UI sebagian | Detail produk ada. Varian warna/ukuran dan batch PO (deadline, kuota, ETA) belum ada. |
-| Auth buyer/admin | Belum | Tombol Akun belum berfungsi dan `/admin` belum dilindungi. |
-| Cart lokal, pemindahan cart setelah login, checkout, alamat | UI sebagian | Cart dengan quantity dan batas stok, serta checkout 3 langkah ada. Cart belum tersimpan di browser dan belum ada alamat tersimpan. |
+| Auth buyer/admin | UI sebagian | Dialog masuk dan daftar (nama, email, kata sandi) ada, lengkap dengan validasi dan pesan error. Guest bisa menjelajah, mengisi cart, dan melihat widget chat; chat, checkout, dan Pesanan saya meminta login lalu aksinya dilanjutkan setelah masuk. Menu akun (nama, email, keluar) ada di header. Adapter Supabase Auth (`lib/auth/supabase-auth.ts`) aktif jika `NEXT_PUBLIC_SUPABASE_URL` dan `NEXT_PUBLIC_SUPABASE_ANON_KEY` diisi; tanpa itu dipakai login demo yang tidak memverifikasi kredensial. Belum ada: profil (telepon), role buyer/admin, RLS, sesi di server, proteksi `/admin`, lupa kata sandi, dan login admin. Adapter Supabase belum diuji dengan project sungguhan. |
+| Cart lokal, pemindahan cart setelah login, checkout, alamat | UI sebagian | Cart dengan quantity dan batas stok, tersimpan di `localStorage` dan tetap ada setelah reload maupun login. Checkout 3 langkah ada dan hanya bisa dilanjutkan setelah login. Belum ada alamat tersimpan di akun dan cart belum dipindah ke database. |
 | Ongkir manual berbasis zona | Belum | Checkout memakai 3 opsi flat yang di-hardcode. Halaman ongkir admin belum mengenal zona kota/provinsi. |
 | Reservasi stok/kuota dan order expiry | Belum | Aturan 2 jam dan batas upload ulang 2 jam belum diimplementasikan. |
 | Transfer manual dan upload bukti | UI | Simulasi saja: cek ukuran 5 MB, file tidak tersimpan, MIME type belum divalidasi. |
@@ -30,7 +30,7 @@ Belum ada item yang berstatus Selesai karena backend (Supabase, R2) belum dikerj
 | Histori dan tracking order buyer | UI sebagian | Menu "Pesanan saya" (ikon paket di header, tab "Pesanan" di navigasi bawah mobile) menampilkan pesanan pembeli dengan status Menunggu pembayaran, Barang sedang dikirim, Selesai, atau Dibatalkan. Checkout membuat pesanan baru, dan tombol "Pesanan selesai" (dengan konfirmasi) muncul saat barang sedang dikirim. Belum ada halaman `/orders` dan `/orders/[orderNumber]`, dan pembeli belum bisa membatalkan pesanan. |
 | Admin: produk, varian, PO, order, pembayaran, zona ongkir | UI sebagian | Produk, pesanan, pembayaran, dan ongkir ada. Belum ada batch PO dan varian. Tolak pembayaran belum meminta alasan. Pembayaran dan Pesanan memakai data yang sama: menerima pembayaran mengubah status pesanan menjadi "Barang sedang dikirim". |
 | Promo, voucher, banner, popup, scheduler dasar | UI sebagian | Layar admin dan form scheduler ada, tetapi form belum menyimpan. Storefront belum menampilkan banner, popup, atau input voucher. |
-| Widget chat buyer dan menu admin Interactions | UI | Chat storefront dan inbox admin berjalan, tetapi belum terhubung satu sama lain. |
+| Widget chat buyer dan menu admin Interactions | UI sebagian | Widget selalu tampil. Guest melihat ajakan login sebagai ganti kolom pesan, buyer yang login bisa mengirim pesan. Inbox admin berjalan, tetapi chat storefront dan inbox admin belum terhubung satu sama lain. |
 | Rating/review dan moderasi di admin | UI sebagian | Moderasi di admin ada. Pembeli bisa menulis dan mengubah ulasan (rating 1–5 dan teks) dari "Pesanan saya", hanya untuk item di pesanan berstatus Selesai. Ulasan baru tersimpan di memori browser dan belum muncul di admin maupun detail produk, yang masih placeholder yang sama untuk semua produk. |
 | Statistik bulanan/tahunan | UI | Grafik dan angka masih statis. |
 | Analitik kunjungan dan jumlah dilihat per produk | UI | Grafik "Statistik pengunjung" (bulanan/tahunan) dan kartu "Kunjungan toko" (total kunjungan dan sebaran perangkat) di dashboard dan jumlah dilihat (ikon mata) per produk di etalase admin. Angkanya data contoh. Belum ada pencatatan di storefront, sesi anonim, deteksi tipe perangkat, dan filter bot. |
@@ -39,6 +39,7 @@ Belum ada item yang berstatus Selesai karena backend (Supabase, R2) belum dikerj
 ## Selesai sejauh ini
 
 - Status pesanan disederhanakan jadi tiga langkah otomatis: **Pending** → **Barang sedang dikirim** (saat admin menerima pembayaran) → **Selesai** (saat pembeli menekan "Pesanan selesai"), ditambah **Dibatalkan**. Halaman admin Pesanan (`/admin/orders`) menampilkan satu kolom Status, tanpa kolom pembayaran, dengan detail berisi stepper tiga langkah, barang, riwayat, serta tombol batalkan (alasan wajib) dan catat refund untuk pesanan yang sudah dibayar. Halaman Pembayaran, Pesanan, dan "Pesanan saya" membaca data yang sama lewat `lib/orders-store.ts`, dan checkout pembeli membuat pesanan baru di sana.
+- Login wajib untuk chat, checkout, dan Pesanan saya, sementara guest tetap bisa menjelajah dan mengisi cart. Widget chat tetap tampil. Lapisan auth dibuat sebagai adapter (`lib/auth/`): Supabase Auth jika variabel lingkungan diisi, login demo jika kosong. Cart disimpan di `localStorage` sehingga bertahan setelah login.
 - Menu "Pesanan saya" di storefront (header desktop dan navigasi bawah mobile) dengan form ulasan untuk pesanan yang selesai. Tab navigasi bawah menyala sesuai panel yang terbuka.
 - Ikon chat diganti ke bentuk bubble standar (storefront dan menu Interactions di admin). Tombol "Tandai selesai" di inbox admin versi mobile kini memakai ikon ceklis saat thread terbuka dan ikon undo saat thread sudah selesai.
 - Keputusan produk MVP difinalkan di PRD v0.3.
@@ -52,7 +53,7 @@ Belum ada item yang berstatus Selesai karena backend (Supabase, R2) belum dikerj
 
 Urutan mengikuti dependensi teknis:
 
-1. Supabase Auth, profile, role buyer/admin, dan proteksi `/admin`.
+1. Menyelesaikan Supabase Auth: tabel profil (nama, telepon), role buyer/admin, RLS, sesi di server (middleware), proteksi `/admin`, dan lupa kata sandi.
 2. Skema database: kategori, produk, varian, foto, batch PO.
 3. Cart, reservasi stok/kuota, order expiry, dan checkout yang menyimpan pesanan ke database (fulfillment group per kelompok pengiriman ditunda).
 4. Pembayaran manual, riwayat bukti transfer, dan penyimpanan privat di R2.
@@ -62,6 +63,9 @@ Urutan mengikuti dependensi teknis:
 
 Utang teknis yang sudah diketahui:
 
+- Adapter Supabase belum diuji dengan project sungguhan. Yang sudah diuji: pemetaan error, type check terhadap tipe Supabase, dan perilaku saat server tidak terjangkau. Uji pendaftaran, masuk, dan konfirmasi email setelah project dibuat.
+- Login demo (tanpa variabel lingkungan) menerima email dan kata sandi apa saja. Jangan dipakai di production; deploy production wajib mengisi variabel Supabase.
+- Pesanan, ulasan, dan chat masih di browser dan belum terikat ke akun Supabase (`buyerId` memakai id pengguna, tetapi data belum di database).
 - Pesanan disimpan di `localStorage` lewat `lib/orders-store.ts` agar storefront dan admin berbagi data saat demo. Ganti dengan query database. Ada tombol "Reset data contoh" di sidebar admin untuk mengembalikan data awal.
 - Status order MVP hanya tiga langkah. Status pengiriman per kelompok dan alur PO yang rinci dari PRD ditunda sampai dibutuhkan.
 - Konversi CSS prototype ke utility Tailwind, komponen demi komponen.

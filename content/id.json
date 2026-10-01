@@ -204,6 +204,53 @@
       "reviewNeedText": "Tulis ulasanmu dulu",
       "thanks": "Terima kasih sudah berbelanja",
       "orderCompleted": "Terima kasih, pesanan ditandai selesai"
+    },
+    "auth": {
+      "dialogLabel": "Masuk atau daftar",
+      "signInTitle": "Masuk",
+      "signUpTitle": "Daftar",
+      "intent": {
+        "default": "Masuk ke akunmu.",
+        "chat": "Masuk untuk mengobrol dengan admin.",
+        "checkout": "Masuk untuk melanjutkan checkout. Keranjangmu tetap tersimpan.",
+        "orders": "Masuk untuk melihat pesananmu."
+      },
+      "name": "Nama lengkap",
+      "namePlaceholder": "Nama kamu",
+      "email": "Email",
+      "emailPlaceholder": "nama@email.com",
+      "password": "Kata sandi",
+      "passwordPlaceholder": "Minimal 8 karakter",
+      "submitSignIn": "Masuk",
+      "submitSignUp": "Daftar",
+      "submitting": "Memproses…",
+      "switchToSignUp": "Belum punya akun?",
+      "switchToSignUpAction": "Daftar",
+      "switchToSignIn": "Sudah punya akun?",
+      "switchToSignInAction": "Masuk",
+      "errors": {
+        "required": "Lengkapi semua kolom dulu.",
+        "invalidEmail": "Format email belum benar.",
+        "shortPassword": "Kata sandi minimal 8 karakter.",
+        "invalidCredentials": "Email atau kata sandi salah.",
+        "emailTaken": "Email ini sudah terdaftar. Coba masuk.",
+        "weakPassword": "Kata sandi terlalu lemah.",
+        "emailNotConfirmed": "Email belum dikonfirmasi. Cek kotak masukmu.",
+        "tooMany": "Terlalu banyak percobaan. Coba lagi sebentar.",
+        "unknown": "Terjadi kesalahan. Coba lagi."
+      },
+      "confirmEmail": "Kami mengirim tautan konfirmasi ke {email}. Buka email itu lalu masuk.",
+      "demoNotice": "Mode demo: login tidak diverifikasi. Masuk dengan nadia@demo.test (kata sandi apa saja, min. 8 karakter) untuk melihat pesanan contoh.",
+      "welcome": "Selamat datang, {name}",
+      "signedOut": "Kamu sudah keluar",
+      "account": {
+        "signedInAs": "Masuk sebagai",
+        "orders": "Pesanan saya",
+        "signOut": "Keluar"
+      },
+      "chatPrompt": "Masuk untuk mengobrol dengan admin.",
+      "ordersPrompt": "Masuk untuk melihat pesananmu.",
+      "promptAction": "Masuk atau daftar"
     }
   },
   "admin": {

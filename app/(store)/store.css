@@ -52,3 +52,26 @@
 .store .order-complete{margin-top:12px;border-top:1px solid var(--line);padding-top:12px}
 .store .order-complete>button{width:100%}
 .store .order-complete p{margin:0 0 10px;font-weight:700;color:var(--wine)}
+.store .login{position:fixed;inset:0;z-index:90;display:grid;place-items:center;padding:20px;pointer-events:none}
+.store .login.open{pointer-events:auto}
+.store .login-card{position:relative;width:min(420px,100%);max-height:92vh;overflow:auto;background:var(--white);border-radius:26px;padding:28px;box-shadow:0 30px 80px rgba(46,32,36,.25);opacity:0;transform:translateY(14px) scale(.98);transition:.22s}
+.store .login.open .login-card{opacity:1;transform:none}
+.store .login-card>.close{position:absolute;right:16px;top:16px}
+.store .login-card h2{font-family:Georgia,serif;color:var(--wine);font-size:30px;margin:0 0 6px;font-weight:500}
+.store .login-form{display:grid;gap:14px;margin-top:18px}
+.store .login-form .primary{width:100%}
+.store .login-error{color:#b83a50;font-size:13px;margin:0}
+.store .login-info{background:#e7f6ef;color:#21845b;border-radius:12px;padding:10px 12px;font-size:13px}
+.store .login-demo{background:#fff2dc;color:#8a5212;border-radius:12px;padding:10px 12px;font-size:12px;margin:12px 0 0}
+.store .login-switch{text-align:center;font-size:14px;color:var(--muted);margin:16px 0 0}
+.store .toast{z-index:95}
+.store .account{position:relative}
+.store .account-btn.signed-in:after{content:"";position:absolute;right:8px;top:8px;width:9px;height:9px;border-radius:50%;background:#55b785;border:2px solid var(--ivory)}
+.store .account-menu{position:absolute;right:0;top:calc(100% + 8px);z-index:30;width:240px;background:var(--white);border:1px solid var(--line);border-radius:18px;padding:10px;box-shadow:0 20px 45px rgba(72,31,45,.15)}
+.store .account-menu-head{padding:8px 10px 10px;border-bottom:1px solid var(--line);margin-bottom:6px}
+.store .account-menu-head small{display:block;color:var(--muted);word-break:break-all}
+.store .account-menu button{width:100%;text-align:left;border:0;background:transparent;border-radius:12px;padding:10px;font-weight:700;color:var(--ink)}
+.store .account-menu button:hover{background:var(--pink2);color:var(--wine)}
+.store .chat-login{padding:16px;border-top:1px solid var(--line);background:#fff;display:grid;gap:10px;text-align:center}
+.store .chat-login p{margin:0;color:var(--muted);font-size:14px}
+@media(max-width:500px){.store .actions{display:flex}.store .actions .icon-btn:not(.account-btn){display:none}}

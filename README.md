@@ -2,7 +2,7 @@
 
 Prototype UI/UX toko online **single seller** untuk produk ready stock, jastip, dan pre-order barang impor. Repository ini memuat halaman customer serta dashboard admin dengan tampilan responsif untuk mobile dan desktop.
 
-> Status saat ini: UI sudah dimigrasikan ke **Next.js App Router** (roadmap langkah 1), tetapi masih memakai data contoh di memori browser yang kembali ke kondisi awal saat halaman dimuat ulang. Belum ada backend, autentikasi, database, object storage, maupun proses pembayaran sungguhan. Pengecualian: pesanan disimpan di `localStorage` browser dan dibaca bersama oleh storefront dan admin, jadi alur pembayaran diterima → barang dikirim → pesanan selesai bisa dicoba dari awal sampai akhir. Tombol "Reset data contoh" di sidebar admin mengembalikan data awal. Prototype HTML statis yang asli disimpan di folder `prototype/` sebagai referensi visual.
+> Status saat ini: UI sudah dimigrasikan ke **Next.js App Router** (roadmap langkah 1), tetapi masih memakai data contoh di memori browser yang kembali ke kondisi awal saat halaman dimuat ulang. Belum ada database, object storage, maupun proses pembayaran sungguhan. Autentikasi memakai Supabase Auth jika variabel lingkungan diisi (lihat bagian Autentikasi), atau login demo jika kosong. Pengecualian: pesanan disimpan di `localStorage` browser dan dibaca bersama oleh storefront dan admin, jadi alur pembayaran diterima → barang dikirim → pesanan selesai bisa dicoba dari awal sampai akhir. Tombol "Reset data contoh" di sidebar admin mengembalikan data awal. Prototype HTML statis yang asli disimpan di folder `prototype/` sebagai referensi visual.
 
 ## Fitur prototype
 
@@ -14,7 +14,8 @@ Prototype UI/UX toko online **single seller** untuk produk ready stock, jastip, 
 - Checkout tiga tahap: alamat, pengiriman, dan transfer manual. Checkout membuat pesanan baru dengan status Pending.
 - Upload bukti pembayaran maksimal 5 MB sebagai simulasi UI.
 - Menu **Pesanan saya** (ikon paket di header, tab Pesanan di navigasi bawah mobile): status pesanan, tombol "Pesanan selesai" saat barang sedang dikirim, dan form ulasan (rating dan teks) untuk pesanan yang selesai.
-- Widget chat untuk menghubungi admin.
+- Widget chat untuk menghubungi admin. Widget selalu tampil, tetapi mengirim pesan memerlukan login.
+- Guest bisa menjelajah dan mengisi cart. Chat, checkout, dan Pesanan saya meminta login (dialog masuk/daftar), lalu aksinya dilanjutkan otomatis.
 - Navigasi responsif untuk mobile dan desktop.
 
 ### Admin
@@ -40,6 +41,8 @@ Membutuhkan Node.js 20 atau lebih baru.
 npm install
 npm run dev      # http://localhost:3000
 ```
+
+Tanpa konfigurasi apa pun, login memakai mode demo. Untuk memakai Supabase Auth, lihat bagian [Autentikasi](#autentikasi-supabase).
 
 Perintah lain:
 
@@ -79,6 +82,7 @@ content/
 └── id.json               # seluruh teks UI (Bahasa Indonesia)
 lib/
 ├── i18n.ts               # t("store.cart.title", { ... })
+├── auth/                 # adapter login: Supabase Auth atau login demo
 ├── mock/                 # data contoh (pengganti database sementara)
 ├── orders-store.ts       # penyimpanan pesanan bersama (localStorage) untuk storefront dan admin
 ├── order-flow.ts         # status pesanan (pending, shipping, completed, cancelled) dan total
@@ -119,9 +123,34 @@ t("store.cart.subtotal", { count: 3 });      // "Subtotal · 3 barang"
 
 Tailwind CSS v4 sudah terpasang dan token warna tersedia lewat `@theme` di `app/globals.css`, tetapi Preflight sengaja tidak dimuat. Tampilan saat ini masih memakai CSS prototype yang di-scope ke `.store` dan `.admin` (`app/(store)/store.css`, `app/admin/admin.css`) agar hasilnya identik dengan prototype. Konversi ke utility class Tailwind dilakukan bertahap, komponen demi komponen.
 
+### Autentikasi (Supabase)
+
+Login memakai Supabase Auth (email dan kata sandi). Adapternya ada di `lib/auth/`: jika dua variabel lingkungan diisi, dipakai Supabase; jika kosong, dipakai **login demo** yang menerima email dan kata sandi apa saja (min. 8 karakter) dan menampilkan peringatan di dialog. Login demo hanya untuk pengembangan dan preview.
+
+Menyiapkan Supabase:
+
+1. Buat project di [supabase.com](https://supabase.com).
+2. Buka **Authentication → Providers → Email** dan pastikan aktif. Matikan "Confirm email" jika ingin daftar langsung masuk; jika dibiarkan aktif, pembeli diminta membuka email konfirmasi dulu.
+3. Buka **Authentication → URL Configuration**, isi **Site URL** dengan alamat situs (mis. `http://localhost:3000` untuk lokal dan domain Vercel untuk production), dan tambahkan keduanya ke **Redirect URLs**.
+4. Salin **Project URL** dan **anon/publishable key** dari **Project Settings → API**.
+5. Salin `.env.example` menjadi `.env.local` dan isi:
+
+   ```bash
+   NEXT_PUBLIC_SUPABASE_URL=https://xxxx.supabase.co
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+   ```
+
+6. Untuk Vercel, isi dua variabel yang sama di **Project Settings → Environment Variables**, lalu redeploy.
+
+Kedua nilai itu aman dipakai di browser karena akses data dibatasi RLS. **Jangan** pernah memakai service role key di kode browser atau variabel `NEXT_PUBLIC_*`.
+
+Yang sudah tersambung ke Supabase baru sesi login (daftar, masuk, keluar). Profil, role, RLS, proteksi `/admin`, dan data pesanan belum; urutannya ada di [PROGRESS.md](PROGRESS.md).
+
+Untuk mencoba login demo, masuk dengan `nadia@demo.test` (kata sandi apa saja, min. 8 karakter) agar pesanan contoh muncul di Pesanan saya.
+
 ### State contoh
 
-Keranjang, wishlist, checkout, chat, interactions, dan review disimpan di React context (`StoreProvider` dan `AdminProvider` di `components/providers/`). Pesanan dan pembayaran disimpan di `lib/orders-store.ts` (`localStorage`) agar storefront dan admin membaca data yang sama. Saat backend tersedia, ganti context ini dengan data dari Supabase melalui Server Component, Route Handler, atau Server Action.
+Wishlist, checkout, chat, interactions, dan review disimpan di React context (`StoreProvider` dan `AdminProvider` di `components/providers/`). Pesanan dan pembayaran disimpan di `lib/orders-store.ts` (`localStorage`) agar storefront dan admin membaca data yang sama. Keranjang juga disimpan di `localStorage` (cart lokal guest) sehingga bertahan setelah reload dan setelah login. Saat backend tersedia, ganti context ini dengan data dari Supabase melalui Server Component, Route Handler, atau Server Action.
 
 ## Target implementasi
 
@@ -197,6 +226,7 @@ Urutan pengerjaan dan status tiap item MVP dicatat di [PROGRESS.md](PROGRESS.md)
 
 ## Ketentuan keamanan minimum
 
+- Login wajib untuk chat, checkout, dan Pesanan saya. Pengecekan di UI saat ini hanya kenyamanan; validasi sesungguhnya harus dilakukan di server (RLS dan Route Handler) saat backend tersambung.
 - Lindungi seluruh route `/admin` dengan autentikasi dan pengecekan role di server.
 - Aktifkan RLS agar buyer hanya dapat mengakses data miliknya.
 - Simpan Supabase service role key dan credential R2 hanya di server.

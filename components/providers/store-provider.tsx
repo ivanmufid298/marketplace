@@ -2,9 +2,10 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { t } from "@/lib/i18n";
-import { CURRENT_BUYER, INITIAL_MY_REVIEWS, type MyReview, type Order } from "@/lib/mock/orders";
+import { INITIAL_MY_REVIEWS, type MyReview, type Order } from "@/lib/mock/orders";
 import { products, SHIPPING_OPTIONS, type Product, type ShippingValue, type SortMode } from "@/lib/mock/store";
 import * as ordersStore from "@/lib/orders-store";
+import { useAuth, type LoginIntent } from "./auth-provider";
 
 /** Sentinel for "no category filter". Display text comes from content/id.json. */
 export const ALL_CATEGORIES = "all";
@@ -18,6 +19,7 @@ export type MobileNavMode = "home" | "category" | "saved" | "orders" | "cart";
 const EMPTY_ADDRESS: Address = { fullName: "", phone: "", address: "", city: "", postcode: "", note: "" };
 const REQUIRED_ADDRESS_FIELDS: (keyof Address)[] = ["fullName", "phone", "address", "city", "postcode"];
 const MAX_PROOF_BYTES = 5 * 1024 * 1024;
+const CART_KEY = "marketplace-cart-v1";
 const ALL_PANELS_CLOSED: Record<PanelId, boolean> = { drawer: false, detail: false, checkout: false, categorySheet: false, chat: false, orders: false };
 
 type StoreContextValue = {
@@ -64,6 +66,8 @@ type StoreContextValue = {
   showToast: (msg: string) => void;
   scrollToProducts: () => void;
   /** Orders of the signed-in buyer, newest first. */
+  /** Whether a buyer is signed in. Guests can browse and fill a cart but must sign in to chat or check out. */
+  signedIn: boolean;
   orders: Order[];
   /** Buyer taps "Pesanan selesai" on a paid order. */
   completeOrder: (orderNumber: string) => void;
@@ -98,10 +102,37 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const interactionId = useRef<string | null>(null);
   const proofFile = useRef<File | null>(null);
   const [myReviews, setMyReviews] = useState(INITIAL_MY_REVIEWS);
+  const { user, loginOpen, intent, openLogin, closeLogin } = useAuth();
   const allOrders = ordersStore.useOrders();
-  const orders = useMemo(() => allOrders.filter((o) => o.buyerId === CURRENT_BUYER.id), [allOrders]);
+  const orders = useMemo(() => (user ? allOrders.filter((o) => o.buyerId === user.id) : []), [allOrders, user]);
   const [toast, setToast] = useState("");
   const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  // The cart lives in this browser so a guest's items survive a reload and a sign-in (PRD section 5).
+  const [cartReady, setCartReady] = useState(false);
+  useEffect(() => {
+    try {
+      const stored: unknown = JSON.parse(window.localStorage.getItem(CART_KEY) ?? "[]");
+      if (Array.isArray(stored)) {
+        const valid = stored.flatMap((line: Partial<CartLine>) => {
+          const product = products.find((p) => p.id === line.id);
+          return product && typeof line.qty === "number" && line.qty > 0 ? [{ id: product.id, qty: Math.min(line.qty, product.stock) }] : [];
+        });
+        if (valid.length) setCart(valid);
+      }
+    } catch {
+      // Unreadable cart: start empty.
+    }
+    setCartReady(true);
+  }, []);
+  useEffect(() => {
+    if (!cartReady) return;
+    try {
+      window.localStorage.setItem(CART_KEY, JSON.stringify(cart));
+    } catch {
+      // Storage blocked: the cart still works for this tab.
+    }
+  }, [cart, cartReady]);
 
   const showToast = useCallback((msg: string) => {
     setToast(msg);
@@ -182,12 +213,41 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const subtotal = cart.reduce((s, l) => s + (products.find((p) => p.id === l.id)?.price ?? 0) * l.qty, 0);
   const shippingCost = SHIPPING_OPTIONS.find((o) => o.value === shipping)?.cost ?? SHIPPING_OPTIONS[0].cost;
 
+  /** Returns true when signed in. Otherwise opens the login dialog for `why` and returns false. */
+  const requireLogin = useCallback(
+    (why: LoginIntent) => {
+      if (user) return true;
+      openLogin(why);
+      return false;
+    },
+    [openLogin, user],
+  );
+
   const startCheckout = useCallback(() => {
     if (!cart.length) return;
+    if (!requireLogin("checkout")) return;
     setPanel("drawer", false);
     setCheckoutStep(1);
     setPanel("checkout", true);
-  }, [cart.length, setPanel]);
+  }, [cart.length, requireLogin, setPanel]);
+
+  // A user appearing while the login dialog is open means sign-in worked: close it and pick up where the buyer left off.
+  useEffect(() => {
+    if (!user || !loginOpen) return;
+    closeLogin();
+    if (intent === "checkout" && cart.length) {
+      setPanel("drawer", false);
+      setCheckoutStep(1);
+      setPanel("checkout", true);
+    }
+    if (intent === "orders") setPanel("orders", true);
+    if (intent === "chat") setPanel("chat", true);
+  }, [user, loginOpen, intent, cart.length, closeLogin, setPanel]);
+
+  // Pre-fill the receiver name from the account the first time.
+  useEffect(() => {
+    if (user) setAddress((a) => (a.fullName ? a : { ...a, fullName: user.name }));
+  }, [user]);
 
   const goCheckoutStep = useCallback(
     (step: number) => {
@@ -223,11 +283,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       showToast(t("store.toast.needProof"));
       return;
     }
+    if (!user) {
+      openLogin("checkout");
+      return;
+    }
     const method = SHIPPING_OPTIONS.find((o) => o.value === shipping) ?? SHIPPING_OPTIONS[0];
     const number = ordersStore.createOrder({
-      buyerId: CURRENT_BUYER.id,
-      buyer: address.fullName.trim() || CURRENT_BUYER.name,
-      phone: address.phone.trim() || CURRENT_BUYER.phone,
+      buyerId: user.id,
+      buyer: address.fullName.trim() || user.name,
+      phone: address.phone.trim(),
       address: [address.address, address.city, address.postcode].map((part) => part.trim()).filter(Boolean).join(", "),
       items: cart.flatMap((line) => {
         const product = products.find((p) => p.id === line.id);
@@ -238,7 +302,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     });
     setOrderNumber(number);
     setCheckoutStep(4);
-  }, [address, cart, shipping, showToast]);
+  }, [address, cart, openLogin, shipping, showToast, user]);
 
   const finishOrder = useCallback(() => {
     setCart([]);
@@ -249,9 +313,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     showToast(t("store.toast.thanks"));
   }, [setPanel, showToast]);
 
-  const sendChat = useCallback((text: string) => {
+  const sendChat = useCallback(
+    (text: string) => {
     const message = text.trim();
     if (!message) return;
+    if (!requireLogin("chat")) return;
     if (!interactionId.current) interactionId.current = "INT-" + String(Date.now()).slice(-6);
     const id = interactionId.current;
     setChatMessages((m) => [...m, { from: "user", text: message, meta: t("store.chat.metaUser") }]);
@@ -259,7 +325,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       () => setChatMessages((m) => [...m, { from: "admin", text: t("store.chat.autoReply", { id }), meta: t("store.chat.metaSystem") }]),
       550,
     );
-  }, []);
+    },
+    [requireLogin],
+  );
 
   const scrollToProducts = useCallback(() => document.getElementById("products")?.scrollIntoView({ behavior: "smooth" }), []);
 
@@ -330,7 +398,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     checkoutStep, goCheckoutStep, startCheckout,
     address, setAddressField: (k, v) => setAddress((a) => ({ ...a, [k]: v })),
     shipping, setShipping, shippingCost, proofName, setProof, placeOrder, orderNumber, finishOrder,
-    chatMessages, sendChat, toast, showToast, scrollToProducts, orders, completeOrder, myReviews, saveReview,
+    chatMessages, sendChat, toast, showToast, scrollToProducts, signedIn: Boolean(user), orders, completeOrder, myReviews, saveReview,
   };
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;

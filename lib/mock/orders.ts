@@ -29,8 +29,8 @@ export type Order = {
   history: HistoryEntry[];
 };
 
-/** The buyer the storefront is pretending to be logged in as, until real auth exists. */
-export const CURRENT_BUYER = { id: "nadia", name: "Nadia Putri", phone: "0811-5550-0312", address: "Jl. Cempaka No. 21, Jakarta Selatan 12140" };
+/** The buyer behind the seeded orders. Signing in to the demo login as nadia@anything shows these orders. */
+const DEMO_BUYER = { id: "nadia", name: "Nadia Putri", phone: "0811-5550-0312", address: "Jl. Cempaka No. 21, Jakarta Selatan 12140" };
 
 const ADMIN = "Admin";
 
@@ -60,19 +60,19 @@ export const seedOrders: Order[] = [
     history: [{ at: "30 Sep 2026, 12.18", event: "created", actor: "Dinda Ayu" }],
   },
   {
-    number: "837312", buyerId: "nadia", buyer: "Nadia Putri", phone: CURRENT_BUYER.phone, address: CURRENT_BUYER.address, date: "30 Sep 2026",
+    number: "837312", buyerId: "nadia", buyer: "Nadia Putri", phone: DEMO_BUYER.phone, address: DEMO_BUYER.address, date: "30 Sep 2026",
     items: [{ productId: 1, qty: 2, price: 89000 }], shippingMethod: "Reguler", shippingFee: 18000,
     payment: "pending", received: false,
     history: [{ at: "30 Sep 2026, 14.05", event: "created", actor: "Nadia Putri" }],
   },
   {
-    number: "837301", buyerId: "nadia", buyer: "Nadia Putri", phone: CURRENT_BUYER.phone, address: CURRENT_BUYER.address, date: "29 Sep 2026",
+    number: "837301", buyerId: "nadia", buyer: "Nadia Putri", phone: DEMO_BUYER.phone, address: DEMO_BUYER.address, date: "29 Sep 2026",
     items: [{ productId: 3, qty: 1, price: 649000 }], shippingMethod: "Express", shippingFee: 32000,
     payment: "pending", received: false,
     history: [{ at: "29 Sep 2026, 18.02", event: "created", actor: "Nadia Putri" }],
   },
   {
-    number: "837288", buyerId: "nadia", buyer: "Nadia Putri", phone: CURRENT_BUYER.phone, address: CURRENT_BUYER.address, date: "27 Sep 2026",
+    number: "837288", buyerId: "nadia", buyer: "Nadia Putri", phone: DEMO_BUYER.phone, address: DEMO_BUYER.address, date: "27 Sep 2026",
     items: [{ productId: 4, qty: 1, price: 329000 }, { productId: 6, qty: 1, price: 279000 }], shippingMethod: "Reguler", shippingFee: 18000,
     payment: "success", received: false,
     history: [
@@ -81,7 +81,7 @@ export const seedOrders: Order[] = [
     ],
   },
   {
-    number: "837270", buyerId: "nadia", buyer: "Nadia Putri", phone: CURRENT_BUYER.phone, address: CURRENT_BUYER.address, date: "22 Sep 2026",
+    number: "837270", buyerId: "nadia", buyer: "Nadia Putri", phone: DEMO_BUYER.phone, address: DEMO_BUYER.address, date: "22 Sep 2026",
     items: [{ productId: 2, qty: 1, price: 129000 }, { productId: 5, qty: 1, price: 459000 }], shippingMethod: "Reguler", shippingFee: 18000,
     payment: "success", received: true,
     history: [
@@ -91,7 +91,7 @@ export const seedOrders: Order[] = [
     ],
   },
   {
-    number: "837240", buyerId: "nadia", buyer: "Nadia Putri", phone: CURRENT_BUYER.phone, address: CURRENT_BUYER.address, date: "15 Sep 2026",
+    number: "837240", buyerId: "nadia", buyer: "Nadia Putri", phone: DEMO_BUYER.phone, address: DEMO_BUYER.address, date: "15 Sep 2026",
     items: [{ productId: 6, qty: 1, price: 279000 }], shippingMethod: "Reguler", shippingFee: 18000,
     payment: "success", received: true,
     history: [

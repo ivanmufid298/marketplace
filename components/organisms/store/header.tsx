@@ -5,6 +5,7 @@ import { Icon } from "../../atoms/icon";
 import { IconButton } from "../../atoms/icon-button";
 import { SearchField } from "../../molecules/search-field";
 import { useStore } from "../../providers/store-provider";
+import { AccountMenu } from "./account-menu";
 
 export function Header() {
   const { query, setQuery, cartCount, openPanel } = useStore();
@@ -26,7 +27,7 @@ export function Header() {
             onChange={(v) => setQuery(v.toLowerCase())}
           />
           <div className="actions">
-            <IconButton label={t("store.header.account")}><Icon name="user" /></IconButton>
+            <AccountMenu />
             <IconButton label={t("store.header.orders")} onClick={() => openPanel("orders")}><Icon name="package" /></IconButton>
             <IconButton label={t("store.header.openCart")} onClick={() => openPanel("drawer")}>
               <Icon name="cart" />
