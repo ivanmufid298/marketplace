@@ -1,8 +1,8 @@
 # PRD — Toko Online Jastip & Barang Impor
 
 **Status:** Draft untuk diskusi  
-**Versi:** 0.4  
-**Pembaruan:** 30 September 2026
+**Versi:** 0.5  
+**Pembaruan:** 1 Oktober 2026
 
 ## 1. Ringkasan Produk
 
@@ -118,6 +118,8 @@ Produk yang pernah masuk order tidak dihapus permanen agar histori transaksi tet
 
 ### Keputusan MVP
 
+> Catatan: pemecahan order menjadi kelompok pengiriman di bawah adalah rencana. Pada versi MVP yang sedang dibangun, tiap order memakai satu status sederhana (bagian 12, "Status order MVP"), dan tiap order masih mencatat satu ongkir.
+
 - Ready stock dan PO tampil dalam katalog yang sama dan boleh masuk satu checkout.
 - Buyer melakukan satu pembayaran untuk seluruh item.
 - Sistem memecah order menjadi beberapa kelompok fulfillment/pengiriman berdasarkan tipe barang dan estimasi ketersediaan.
@@ -157,7 +159,7 @@ Produk yang pernah masuk order tidak dihapus permanen agar histori transaksi tet
 6. Jika ditolak, buyer melihat alasan dan dapat mengunggah ulang dalam **2 jam** sejak penolakan.
 7. Jika buyer mengunggah ulang sebelum batas waktu, status kembali menjadi `under_review`.
 8. Jika tidak ada unggahan ulang sampai batas waktu, status menjadi `expired` dan reservasi dilepas.
-9. Admin tetap dapat membatalkan order secara manual dengan alasan pada tahap mana pun sebelum fulfillment dikirim.
+9. Admin tetap dapat membatalkan order secara manual dengan alasan wajib sampai buyer menandai pesanan selesai. Order yang sudah dibayar masuk ke `refund_pending`.
 
 Keputusan MVP:
 
@@ -318,7 +320,7 @@ Status ringkas bukan sumber kebenaran baru dan tidak boleh menggantikan payment 
 - Order `awaiting_payment` otomatis dibatalkan ketika reservasi kedaluwarsa.
 - Setelah bukti diunggah, pembatalan diproses admin dan wajib memiliki catatan.
 - Order `paid` yang dibatalkan masuk ke `refund_pending`, lalu `refunded` setelah pengembalian dana dicatat.
-- Fulfillment yang sudah dikirim tidak dapat dibatalkan melalui alur pembatalan biasa.
+- Pada MVP yang disederhanakan, admin dapat membatalkan sampai buyer menandai pesanan selesai. Larangan membatalkan fulfillment yang sudah dikirim berlaku ketika status pengiriman per kelompok diaktifkan.
 
 ## 13. Perhitungan Harga
 
@@ -358,7 +360,7 @@ Order menyimpan snapshot subtotal, diskon, ongkir, dan total. Perubahan harga at
 ### Commerce
 
 - `Cart`, `CartItem` jika cart tersimpan lintas perangkat.
-- `Order`: buyer, nomor, payment status, snapshot alamat dan harga, expiry.
+- `Order`: buyer, nomor, payment status, snapshot alamat dan harga, expiry, `received_at` (saat buyer menekan Pesanan selesai), `cancelled_at` beserta catatan pembatalan, dan status refund.
 - `OrderItem`: referensi produk/varian, snapshot nama/harga, quantity, batch PO.
 - `FulfillmentGroup`: order, tipe ready/PO, batch/ETA, shipping method, shipping fee snapshot, fulfillment status.
 - `FulfillmentGroupItem`: relasi item order ke kelompok pengiriman.
@@ -419,7 +421,7 @@ Order menyimpan snapshot subtotal, diskon, ongkir, dan total. Perubahan harga at
 - [ ] Reservasi stok/kuota dan order expiry.
 - [ ] Transfer manual dan upload bukti.
 - [ ] Pembatalan order sesuai aturan (buyer sebelum upload bukti, admin sesudahnya).
-- [ ] Histori/tracking order buyer dengan status ringkas.
+- [ ] Histori/tracking order buyer (pending, barang sedang dikirim, selesai, dibatalkan) dengan tombol Pesanan selesai.
 - [ ] Admin produk, varian, PO, order, pembayaran, dan zona ongkir.
 - [ ] Promo, voucher, banner, popup, dan scheduler dasar sebagai bagian MVP.
 - [ ] Widget chat buyer dan menu admin Interactions.

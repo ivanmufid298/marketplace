@@ -2,7 +2,7 @@
 
 Status pengerjaan terhadap scope MVP di [PRD.md](PRD.md) bagian 18. File ini diperbarui setiap ada perubahan status, sedangkan [README.md](README.md) hanya berisi gambaran umum dan cara menjalankan.
 
-**Pembaruan terakhir:** 30 September 2026
+**Pembaruan terakhir:** 1 Oktober 2026
 
 ## Legenda
 
@@ -26,7 +26,7 @@ Belum ada item yang berstatus Selesai karena backend (Supabase, R2) belum dikerj
 | Ongkir manual berbasis zona | Belum | Checkout memakai 3 opsi flat yang di-hardcode. Halaman ongkir admin belum mengenal zona kota/provinsi. |
 | Reservasi stok/kuota dan order expiry | Belum | Aturan 2 jam dan batas upload ulang 2 jam belum diimplementasikan. |
 | Transfer manual dan upload bukti | UI | Simulasi saja: cek ukuran 5 MB, file tidak tersimpan, MIME type belum divalidasi. |
-| Pembatalan order | Belum | |
+| Pembatalan order | UI sebagian | Admin bisa membatalkan pesanan dengan alasan wajib sampai pembeli menandai selesai, dan mencatat refund untuk pesanan yang sudah dibayar. Pembeli belum bisa membatalkan sendiri sebelum upload bukti. |
 | Histori dan tracking order buyer | UI sebagian | Menu "Pesanan saya" (ikon paket di header, tab "Pesanan" di navigasi bawah mobile) menampilkan pesanan pembeli dengan status Menunggu pembayaran, Barang sedang dikirim, Selesai, atau Dibatalkan. Checkout membuat pesanan baru, dan tombol "Pesanan selesai" (dengan konfirmasi) muncul saat barang sedang dikirim. Belum ada halaman `/orders` dan `/orders/[orderNumber]`, dan pembeli belum bisa membatalkan pesanan. |
 | Admin: produk, varian, PO, order, pembayaran, zona ongkir | UI sebagian | Produk, pesanan, pembayaran, dan ongkir ada. Belum ada batch PO dan varian. Tolak pembayaran belum meminta alasan. Pembayaran dan Pesanan memakai data yang sama: menerima pembayaran mengubah status pesanan menjadi "Barang sedang dikirim". |
 | Promo, voucher, banner, popup, scheduler dasar | UI sebagian | Layar admin dan form scheduler ada, tetapi form belum menyimpan. Storefront belum menampilkan banner, popup, atau input voucher. |
@@ -54,7 +54,7 @@ Urutan mengikuti dependensi teknis:
 
 1. Supabase Auth, profile, role buyer/admin, dan proteksi `/admin`.
 2. Skema database: kategori, produk, varian, foto, batch PO.
-3. Cart, reservasi stok/kuota, order expiry, checkout, dan fulfillment group.
+3. Cart, reservasi stok/kuota, order expiry, dan checkout yang menyimpan pesanan ke database (fulfillment group per kelompok pengiriman ditunda).
 4. Pembayaran manual, riwayat bukti transfer, dan penyimpanan privat di R2.
 5. Batch PO di admin, serta menyambungkan order, interaction, review, promo, voucher, banner, popup, dan scheduler ke database.
 6. RLS, audit log, rate limiting, dan automated testing.

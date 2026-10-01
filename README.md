@@ -11,16 +11,18 @@ Prototype UI/UX toko online **single seller** untuk produk ready stock, jastip, 
 - Homepage, hero banner, kategori, Hot Promo, pencarian, dan sorting produk.
 - Detail produk, informasi stok terbatas, rating, dan daftar review.
 - Wishlist dan keranjang belanja lokal.
-- Checkout tiga tahap: alamat, pengiriman, dan transfer manual.
+- Checkout tiga tahap: alamat, pengiriman, dan transfer manual. Checkout membuat pesanan baru dengan status Pending.
 - Upload bukti pembayaran maksimal 5 MB sebagai simulasi UI.
+- Menu **Pesanan saya** (ikon paket di header, tab Pesanan di navigasi bawah mobile): status pesanan, tombol "Pesanan selesai" saat barang sedang dikirim, dan form ulasan (rating dan teks) untuk pesanan yang selesai.
 - Widget chat untuk menghubungi admin.
 - Navigasi responsif untuk mobile dan desktop.
 
 ### Admin
 
-- Dashboard dan statistik penjualan bulanan/tahunan.
-- Pengelolaan etalase produk.
-- Verifikasi dan perubahan status pembayaran.
+- Dashboard: statistik penjualan, statistik pengunjung, total kunjungan, dan sebaran perangkat, bulanan/tahunan.
+- Pengelolaan etalase produk, dengan jumlah dilihat per produk.
+- Pesanan: daftar dengan cari dan filter status, detail, riwayat, batalkan pesanan, dan catat refund.
+- Verifikasi pembayaran. Menerima pembayaran mengubah status pesanan menjadi "Barang sedang dikirim" secara otomatis.
 - Interactions: daftar percakapan, thread chat, balasan admin, dan status penanganan.
 - Moderasi review berdasarkan rating dan status tampil.
 - Pengelolaan promo dan voucher beserta scheduler.
@@ -28,7 +30,7 @@ Prototype UI/UX toko online **single seller** untuk produk ready stock, jastip, 
 - Pengaturan layanan dan tarif ongkir.
 - Form dan dropdown custom yang responsif.
 
-Interaksi seperti menyimpan form, mengunggah file, mengubah pembayaran, membalas chat, serta memoderasi review masih berupa simulasi di memori browser.
+Interaksi seperti menyimpan form, mengunggah file, membalas chat, serta memoderasi review masih berupa simulasi di memori browser. Pesanan dan pembayaran adalah pengecualian: keduanya memakai penyimpanan bersama di `localStorage` (lihat status di atas).
 
 ## Menjalankan secara lokal
 
@@ -63,8 +65,8 @@ app/
 └── admin/                # dashboard admin (satu route per menu)
     ├── layout.tsx
     ├── admin.css
-    └── page.tsx, products/, payments/, interactions/, reviews/,
-        promos/, vouchers/, content/, shipping/
+    └── page.tsx, products/, orders/, payments/, interactions/,
+        reviews/, promos/, vouchers/, content/, shipping/
 components/               # atomic design
 ├── atoms/                # Icon, Button, Chip, Switch, Toast, badge, dll.
 ├── molecules/            # ProductCard, CartRow, Field, Select, PaymentRow, dll.
@@ -119,7 +121,7 @@ Tailwind CSS v4 sudah terpasang dan token warna tersedia lewat `@theme` di `app/
 
 ### State contoh
 
-Keranjang, wishlist, checkout, chat, pembayaran, interactions, dan review disimpan di React context (`StoreProvider` dan `AdminProvider` di `components/providers/`). Saat backend tersedia, ganti context ini dengan data dari Supabase melalui Server Component, Route Handler, atau Server Action.
+Keranjang, wishlist, checkout, chat, interactions, dan review disimpan di React context (`StoreProvider` dan `AdminProvider` di `components/providers/`). Pesanan dan pembayaran disimpan di `lib/orders-store.ts` (`localStorage`) agar storefront dan admin membaca data yang sama. Saat backend tersedia, ganti context ini dengan data dari Supabase melalui Server Component, Route Handler, atau Server Action.
 
 ## Target implementasi
 
