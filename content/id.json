@@ -213,7 +213,8 @@
         "default": "Masuk ke akunmu.",
         "chat": "Masuk untuk mengobrol dengan admin.",
         "checkout": "Masuk untuk melanjutkan checkout. Keranjangmu tetap tersimpan.",
-        "orders": "Masuk untuk melihat pesananmu."
+        "orders": "Masuk untuk melihat pesananmu.",
+        "cart": "Masuk untuk memakai keranjang belanjamu. Produk yang kamu pilih akan masuk otomatis."
       },
       "name": "Nama lengkap",
       "namePlaceholder": "Nama kamu",
@@ -250,7 +251,8 @@
       },
       "chatPrompt": "Masuk untuk mengobrol dengan admin.",
       "ordersPrompt": "Masuk untuk melihat pesananmu.",
-      "promptAction": "Masuk atau daftar"
+      "promptAction": "Masuk atau daftar",
+      "cartPrompt": "Masuk untuk melihat dan mengisi keranjangmu."
     }
   },
   "admin": {

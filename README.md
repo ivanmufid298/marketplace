@@ -10,12 +10,12 @@ Prototype UI/UX toko online **single seller** untuk produk ready stock, jastip, 
 
 - Homepage, hero banner, kategori, Hot Promo, pencarian, dan sorting produk.
 - Detail produk, informasi stok terbatas, rating, dan daftar review.
-- Wishlist dan keranjang belanja lokal.
+- Wishlist lokal dan keranjang belanja (keranjang per akun, butuh login).
 - Checkout tiga tahap: alamat, pengiriman, dan transfer manual. Checkout membuat pesanan baru dengan status Pending.
 - Upload bukti pembayaran maksimal 5 MB sebagai simulasi UI.
 - Menu **Pesanan saya** (ikon paket di header, tab Pesanan di navigasi bawah mobile): status pesanan, tombol "Pesanan selesai" saat barang sedang dikirim, dan form ulasan (rating dan teks) untuk pesanan yang selesai.
 - Widget chat untuk menghubungi admin. Widget selalu tampil, tetapi mengirim pesan memerlukan login.
-- Guest bisa menjelajah dan mengisi cart. Chat, checkout, dan Pesanan saya meminta login (dialog masuk/daftar), lalu aksinya dilanjutkan otomatis.
+- Guest bisa menjelajah dan memakai wishlist. Menambah ke keranjang, checkout, chat, dan Pesanan saya meminta login (dialog masuk/daftar), lalu aksinya dilanjutkan otomatis. Produk yang dipilih langsung masuk ke keranjang setelah berhasil masuk.
 - Navigasi responsif untuk mobile dan desktop.
 
 ### Admin
@@ -146,11 +146,20 @@ Kedua nilai itu aman dipakai di browser karena akses data dibatasi RLS. **Jangan
 
 Yang sudah tersambung ke Supabase baru sesi login (daftar, masuk, keluar). Profil, role, RLS, proteksi `/admin`, dan data pesanan belum; urutannya ada di [PROGRESS.md](PROGRESS.md).
 
+Checklist uji setelah Supabase terhubung (variabel `NEXT_PUBLIC_*` dibaca saat build dan start, jadi restart `npm run dev` atau redeploy setelah mengisinya):
+
+1. Buka dialog login. Peringatan "Mode demo" harus hilang.
+2. Daftar dengan akun baru. Jika "Confirm email" aktif, muncul pesan untuk membuka email konfirmasi, lalu masuk setelah mengonfirmasi. Jika mati, langsung masuk.
+3. Buka **Authentication → Users** di dashboard Supabase: pengguna baru harus muncul, dan nama lengkap tersimpan di user metadata (`full_name`).
+4. Masuk dengan kata sandi yang salah: harus muncul "Email atau kata sandi salah."
+5. Tambah produk ke keranjang, keluar, lalu masuk lagi dengan akun yang sama: keranjang harus kembali.
+6. Tanpa login, "Tambah ke keranjang", chat, checkout, dan Pesanan saya harus meminta login.
+
 Untuk mencoba login demo, masuk dengan `nadia@demo.test` (kata sandi apa saja, min. 8 karakter) agar pesanan contoh muncul di Pesanan saya.
 
 ### State contoh
 
-Wishlist, checkout, chat, interactions, dan review disimpan di React context (`StoreProvider` dan `AdminProvider` di `components/providers/`). Pesanan dan pembayaran disimpan di `lib/orders-store.ts` (`localStorage`) agar storefront dan admin membaca data yang sama. Keranjang juga disimpan di `localStorage` (cart lokal guest) sehingga bertahan setelah reload dan setelah login. Saat backend tersedia, ganti context ini dengan data dari Supabase melalui Server Component, Route Handler, atau Server Action.
+Wishlist, checkout, chat, interactions, dan review disimpan di React context (`StoreProvider` dan `AdminProvider` di `components/providers/`). Pesanan dan pembayaran disimpan di `lib/orders-store.ts` (`localStorage`) agar storefront dan admin membaca data yang sama. Keranjang disimpan di `localStorage` per akun (kunci `marketplace-cart-v2:<id pengguna>`), sehingga bertahan setelah reload dan kembali saat akun yang sama login lagi. Guest tidak punya keranjang. Saat backend tersedia, ganti context ini dengan data dari Supabase melalui Server Component, Route Handler, atau Server Action.
 
 ## Target implementasi
 
@@ -226,7 +235,7 @@ Urutan pengerjaan dan status tiap item MVP dicatat di [PROGRESS.md](PROGRESS.md)
 
 ## Ketentuan keamanan minimum
 
-- Login wajib untuk chat, checkout, dan Pesanan saya. Pengecekan di UI saat ini hanya kenyamanan; validasi sesungguhnya harus dilakukan di server (RLS dan Route Handler) saat backend tersambung.
+- Login wajib untuk keranjang, checkout, chat, dan Pesanan saya. Pengecekan di UI saat ini hanya kenyamanan; validasi sesungguhnya harus dilakukan di server (RLS dan Route Handler) saat backend tersambung.
 - Lindungi seluruh route `/admin` dengan autentikasi dan pengecekan role di server.
 - Aktifkan RLS agar buyer hanya dapat mengakses data miliknya.
 - Simpan Supabase service role key dan credential R2 hanya di server.

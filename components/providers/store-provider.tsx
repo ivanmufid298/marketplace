@@ -19,7 +19,8 @@ export type MobileNavMode = "home" | "category" | "saved" | "orders" | "cart";
 const EMPTY_ADDRESS: Address = { fullName: "", phone: "", address: "", city: "", postcode: "", note: "" };
 const REQUIRED_ADDRESS_FIELDS: (keyof Address)[] = ["fullName", "phone", "address", "city", "postcode"];
 const MAX_PROOF_BYTES = 5 * 1024 * 1024;
-const CART_KEY = "marketplace-cart-v1";
+const CART_KEY_PREFIX = "marketplace-cart-v2:";
+const LEGACY_CART_KEY = "marketplace-cart-v1";
 const ALL_PANELS_CLOSED: Record<PanelId, boolean> = { drawer: false, detail: false, checkout: false, categorySheet: false, chat: false, orders: false };
 
 type StoreContextValue = {
@@ -102,37 +103,49 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const interactionId = useRef<string | null>(null);
   const proofFile = useRef<File | null>(null);
   const [myReviews, setMyReviews] = useState(INITIAL_MY_REVIEWS);
-  const { user, loginOpen, intent, openLogin, closeLogin } = useAuth();
+  const { user, ready, loginOpen, intent, openLogin, closeLogin } = useAuth();
+  // The cart belongs to the signed-in account and is kept in this browser per account until it moves to the database.
+  // Guests have no cart: adding to it asks them to sign in first.
+  const userId = user?.id ?? null;
+  const [cartOwner, setCartOwner] = useState<string | null>(null);
+  const [pendingAdd, setPendingAdd] = useState<Product | null>(null);
+  useEffect(() => {
+    if (!ready) return;
+    let stored: CartLine[] = [];
+    if (userId) {
+      try {
+        const raw: unknown = JSON.parse(window.localStorage.getItem(CART_KEY_PREFIX + userId) ?? "[]");
+        if (Array.isArray(raw)) {
+          stored = raw.flatMap((line: Partial<CartLine>) => {
+            const product = products.find((p) => p.id === line.id);
+            return product && typeof line.qty === "number" && line.qty > 0 ? [{ id: product.id, qty: Math.min(line.qty, product.stock) }] : [];
+          });
+        }
+      } catch {
+        // Unreadable cart: start empty.
+      }
+    }
+    try {
+      window.localStorage.removeItem(LEGACY_CART_KEY);
+    } catch {
+      // Storage blocked: nothing to clean up.
+    }
+    setCart(stored);
+    setCartOwner(userId);
+  }, [ready, userId]);
+  useEffect(() => {
+    if (!userId || cartOwner !== userId) return;
+    try {
+      window.localStorage.setItem(CART_KEY_PREFIX + userId, JSON.stringify(cart));
+    } catch {
+      // Storage blocked: the cart still works for this tab.
+    }
+  }, [cart, cartOwner, userId]);
+
   const allOrders = ordersStore.useOrders();
   const orders = useMemo(() => (user ? allOrders.filter((o) => o.buyerId === user.id) : []), [allOrders, user]);
   const [toast, setToast] = useState("");
   const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
-
-  // The cart lives in this browser so a guest's items survive a reload and a sign-in (PRD section 5).
-  const [cartReady, setCartReady] = useState(false);
-  useEffect(() => {
-    try {
-      const stored: unknown = JSON.parse(window.localStorage.getItem(CART_KEY) ?? "[]");
-      if (Array.isArray(stored)) {
-        const valid = stored.flatMap((line: Partial<CartLine>) => {
-          const product = products.find((p) => p.id === line.id);
-          return product && typeof line.qty === "number" && line.qty > 0 ? [{ id: product.id, qty: Math.min(line.qty, product.stock) }] : [];
-        });
-        if (valid.length) setCart(valid);
-      }
-    } catch {
-      // Unreadable cart: start empty.
-    }
-    setCartReady(true);
-  }, []);
-  useEffect(() => {
-    if (!cartReady) return;
-    try {
-      window.localStorage.setItem(CART_KEY, JSON.stringify(cart));
-    } catch {
-      // Storage blocked: the cart still works for this tab.
-    }
-  }, [cart, cartReady]);
 
   const showToast = useCallback((msg: string) => {
     setToast(msg);
@@ -185,6 +198,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const addToCart = useCallback(
     (p: Product) => {
+      if (!user) {
+        // Remember what the buyer picked; it is added once they have signed in.
+        setPendingAdd(p);
+        openLogin("cart");
+        return;
+      }
       const line = cart.find((l) => l.id === p.id);
       if (line && line.qty >= p.stock) {
         showToast(t("store.toast.stockMax"));
@@ -194,7 +213,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setPanel("detail", false);
       showToast(t("store.toast.cartAdded"));
     },
-    [cart, setPanel, showToast],
+    [cart, openLogin, setPanel, showToast, user],
   );
 
   const changeQty = useCallback((id: number, delta: number) => {
@@ -234,7 +253,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   // A user appearing while the login dialog is open means sign-in worked: close it and pick up where the buyer left off.
   useEffect(() => {
     if (!user || !loginOpen) return;
+    // Adding to the cart has to wait until this account's saved cart has loaded, or it would be overwritten.
+    if (intent === "cart" && cartOwner !== userId) return;
     closeLogin();
+    if (intent === "cart" && pendingAdd) {
+      addToCart(pendingAdd);
+      setPendingAdd(null);
+    }
     if (intent === "checkout" && cart.length) {
       setPanel("drawer", false);
       setCheckoutStep(1);
@@ -242,7 +267,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
     if (intent === "orders") setPanel("orders", true);
     if (intent === "chat") setPanel("chat", true);
-  }, [user, loginOpen, intent, cart.length, closeLogin, setPanel]);
+  }, [user, userId, loginOpen, intent, cartOwner, pendingAdd, cart.length, addToCart, closeLogin, setPanel]);
 
   // Pre-fill the receiver name from the account the first time.
   useEffect(() => {

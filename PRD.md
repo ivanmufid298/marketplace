@@ -1,7 +1,7 @@
 # PRD — Toko Online Jastip & Barang Impor
 
 **Status:** Draft untuk diskusi  
-**Versi:** 0.6  
+**Versi:** 0.7  
 **Pembaruan:** 1 Oktober 2026
 
 ## 1. Ringkasan Produk
@@ -74,17 +74,17 @@ Target development dan MVP awal adalah biaya nol selama penggunaan masih berada 
 
 | Role | Akses |
 |---|---|
-| Guest | Melihat katalog dan detail produk, memakai wishlist dan cart lokal. Widget chat tampil, tetapi mengirim pesan memerlukan login. |
-| Buyer | Semua akses guest, ditambah checkout, chat dengan admin, bukti pembayaran, histori, dan tracking order miliknya. |
+| Guest | Melihat katalog dan detail produk serta memakai wishlist lokal. Widget chat tampil, tetapi menambah ke cart, checkout, chat, dan Pesanan Saya memerlukan login. |
+| Buyer | Semua akses guest, ditambah cart, checkout, chat dengan admin, bukti pembayaran, histori, dan tracking order miliknya. |
 | Admin | Seluruh dashboard dan data operasional toko. |
 
 Keputusan awal:
 
-- Guest dapat melihat katalog serta menyimpan cart dan wishlist secara lokal di browser.
-- **Checkout, chat, dan Pesanan Saya membutuhkan login.** Widget chat tetap tampil bagi guest; saat guest mencoba mengirim pesan, checkout, atau membuka pesanan, dialog login muncul dan aksi dilanjutkan setelah berhasil masuk.
+- Guest dapat melihat katalog dan menyimpan wishlist secara lokal di browser.
+- **Menambah ke cart, membuka cart, checkout, chat, dan Pesanan Saya membutuhkan login.** Widget chat tetap tampil bagi guest. Saat guest mencoba salah satu aksi itu, dialog login muncul dan aksi dilanjutkan setelah berhasil masuk (produk yang dipilih otomatis masuk ke cart).
 - Autentikasi memakai Supabase Auth dengan email dan kata sandi. Pendaftaran meminta nama lengkap, email, dan kata sandi minimal 8 karakter. Nomor telepon dan alamat diisi saat checkout atau di profil.
 - Konfirmasi email mengikuti pengaturan project Supabase. Jika aktif, buyer diminta membuka email konfirmasi sebelum bisa masuk.
-- Cart lokal guest dapat dipindahkan ke akun setelah login dan tetap divalidasi ulang.
+- Cart adalah milik akun buyer, guest tidak punya cart. Isinya tetap divalidasi ulang saat checkout.
 - Route `/admin` dilindungi autentikasi dan pengecekan role di server.
 - RLS memastikan buyer hanya dapat mengakses data miliknya.
 
@@ -141,8 +141,8 @@ Produk yang pernah masuk order tidak dihapus permanen agar histori transaksi tet
 
 1. Browse, cari, atau filter katalog.
 2. Lihat detail, tipe produk, harga, stok/sisa kuota, deadline, dan estimasi PO.
-3. Tambah ke cart atau beli langsung.
-4. Login atau daftar saat hendak checkout, jika belum memiliki sesi. Cart lokal tetap tersimpan dan checkout dilanjutkan otomatis setelah masuk.
+3. Tambah ke cart atau beli langsung. Guest diminta login lebih dulu, dan produk yang dipilih otomatis masuk setelah berhasil masuk.
+4. Login atau daftar jika belum memiliki sesi. Aksi yang tertunda (menambah ke cart atau checkout) dilanjutkan otomatis setelah masuk.
 5. Pilih/isi alamat dan layanan untuk setiap kelompok pengiriman.
 6. Lihat rincian item, pemisahan pengiriman, ongkir, dan harga final lalu buat order.
 7. Sistem mereservasi stok/kuota.
@@ -360,7 +360,7 @@ Order menyimpan snapshot subtotal, diskon, ongkir, dan total. Perubahan harga at
 
 ### Commerce
 
-- `Cart`, `CartItem` jika cart tersimpan lintas perangkat.
+- `Cart`, `CartItem`: cart milik satu buyer (guest tidak punya cart).
 - `Order`: buyer, nomor, payment status, snapshot alamat dan harga, expiry, `received_at` (saat buyer menekan Pesanan selesai), `cancelled_at` beserta catatan pembatalan, dan status refund.
 - `OrderItem`: referensi produk/varian, snapshot nama/harga, quantity, batch PO.
 - `FulfillmentGroup`: order, tipe ready/PO, batch/ETA, shipping method, shipping fee snapshot, fulfillment status.
@@ -416,8 +416,8 @@ Order menyimpan snapshot subtotal, diskon, ongkir, dan total. Perubahan harga at
 
 - [ ] Katalog ready stock/PO dengan pencarian dan filter.
 - [ ] Detail produk, varian warna/ukuran, dan batch PO.
-- [ ] Auth buyer/admin (Supabase Auth, email dan kata sandi), dengan login wajib untuk chat, checkout, dan Pesanan Saya.
-- [ ] Cart lokal guest, pemindahan cart setelah login, checkout, dan alamat.
+- [ ] Auth buyer/admin (Supabase Auth, email dan kata sandi), dengan login wajib untuk cart, checkout, chat, dan Pesanan Saya.
+- [ ] Cart per akun (login wajib), checkout, dan alamat.
 - [ ] Ongkir manual berbasis zona (kota/provinsi).
 - [ ] Reservasi stok/kuota dan order expiry.
 - [ ] Transfer manual dan upload bukti.
@@ -453,7 +453,7 @@ Order menyimpan snapshot subtotal, diskon, ongkir, dan total. Perubahan harga at
 
 ## 20. Keputusan Produk MVP
 
-1. Guest boleh browsing dan memakai cart serta wishlist lokal. Login wajib sebelum chat, checkout, dan membuka Pesanan Saya. Widget chat tetap tampil untuk guest.
+1. Guest boleh browsing dan memakai wishlist lokal. Login wajib sebelum menambah ke cart, checkout, chat, dan membuka Pesanan Saya. Widget chat tetap tampil untuk guest.
 2. Varian sederhana warna/ukuran masuk MVP.
 3. Ongkir dikelola admin berdasarkan zona yang berisi kota/provinsi.
 4. Produk PO dibayar penuh; deposit tidak masuk MVP.

@@ -4,7 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { getAuthClient, type AuthResult, type AuthUser, type SignUpInput } from "@/lib/auth";
 
 /** What the buyer was trying to do when asked to sign in. Used for the dialog text and to resume afterwards. */
-export type LoginIntent = "default" | "chat" | "checkout" | "orders";
+export type LoginIntent = "default" | "chat" | "checkout" | "orders" | "cart";
 
 type AuthContextValue = {
   user: AuthUser | null;
