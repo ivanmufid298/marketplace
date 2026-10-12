@@ -5,7 +5,7 @@ export type AuthUser = {
 };
 
 /** Keys into store.auth.errors in content/id.json. */
-export type AuthErrorKey = "invalidCredentials" | "emailTaken" | "weakPassword" | "emailNotConfirmed" | "tooMany" | "unknown";
+export type AuthErrorKey = "invalidCredentials" | "emailTaken" | "weakPassword" | "emailNotConfirmed" | "tooMany" | "notConfigured" | "unknown";
 
 export type AuthResult =
   | { ok: true; user: AuthUser | null; /** True when the account exists but must confirm its email before signing in. */ needsConfirmation: boolean }

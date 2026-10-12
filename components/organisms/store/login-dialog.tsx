@@ -17,7 +17,7 @@ const MIN_PASSWORD = 8;
 
 /** Sign in or register. Opened whenever a guest tries to chat, check out, or open their orders. */
 export function LoginDialog() {
-  const { loginOpen, closeLogin, intent, signIn, signUp, demo } = useAuth();
+  const { loginOpen, closeLogin, intent, signIn, signUp, demo, mode: authMode } = useAuth();
   const { showToast } = useStore();
   const [mode, setMode] = useState<Mode>("signIn");
   const [name, setName] = useState("");
@@ -77,7 +77,9 @@ export function LoginDialog() {
         <p className="co-note" style={{ margin: 0 }}>{t(`store.auth.intent.${intent}`)}</p>
         {demo && <p className="login-demo">{t("store.auth.demoNotice")}</p>}
 
-        {confirmEmail ? (
+        {authMode === "misconfigured" ? (
+          <p className="login-error" role="alert" style={{ marginTop: 18 }}>{t("store.auth.notConfiguredNotice")}</p>
+        ) : confirmEmail ? (
           <p className="login-info" role="status" style={{ marginTop: 18 }}>{t("store.auth.confirmEmail", { email })}</p>
         ) : (
           <form className="login-form" onSubmit={submit} noValidate>
@@ -99,12 +101,14 @@ export function LoginDialog() {
           </form>
         )}
 
-        <p className="login-switch">
-          {signUpMode ? t("store.auth.switchToSignIn") : t("store.auth.switchToSignUp")}{" "}
-          <button type="button" className="link-btn" onClick={() => switchMode(signUpMode ? "signIn" : "signUp")}>
-            {signUpMode ? t("store.auth.switchToSignInAction") : t("store.auth.switchToSignUpAction")}
-          </button>
-        </p>
+        {authMode !== "misconfigured" && (
+          <p className="login-switch">
+            {signUpMode ? t("store.auth.switchToSignIn") : t("store.auth.switchToSignUp")}{" "}
+            <button type="button" className="link-btn" onClick={() => switchMode(signUpMode ? "signIn" : "signUp")}>
+              {signUpMode ? t("store.auth.switchToSignInAction") : t("store.auth.switchToSignUpAction")}
+            </button>
+          </p>
+        )}
       </div>
     </div>
   );

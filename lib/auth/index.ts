@@ -1,17 +1,40 @@
+import { authMode, type AuthMode } from "./config";
 import { mockAuth } from "./mock-auth";
 import { createSupabaseAuth } from "./supabase-auth";
 import type { AuthClient } from "./types";
 
+/** Used when no login is allowed: nobody can sign in, and the UI says why. */
+const unavailableAuth: AuthClient = {
+  demo: false,
+  subscribe(listener) {
+    listener(null);
+    return () => {};
+  },
+  async signIn() {
+    return { ok: false, error: "notConfigured" };
+  },
+  async signUp() {
+    return { ok: false, error: "notConfigured" };
+  },
+  async signOut() {},
+};
+
 let client: AuthClient | null = null;
 
-/** Supabase when both env vars are set, otherwise the demo adapter. Created once per browser tab. */
+/** Supabase when its env vars are set, the demo login where that is allowed (see config.ts), otherwise nothing. */
 export function getAuthClient(): AuthClient {
   if (!client) {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    client = url && key ? createSupabaseAuth(url, key) : mockAuth;
+    const mode = authMode();
+    client =
+      mode === "supabase"
+        ? createSupabaseAuth(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "", process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "")
+        : mode === "demo"
+          ? mockAuth
+          : unavailableAuth;
   }
   return client;
 }
 
+export { authMode };
 export type { AuthClient, AuthErrorKey, AuthResult, AuthUser, SignUpInput } from "./types";
+export type { AuthMode };

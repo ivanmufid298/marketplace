@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { AdminTemplate } from "@/components/templates/admin-template";
 import { t } from "@/lib/i18n";
 import "./admin.css";
 
@@ -10,6 +9,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function AdminLayout({ children }: { children: ReactNode }) {
-  return <AdminTemplate>{children}</AdminTemplate>;
+// Shared by the login page and the panel. The access check lives in (panel)/layout.tsx so the login page stays reachable.
+export default function AdminRootLayout({ children }: { children: ReactNode }) {
+  return <div className="admin">{children}</div>;
 }

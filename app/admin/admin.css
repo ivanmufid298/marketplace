@@ -59,3 +59,14 @@
 .admin .mobile-only{display:none}
 @media(max-width:760px){.admin .orders-table{min-width:0}.admin .orders-table th,.admin .orders-table td{padding:12px 9px}.admin .orders-table .hide-mobile{display:none}.admin .orders-table .mobile-only{display:block}}
 @media(max-width:760px){.admin .orders-table td:first-child strong{white-space:nowrap}}
+.admin .demo-banner{background:#fff2dc;color:#8a5212;border-bottom:1px solid #f0d9ae;padding:9px 20px;font-size:13px;font-weight:700;text-align:center}
+.admin .admin-login{min-height:100vh;display:grid;place-items:center;padding:20px;background:#f8f4ee}
+.admin .admin-login-card{width:min(420px,100%);background:var(--paper);border:1px solid var(--line);border-radius:22px;padding:30px;box-shadow:var(--shadow)}
+.admin .admin-login-card h1{font:500 30px Georgia,serif;color:var(--wine);margin:0 0 4px}
+.admin .admin-login-form{display:grid;gap:14px;margin-top:18px}
+.admin .admin-login-form .btn{width:100%}
+.admin .login-alert{background:#fde8eb;color:var(--red);border-radius:12px;padding:10px 12px;font-size:13px;margin:14px 0 0}
+.admin .admin-login-form .login-alert{margin:0}
+.admin .link-back{color:var(--wine);font-weight:700;font-size:14px}
+.admin .signout-link{width:100%;border:0;background:transparent;cursor:pointer;text-align:left;font:inherit;font-size:13px}
+.admin .signout-link:hover{color:#fff}

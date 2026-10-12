@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { getAuthClient, type AuthResult, type AuthUser, type SignUpInput } from "@/lib/auth";
+import { authMode, getAuthClient, type AuthMode, type AuthResult, type AuthUser, type SignUpInput } from "@/lib/auth";
 
 /** What the buyer was trying to do when asked to sign in. Used for the dialog text and to resume afterwards. */
 export type LoginIntent = "default" | "chat" | "checkout" | "orders" | "cart";
@@ -10,6 +10,8 @@ type AuthContextValue = {
   user: AuthUser | null;
   /** False until the first session lookup finishes. */
   ready: boolean;
+  /** supabase, demo, or misconfigured (no login possible). */
+  mode: AuthMode;
   /** True when running on the demo adapter instead of Supabase. */
   demo: boolean;
   loginOpen: boolean;
@@ -58,6 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value: AuthContextValue = {
     user,
     ready,
+    mode: authMode(),
     demo: client.demo,
     loginOpen,
     intent,

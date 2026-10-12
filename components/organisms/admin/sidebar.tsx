@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { ADMIN_NAV } from "@/lib/admin-nav";
+import { authMode, getAuthClient } from "@/lib/auth";
 import { t } from "@/lib/i18n";
 import { Icon } from "../../atoms/icon";
 import { SidebarLink } from "../../molecules/sidebar-link";
@@ -10,6 +11,7 @@ import { useAdmin } from "../../providers/admin-provider";
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { sidebarOpen, setSidebarOpen, interactions, resetData } = useAdmin();
   const unread = interactions.filter((i) => i.status === "open" && i.unread > 0).length;
 
@@ -42,10 +44,25 @@ export function Sidebar() {
           <Icon name="external" width={18} />
           {t("admin.shell.viewStore")}
         </Link>
-        <button type="button" className="store-link reset-link" onClick={resetData}>
-          <Icon name="undo" width={18} />
-          {t("admin.shell.resetData")}
-        </button>
+        {authMode() === "supabase" ? (
+          <button
+            type="button"
+            className="store-link signout-link"
+            onClick={async () => {
+              await getAuthClient().signOut();
+              router.replace("/admin/login");
+              router.refresh();
+            }}
+          >
+            <Icon name="external" width={18} />
+            {t("admin.shell.signOut")}
+          </button>
+        ) : (
+          <button type="button" className="store-link reset-link" onClick={resetData}>
+            <Icon name="undo" width={18} />
+            {t("admin.shell.resetData")}
+          </button>
+        )}
       </div>
     </aside>
   );

@@ -238,7 +238,8 @@
         "weakPassword": "Kata sandi terlalu lemah.",
         "emailNotConfirmed": "Email belum dikonfirmasi. Cek kotak masukmu.",
         "tooMany": "Terlalu banyak percobaan. Coba lagi sebentar.",
-        "unknown": "Terjadi kesalahan. Coba lagi."
+        "unknown": "Terjadi kesalahan. Coba lagi.",
+        "notConfigured": "Login belum siap dipakai. Coba lagi nanti."
       },
       "confirmEmail": "Kami mengirim tautan konfirmasi ke {email}. Buka email itu lalu masuk.",
       "demoNotice": "Mode demo: login tidak diverifikasi. Masuk dengan nadia@demo.test (kata sandi apa saja, min. 8 karakter) untuk melihat pesanan contoh.",
@@ -252,7 +253,8 @@
       "chatPrompt": "Masuk untuk mengobrol dengan admin.",
       "ordersPrompt": "Masuk untuk melihat pesananmu.",
       "promptAction": "Masuk atau daftar",
-      "cartPrompt": "Masuk untuk melihat dan mengisi keranjangmu."
+      "cartPrompt": "Masuk untuk melihat dan mengisi keranjangmu.",
+      "notConfiguredNotice": "Layanan login belum dikonfigurasi di situs ini. Kamu masih bisa menjelajah, tetapi belum bisa masuk."
     }
   },
   "admin": {
@@ -270,7 +272,8 @@
       "openMenu": "Buka menu",
       "fallbackTitle": "Admin",
       "resetData": "Reset data contoh",
-      "resetDone": "Data contoh dikembalikan ke awal"
+      "resetDone": "Data contoh dikembalikan ke awal",
+      "signOut": "Keluar"
     },
     "nav": {
       "dashboard": "Dashboard",
@@ -619,6 +622,23 @@
     },
     "ui": {
       "selectPlaceholder": "Pilih opsi"
+    },
+    "demoBanner": "Mode demo: panel admin terbuka tanpa login dan datanya hanya contoh. Jangan dipakai di production.",
+    "login": {
+      "title": "Masuk admin",
+      "subtitle": "Khusus pengelola toko.",
+      "email": "Email",
+      "emailPlaceholder": "admin@email.com",
+      "password": "Kata sandi",
+      "submit": "Masuk",
+      "submitting": "Memproses…",
+      "backToStore": "Kembali ke toko",
+      "signOutOther": "Keluar dari akun ini",
+      "errors": {
+        "forbidden": "Akun ini bukan admin. Keluar lalu masuk dengan akun admin.",
+        "config": "Login admin belum dikonfigurasi di situs ini, jadi panel admin terkunci.",
+        "unavailable": "Layanan login sedang tidak bisa dihubungi. Coba lagi sebentar."
+      }
     }
   }
 }
