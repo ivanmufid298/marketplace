@@ -194,7 +194,7 @@ npm run test:sql  # menjalankan migrasi di Postgres sungguhan (PGlite): hak akse
 
 `test:sql` meniru Supabase dengan schema `auth` buatan sendiri. Ia membuktikan SQL dan hak aksesnya benar, **bukan** bahwa project Supabase-mu terkonfigurasi benar. Lakukan checklist di bawah pada project sungguhan.
 
-Checklist uji manual pada project Supabase sungguhan (**belum pernah dijalankan**):
+Pada 12 Oktober 2026 hak akses database dan guard `/admin` sudah diuji otomatis terhadap project Supabase dev: 19 pengecekan SQL (peran disimulasikan dengan `SET ROLE`, di dalam transaksi yang dibatalkan) dan 32 pengecekan HTTP dengan login sungguhan (butir 7 sampai 11 di bawah terbukti di tingkat HTTP, yaitu status dan arah redirect, ditambah `PATCH`, `INSERT`, dan `DELETE` ke PostgREST oleh pembeli; Supabase menolak kata sandi salah (butir 4) tetapi teks pesan di UI belum dilihat). Yang **belum** pernah dijalankan: butir 1 sampai 3, 5, 6, dan 12 (daftar lewat form, konfirmasi email, dan klik di browser), serta tampilan banner demo dan tombol Keluar admin. Checklist uji manual pada project Supabase sungguhan:
 
 *Akun pembeli*
 1. Buka dialog login. Peringatan "Mode demo" harus hilang.
