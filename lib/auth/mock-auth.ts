@@ -69,6 +69,13 @@ export const mockAuth: AuthClient = {
   async signUp({ name, email }: SignUpInput) {
     return { ok: true, user: begin(email.trim().toLowerCase(), name), needsConfirmation: false };
   },
+  // The demo has no email and no passwords to change; both just succeed so the screens can be clicked through.
+  async requestPasswordReset() {
+    return { ok: true };
+  },
+  async updatePassword() {
+    return { ok: true };
+  },
   async signOut() {
     writeJson(SESSION_KEY, null);
     emit();

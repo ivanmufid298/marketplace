@@ -1,6 +1,6 @@
 import { createBrowserClient } from "@supabase/ssr";
 import type { AuthError, Session, User } from "@supabase/supabase-js";
-import type { AuthClient, AuthErrorKey, AuthResult, AuthUser } from "./types";
+import type { ActionResult, AuthClient, AuthErrorKey, AuthResult, AuthUser } from "./types";
 
 /** Maps a Supabase auth error to the keys under store.auth.errors. Unknown errors fall back to "unknown". */
 export function mapAuthError(error: Pick<AuthError, "code" | "status"> | null | undefined): AuthErrorKey {
@@ -12,6 +12,11 @@ export function mapAuthError(error: Pick<AuthError, "code" | "status"> | null | 
       return "emailTaken";
     case "weak_password":
       return "weakPassword";
+    case "same_password":
+      return "samePassword";
+    case "session_not_found":
+    case "otp_expired":
+      return "linkExpired";
     case "email_not_confirmed":
       return "emailNotConfirmed";
     case "over_request_rate_limit":
@@ -57,6 +62,26 @@ export function createSupabaseAuth(url: string, key: string): AuthClient {
         if (data.user && data.user.identities?.length === 0) return { ok: false, error: "emailTaken" };
         // No session means the project requires email confirmation first.
         return { ok: true, user: toAuthUser(data.user), needsConfirmation: !data.session };
+      } catch {
+        return { ok: false, error: "unknown" };
+      }
+    },
+    async requestPasswordReset(email): Promise<ActionResult> {
+      try {
+        // The link lands on this same site. Supabase only honours redirectTo for URLs on its allow-list
+        // (Authentication → URL Configuration) and otherwise falls back to the Site URL.
+        const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: `${window.location.origin}/reset-password` });
+        return error ? { ok: false, error: mapAuthError(error) } : { ok: true };
+      } catch {
+        return { ok: false, error: "unknown" };
+      }
+    },
+    async updatePassword(password): Promise<ActionResult> {
+      try {
+        const { error } = await supabase.auth.updateUser({ password });
+        if (!error) return { ok: true };
+        // No session at all (for example the recovery session already expired) arrives without a code.
+        return { ok: false, error: error.name === "AuthSessionMissingError" ? "linkExpired" : mapAuthError(error) };
       } catch {
         return { ok: false, error: "unknown" };
       }

@@ -4,6 +4,7 @@ import { describe, it } from "node:test";
 import { checkAdminAccess, loginRedirect, type GuardClient } from "./admin-guard.ts";
 import { resolveAuthMode, type AuthEnv } from "./config.ts";
 import { safeAdminNext } from "./safe-next.ts";
+import { mapAuthError } from "./supabase-auth.ts";
 
 const SUPA = { supabaseUrl: "https://abc.supabase.co", supabaseKey: "sb_publishable_x" };
 
@@ -88,4 +89,20 @@ describe("loginRedirect", () => {
   it("anonymous without a destination", () => assert.equal(loginRedirect("anonymous"), "/admin/login"));
   it("forbidden", () => assert.equal(loginRedirect("forbidden", "/admin/orders"), "/admin/login?error=forbidden"));
   it("error", () => assert.equal(loginRedirect("error"), "/admin/login?error=unavailable"));
+});
+
+describe("mapAuthError (password reset)", () => {
+  const cases: [string, { code?: string; status?: number } | null, string][] = [
+    ["same_password → samePassword", { code: "same_password", status: 422 }, "samePassword"],
+    ["weak_password → weakPassword", { code: "weak_password", status: 422 }, "weakPassword"],
+    ["session_not_found → linkExpired", { code: "session_not_found", status: 403 }, "linkExpired"],
+    ["otp_expired → linkExpired", { code: "otp_expired", status: 403 }, "linkExpired"],
+    ["over_email_send_rate_limit → tooMany", { code: "over_email_send_rate_limit", status: 429 }, "tooMany"],
+    ["429 without a code → tooMany", { status: 429 }, "tooMany"],
+    ["unknown code → unknown", { code: "something_new", status: 500 }, "unknown"],
+    ["null → unknown", null, "unknown"],
+  ];
+  for (const [name, error, expected] of cases) {
+    it(name, () => assert.equal(mapAuthError(error as never), expected));
+  }
 });

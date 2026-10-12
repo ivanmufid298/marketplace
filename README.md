@@ -168,7 +168,7 @@ Dengan mode demo, masuk dengan `nadia@demo.test` (kata sandi apa saja, min. 8 ka
 
 1. Buat project Supabase untuk development (disarankan project terpisah untuk production).
 2. **Authentication → Providers → Email**: pastikan aktif. Matikan "Confirm email" jika ingin daftar langsung masuk; jika dibiarkan aktif, pembeli diminta membuka email konfirmasi dulu.
-3. **Authentication → URL Configuration**: isi **Site URL** dan tambahkan ke **Redirect URLs** alamat lokal (`http://localhost:3000`) serta domain situs.
+3. **Authentication → URL Configuration**: isi **Site URL** dan tambahkan ke **Redirect URLs** alamat lokal (`http://localhost:3000`) serta domain situs. Langkah 2 dan 3 juga bisa dijalankan lewat Supabase CLI: `supabase login`, `supabase link --project-ref <ref>`, ubah nilainya di `supabase/config.toml`, lalu `supabase config diff` untuk pratinjau dan `supabase config push` untuk menerapkan. `config.toml` sengaja hanya mendeklarasikan tiga setelan Auth (`site_url`, `additional_redirect_urls`, `email.enable_confirmations`); `config push` membiarkan setelan yang tidak dideklarasikan. Nilai di berkas itu untuk project **dev**: untuk production pakai domain produksi dan aktifkan `enable_confirmations`.
 4. Salin **Project URL** dan **anon/publishable key** dari **Project Settings → API**. Lokal: salin `.env.example` menjadi `.env.local` dan isi. Vercel: **Settings → Environment Variables**, isi dua variabel itu untuk **Production dan Preview**. Jangan mengisi `NEXT_PUBLIC_DEMO_MODE` di Production.
 5. **Jalankan migrasi**: buka **SQL Editor**, tempel isi semua berkas di `supabase/migrations/` berurutan (`20261012061023_profiles_and_roles.sql`, lalu `20261012065146_revoke_rls_auto_enable_execute.sql`), lalu Run. Aman dijalankan berulang. (Atau `supabase db push` jika memakai Supabase CLI.)
 6. **Buat user admin**: **Authentication → Users → Add user** (centang *Auto Confirm User*), atau daftar lewat storefront.
@@ -216,6 +216,7 @@ Pada 12 Oktober 2026 hak akses database dan guard `/admin` sudah diuji otomatis 
 10. Sebagai admin, buka `/admin/login`: langsung masuk ke panel. Klik Keluar: `/admin` tertutup lagi.
 11. Buka `/admin/login?next=https://example.com`, masuk sebagai admin: mendarat di `/admin`, bukan di situs lain.
 12. Daftar akun baru lewat form, lalu `select role from public.profiles order by created_at desc limit 1;`: harus `buyer`.
+13. **Lupa kata sandi**: di dialog login klik "Lupa kata sandi?" (atau di `/admin/login`), isi email akun uji, lalu buka email yang masuk **di browser yang sama**. Tautan membuka `/reset-password`; isi kata sandi baru dua kali, lalu masuk ulang dengan kata sandi baru. Tautan yang sudah dipakai atau kedaluwarsa menampilkan "Tautan tidak berlaku" dengan tombol minta tautan baru. Layanan email bawaan Supabase membatasi jumlah email per jam, jadi jangan menguji berulang-ulang.
 
 *Hak akses database (SQL Editor, mensimulasikan pembeli; ganti `<uuid-buyer>`)*
 

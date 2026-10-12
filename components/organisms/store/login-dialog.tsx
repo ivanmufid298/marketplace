@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState, type FormEvent } from "react";
 import { t } from "@/lib/i18n";
 import type { AuthErrorKey } from "@/lib/auth";
@@ -94,6 +95,9 @@ export function LoginDialog() {
             <Field label={t("store.auth.password")} htmlFor="authPassword">
               <input id="authPassword" type="password" autoComplete={signUpMode ? "new-password" : "current-password"} placeholder={t("store.auth.passwordPlaceholder")} value={password} onChange={(e) => setPassword(e.target.value)} />
             </Field>
+            {!signUpMode && (
+              <Link href="/lupa-sandi" className="link-btn" style={{ justifySelf: "start" }} onClick={closeLogin}>{t("store.auth.forgotLink")}</Link>
+            )}
             {error && <p className="login-error" role="alert">{t(`store.auth.errors.${error}`)}</p>}
             <Button type="submit" disabled={busy}>
               {busy ? t("store.auth.submitting") : signUpMode ? t("store.auth.submitSignUp") : t("store.auth.submitSignIn")}

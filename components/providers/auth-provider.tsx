@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { authMode, getAuthClient, type AuthMode, type AuthResult, type AuthUser, type SignUpInput } from "@/lib/auth";
+import { authMode, getAuthClient, type ActionResult, type AuthMode, type AuthResult, type AuthUser, type SignUpInput } from "@/lib/auth";
 
 /** What the buyer was trying to do when asked to sign in. Used for the dialog text and to resume afterwards. */
 export type LoginIntent = "default" | "chat" | "checkout" | "orders" | "cart";
@@ -20,6 +20,8 @@ type AuthContextValue = {
   closeLogin: () => void;
   signIn: (email: string, password: string) => Promise<AuthResult>;
   signUp: (input: SignUpInput) => Promise<AuthResult>;
+  requestPasswordReset: (email: string) => Promise<ActionResult>;
+  updatePassword: (password: string) => Promise<ActionResult>;
   signOut: () => Promise<void>;
 };
 
@@ -68,6 +70,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     closeLogin,
     signIn: client.signIn,
     signUp: client.signUp,
+    requestPasswordReset: client.requestPasswordReset,
+    updatePassword: client.updatePassword,
     signOut: client.signOut,
   };
 

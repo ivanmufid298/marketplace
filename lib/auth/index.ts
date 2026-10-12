@@ -16,6 +16,12 @@ const unavailableAuth: AuthClient = {
   async signUp() {
     return { ok: false, error: "notConfigured" };
   },
+  async requestPasswordReset() {
+    return { ok: false, error: "notConfigured" };
+  },
+  async updatePassword() {
+    return { ok: false, error: "notConfigured" };
+  },
   async signOut() {},
 };
 
@@ -36,5 +42,5 @@ export function getAuthClient(): AuthClient {
 }
 
 export { authMode };
-export type { AuthClient, AuthErrorKey, AuthResult, AuthUser, SignUpInput } from "./types";
+export type { ActionResult, AuthClient, AuthErrorKey, AuthResult, AuthUser, SignUpInput } from "./types";
 export type { AuthMode };

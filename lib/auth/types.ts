@@ -5,11 +5,23 @@ export type AuthUser = {
 };
 
 /** Keys into store.auth.errors in content/id.json. */
-export type AuthErrorKey = "invalidCredentials" | "emailTaken" | "weakPassword" | "emailNotConfirmed" | "tooMany" | "notConfigured" | "unknown";
+export type AuthErrorKey =
+  | "invalidCredentials"
+  | "emailTaken"
+  | "weakPassword"
+  | "samePassword"
+  | "linkExpired"
+  | "emailNotConfirmed"
+  | "tooMany"
+  | "notConfigured"
+  | "unknown";
 
 export type AuthResult =
   | { ok: true; user: AuthUser | null; /** True when the account exists but must confirm its email before signing in. */ needsConfirmation: boolean }
   | { ok: false; error: AuthErrorKey };
+
+/** Result of an action that returns no user, such as asking for a reset link or setting a new password. */
+export type ActionResult = { ok: true } | { ok: false; error: AuthErrorKey };
 
 export type SignUpInput = { name: string; email: string; password: string };
 
@@ -21,5 +33,12 @@ export interface AuthClient {
   subscribe(listener: (user: AuthUser | null) => void): () => void;
   signIn(email: string, password: string): Promise<AuthResult>;
   signUp(input: SignUpInput): Promise<AuthResult>;
+  /**
+   * Emails a link that opens /reset-password signed in with a short-lived recovery session. Backends answer the same
+   * whether or not the address has an account, so this cannot be used to find out who is registered.
+   */
+  requestPasswordReset(email: string): Promise<ActionResult>;
+  /** Sets a new password for the signed-in user (the recovery session from the emailed link counts). */
+  updatePassword(password: string): Promise<ActionResult>;
   signOut(): Promise<void>;
 }
