@@ -1,7 +1,7 @@
 # PRD — Toko Online Jastip & Barang Impor
 
 **Status:** Draft untuk diskusi  
-**Versi:** 0.8  
+**Versi:** 0.9  
 **Pembaruan:** 12 Oktober 2026
 
 ## 1. Ringkasan Produk
@@ -88,7 +88,7 @@ Keputusan awal:
 - Route `/admin` dilindungi autentikasi dan pengecekan role di server. Server memverifikasi sesi ke layanan Auth (bukan hanya membaca cookie) dan membaca role dari database pada setiap request. Pemeriksaan dilakukan di dua tempat (proxy dan layout panel), dan data admin tetap harus dilindungi RLS.
 - **Role disimpan hanya di tabel `profiles`.** Role tidak boleh dibaca dari metadata akun atau dari apa pun yang dikirim klien, dan pemilik profil tidak dapat mengubah role-nya sendiri, termasuk lewat API.
 - Pendaftaran publik selalu menghasilkan `buyer`. Admin pertama dibuat manual lewat SQL oleh pemilik project; penambahan admin berikutnya juga lewat jalur yang sama sampai ada alat khusus.
-- Admin masuk lewat halaman `/admin/login` khusus. Pembeli yang login tetapi bukan admin ditolak dengan pesan yang jelas, bukan diberi halaman kosong. Tujuan setelah login (`next`) hanya boleh berupa path di bawah `/admin`.
+- Admin masuk lewat halaman `/admin/login` khusus: panel brand di kiri (pada layar kecil disembunyikan dan diganti logo di atas form) dan form email serta kata sandi di kanan, dengan tombol tampilkan/sembunyikan kata sandi dan pesan galat yang jelas. Tautan "Lupa kata sandi" baru dipasang setelah fitur reset kata sandi ada. Pembeli yang login tetapi bukan admin ditolak dengan pesan yang jelas, bukan diberi halaman kosong. Tujuan setelah login (`next`) hanya boleh berupa path di bawah `/admin`.
 - **Gagal berarti tertutup.** Jika layanan Auth tidak terjangkau atau hasilnya tidak jelas, akses admin ditolak.
 - **Mode demo tidak boleh aktif di production.** Tanpa konfigurasi Supabase di production, login dinonaktifkan dan `/admin` terkunci; situs hanya bisa dijelajahi. Login demo (menerima kredensial apa saja dan membuka `/admin`) hanya untuk pengembangan lokal dan environment preview yang diaktifkan secara eksplisit.
 - RLS memastikan buyer hanya dapat mengakses data miliknya.

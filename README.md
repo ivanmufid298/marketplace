@@ -20,6 +20,7 @@ Prototype UI/UX toko online **single seller** untuk produk ready stock, jastip, 
 
 ### Admin
 
+- Halaman login admin khusus (`/admin/login`) dengan tampilan dua panel yang responsif.
 - Dashboard: statistik penjualan, statistik pengunjung, total kunjungan, dan sebaran perangkat, bulanan/tahunan.
 - Pengelolaan etalase produk, dengan jumlah dilihat per produk.
 - Pesanan: daftar dengan cari dan filter status, detail, riwayat, batalkan pesanan, dan catat refund.
@@ -70,7 +71,7 @@ app/
 └── admin/                # dashboard admin
     ├── layout.tsx        # CSS dan pembungkus .admin (dipakai halaman login dan panel)
     ├── admin.css
-    ├── login/            # /admin/login (di luar guard)
+    ├── login/            # /admin/login (di luar guard); tampilannya di components/organisms/admin/admin-login-view(.module.css)
     └── (panel)/          # semua halaman panel, dilindungi
         ├── layout.tsx    # pengecekan akses admin di server (lapisan kedua)
         └── page.tsx, products/, orders/, payments/, interactions/,
@@ -131,7 +132,7 @@ t("store.cart.subtotal", { count: 3 });      // "Subtotal · 3 barang"
 
 ### Catatan styling
 
-Tailwind CSS v4 sudah terpasang dan token warna tersedia lewat `@theme` di `app/globals.css`, tetapi Preflight sengaja tidak dimuat. Tampilan saat ini masih memakai CSS prototype yang di-scope ke `.store` dan `.admin` (`app/(store)/store.css`, `app/admin/admin.css`) agar hasilnya identik dengan prototype. Konversi ke utility class Tailwind dilakukan bertahap, komponen demi komponen.
+Tailwind CSS v4 sudah terpasang dan token warna tersedia lewat `@theme` di `app/globals.css`, tetapi Preflight sengaja tidak dimuat. Tampilan saat ini masih memakai CSS prototype yang di-scope ke `.store` dan `.admin` (`app/(store)/store.css`, `app/admin/admin.css`) agar hasilnya identik dengan prototype. Konversi ke utility class Tailwind dilakukan bertahap, komponen demi komponen. Halaman login admin sudah memakai CSS Module (`admin-login-view.module.css`); komponen baru sebaiknya memakai Tailwind atau CSS Module, bukan menambah CSS prototype.
 
 ### Autentikasi dan akses admin
 

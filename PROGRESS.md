@@ -39,6 +39,7 @@ Belum ada item yang berstatus Selesai karena backend (Supabase, R2) belum dikerj
 ## Selesai sejauh ini
 
 - **Role admin dan guard `/admin`.** Role disimpan hanya di `profiles` (`supabase/migrations/20261012000000_profiles_and_roles.sql`): pendaftaran selalu menjadi `buyer`, kolom `role` tidak bisa diubah lewat API (column privilege, bukan hanya RLS), dan `is_admin()` dibuat `SECURITY DEFINER` dengan `search_path` kosong. `/admin` dijaga `proxy.ts` (verifikasi `getUser()` ke server Auth dan `is_admin()` ke database) dan layout `(panel)`. Halaman `/admin/login` khusus dengan validasi `next=`. Gagal atau tidak jelas selalu berarti ditolak.
+- **Halaman login admin baru** (`/admin/login`): tata letak dua panel (brand dan form), responsif dengan logo di atas form pada layar kecil, tombol tampilkan/sembunyikan kata sandi, status memuat, dan pesan galat (bukan admin, belum dikonfigurasi, layanan tidak terjangkau). Memakai CSS Module (`admin-login-view.module.css`) dan teks di `content/id.json`; logika login tidak berubah. Dicek lewat screenshot desktop dan mobile, tetapi belum dicoba login sungguhan lewat tampilan baru ini di browser. `AGENTS.md` dan `CLAUDE.md` kini di-ignore git.
 - **Mode demo tertutup di production.** `lib/auth/config.ts` memakai allowlist: demo hanya di `next dev`, atau di Vercel Preview dengan `NEXT_PUBLIC_DEMO_MODE=1` (`VERCEL_ENV` diteruskan lewat `next.config.ts`). Tanpa itu dan tanpa env Supabase, hasilnya "terkunci": login mati, `/admin` terkunci, storefront tetap bisa dijelajahi. Admin dalam mode demo menampilkan banner.
 
 - Status pesanan disederhanakan jadi tiga langkah otomatis: **Pending** → **Barang sedang dikirim** (saat admin menerima pembayaran) → **Selesai** (saat pembeli menekan "Pesanan selesai"), ditambah **Dibatalkan**. Halaman admin Pesanan (`/admin/orders`) menampilkan satu kolom Status, tanpa kolom pembayaran, dengan detail berisi stepper tiga langkah, barang, riwayat, serta tombol batalkan (alasan wajib) dan catat refund untuk pesanan yang sudah dibayar. Halaman Pembayaran, Pesanan, dan "Pesanan saya" membaca data yang sama lewat `lib/orders-store.ts`, dan checkout pembeli membuat pesanan baru di sana.
@@ -56,7 +57,12 @@ Belum ada item yang berstatus Selesai karena backend (Supabase, R2) belum dikerj
 
 Urutan mengikuti dependensi teknis:
 
-1. Menyelesaikan uji Supabase Auth di project sungguhan yang tersisa (daftar lewat form, konfirmasi email, klik di browser; checklist di README), menindaklanjuti temuan advisors, lalu menambah lupa kata sandi dan UI profil.
+1. **Menutup pekerjaan Auth** sebelum pindah ke data:
+   - Migrasi baru di `supabase/migrations/`: cabut `EXECUTE` dari `public.rls_auto_enable()` (temuan advisors), setelah dipastikan hanya dipakai event trigger. Samakan juga nama berkas migrasi dengan versi di Supabase (`20261012061023`).
+   - Pengaturan dashboard (dikerjakan pemilik project): Authentication → Email ("Confirm email"), URL Configuration, dan membuat user admin lalu menjadikannya admin lewat SQL.
+   - Uji manual di browser dengan akun sungguhan (checklist README butir 1 sampai 3, 5, 6, 12) termasuk login lewat tampilan baru `/admin/login`.
+   - Isi env Supabase di Vercel (Production dan Preview), lalu deploy.
+   - Setelah itu: lupa kata sandi (lalu pasang tautannya di halaman login) dan UI profil.
 2. Skema database: kategori, produk, varian, foto, batch PO.
 3. Cart, reservasi stok/kuota, order expiry, dan checkout yang menyimpan pesanan ke database (fulfillment group per kelompok pengiriman ditunda).
 4. Pembayaran manual, riwayat bukti transfer, dan penyimpanan privat di R2.
