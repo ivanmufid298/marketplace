@@ -6,7 +6,8 @@
 import fs from "node:fs";
 import { PGlite } from "@electric-sql/pglite";
 
-const MIGRATION = fs.readFileSync(new URL("../migrations/20261012000000_profiles_and_roles.sql", import.meta.url), "utf8");
+const MIGRATION = fs.readFileSync(new URL("../migrations/20261012061023_profiles_and_roles.sql", import.meta.url), "utf8");
+const REVOKE_RLS_FN = fs.readFileSync(new URL("../migrations/20261012065146_revoke_rls_auto_enable_execute.sql", import.meta.url), "utf8");
 const db = new PGlite();
 let failed = 0;
 const check = (name, ok, detail = "") => { console.log(`${ok ? "PASS" : "FAIL"}  ${name}${detail ? "  → " + detail : ""}`); if (!ok) failed++; };
@@ -122,6 +123,20 @@ const cols = await rows(`select column_name from information_schema.column_privi
 check("authenticated may UPDATE exactly full_name and phone", JSON.stringify(cols.map((c) => c.column_name)) === JSON.stringify(["full_name", "phone"]), JSON.stringify(cols.map((c) => c.column_name)));
 const fn = await rows(`select p.proname, p.prosecdef, p.proconfig from pg_proc p where p.pronamespace = 'public'::regnamespace and p.proname in ('is_admin','handle_new_user') order by 1`);
 check("is_admin and handle_new_user are SECURITY DEFINER with an empty search_path", fn.length === 2 && fn.every((f) => f.prosecdef && f.proconfig?.includes('search_path=""')), JSON.stringify(fn));
+
+// ---- 20261012065146: rls_auto_enable() (a Supabase-managed event trigger function) is locked down
+await as("postgres");
+let guardOk = true;
+try { await db.exec(REVOKE_RLS_FN); } catch { guardOk = false; }
+check("revoke migration is a no-op when rls_auto_enable() does not exist", guardOk);
+await db.exec(`create function public.rls_auto_enable() returns event_trigger language plpgsql security definer set search_path = '' as $$ begin null; end; $$`);
+const canRun = async (role) => (await rows(`select has_function_privilege('${role}', 'public.rls_auto_enable()', 'execute') as v`))[0].v;
+check("before the fix, anon and authenticated can execute rls_auto_enable() (Supabase default)", (await canRun("anon")) && (await canRun("authenticated")));
+await db.exec(REVOKE_RLS_FN);
+check("after the fix, neither anon nor authenticated can execute rls_auto_enable()", !(await canRun("anon")) && !(await canRun("authenticated")));
+let againOk = true;
+try { await db.exec(REVOKE_RLS_FN); } catch { againOk = false; }
+check("revoke migration runs twice without error", againOk);
 
 console.log(failed ? `\n${failed} failed` : "\nall passed");
 process.exit(failed ? 1 : 0);

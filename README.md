@@ -78,7 +78,7 @@ app/
             reviews/, promos/, vouchers/, content/, shipping/
 proxy.ts                  # guard /admin di setiap request + refresh sesi (pengganti middleware.ts di Next 16)
 supabase/
-├── migrations/           # SQL: tabel profiles, role, RLS, is_admin()
+├── migrations/           # SQL: tabel profiles, role, RLS, is_admin(), pencabutan EXECUTE rls_auto_enable()
 └── tests/                # tes migrasi di Postgres sungguhan (PGlite)
 components/               # atomic design
 ├── atoms/                # Icon, Button, Chip, Switch, Toast, badge, dll.
@@ -170,7 +170,7 @@ Dengan mode demo, masuk dengan `nadia@demo.test` (kata sandi apa saja, min. 8 ka
 2. **Authentication → Providers → Email**: pastikan aktif. Matikan "Confirm email" jika ingin daftar langsung masuk; jika dibiarkan aktif, pembeli diminta membuka email konfirmasi dulu.
 3. **Authentication → URL Configuration**: isi **Site URL** dan tambahkan ke **Redirect URLs** alamat lokal (`http://localhost:3000`) serta domain situs.
 4. Salin **Project URL** dan **anon/publishable key** dari **Project Settings → API**. Lokal: salin `.env.example` menjadi `.env.local` dan isi. Vercel: **Settings → Environment Variables**, isi dua variabel itu untuk **Production dan Preview**. Jangan mengisi `NEXT_PUBLIC_DEMO_MODE` di Production.
-5. **Jalankan migrasi**: buka **SQL Editor**, tempel isi `supabase/migrations/20261012000000_profiles_and_roles.sql`, lalu Run. Aman dijalankan berulang. (Atau `supabase db push` jika memakai Supabase CLI.)
+5. **Jalankan migrasi**: buka **SQL Editor**, tempel isi semua berkas di `supabase/migrations/` berurutan (`20261012061023_profiles_and_roles.sql`, lalu `20261012065146_revoke_rls_auto_enable_execute.sql`), lalu Run. Aman dijalankan berulang. (Atau `supabase db push` jika memakai Supabase CLI.)
 6. **Buat user admin**: **Authentication → Users → Add user** (centang *Auto Confirm User*), atau daftar lewat storefront.
 7. **Jadikan user itu admin** di SQL Editor (ganti emailnya):
 
@@ -190,7 +190,7 @@ Otomatis (tanpa Supabase sungguhan):
 
 ```bash
 npm test          # logika keamanan: pemilihan mode, validasi next=, keputusan akses admin (64 tes)
-npm run test:sql  # menjalankan migrasi di Postgres sungguhan (PGlite): hak akses, RLS, trigger (40 pengecekan)
+npm run test:sql  # menjalankan migrasi di Postgres sungguhan (PGlite): hak akses, RLS, trigger (44 pengecekan)
 ```
 
 `test:sql` meniru Supabase dengan schema `auth` buatan sendiri. Ia membuktikan SQL dan hak aksesnya benar, **bukan** bahwa project Supabase-mu terkonfigurasi benar. Lakukan checklist di bawah pada project sungguhan.
