@@ -51,7 +51,8 @@ Perintah lain:
 npm run build    # production build
 npm run start    # jalankan hasil build
 npm run lint     # type check (tsc --noEmit)
-npm test         # tes logika keamanan auth dan akses admin
+npm test         # tes logika (auth, akses admin, batas modul) lalu tes state storefront (vitest)
+npm run test:ui  # hanya tes state storefront dan komponen (vitest + jsdom)
 npm run test:sql # tes migrasi SQL di Postgres sungguhan (PGlite)
 ```
 
@@ -200,7 +201,7 @@ Jangan pernah memakai service role key di kode browser atau variabel `NEXT_PUBLI
 Otomatis (tanpa Supabase sungguhan):
 
 ```bash
-npm test          # logika keamanan: pemilihan mode, validasi next=, keputusan akses admin (64 tes)
+npm test          # logika keamanan, batas modul (82 tes, node:test) lalu tes state storefront (44 tes, vitest)
 npm run test:sql  # menjalankan migrasi di Postgres sungguhan (PGlite): hak akses, RLS, trigger (44 pengecekan)
 ```
 

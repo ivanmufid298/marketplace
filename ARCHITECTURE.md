@@ -59,7 +59,7 @@ features/<nama>/
 1. Buat folder dan `index.ts` yang hanya mengekspor yang dipakai luar.
 2. Pindahkan berkas dengan `git mv` agar riwayat tetap terbaca. Perbarui impor.
 3. Jalankan `npm test`, `npx tsc --noEmit`, dan `npm run build`.
-4. Bandingkan HTML hasil render halaman terkait sebelum dan sesudah. Hasilnya harus identik, karena ini refactor tanpa perubahan perilaku.
+4. Bandingkan HTML hasil render halaman terkait sebelum dan sesudah. Hasilnya harus identik, karena ini refactor tanpa perubahan perilaku. HTML hanya membuktikan render awal; perilaku state (keranjang, checkout, chat, ulasan) dibuktikan oleh `components/providers/store-provider.test.tsx` (`npm run test:ui`), yang memakai hook publik `useStore` dan `useAuth` sehingga tetap berlaku saat state berpindah antar modul.
 5. Satu modul per commit. Catat di tabel di bawah dan di PROGRESS.md.
 
 Fitur baru dibuat langsung sebagai modul. Skema produk, misalnya, menjadi `features/catalog` lengkap dengan migrasinya.
