@@ -218,7 +218,7 @@ Pada 12 Oktober 2026 hak akses database dan guard `/admin` sudah diuji otomatis 
 10. Sebagai admin, buka `/admin/login`: langsung masuk ke panel. Klik Keluar: `/admin` tertutup lagi.
 11. Buka `/admin/login?next=https://example.com`, masuk sebagai admin: mendarat di `/admin`, bukan di situs lain.
 12. Daftar akun baru lewat form, lalu `select role from public.profiles order by created_at desc limit 1;`: harus `buyer`.
-13. **Lupa kata sandi**: di dialog login klik "Lupa kata sandi?" (atau di `/admin/login`), isi email akun uji, lalu buka email yang masuk **di browser yang sama**. Tautan membuka `/reset-password`; isi kata sandi baru dua kali, lalu masuk ulang dengan kata sandi baru. Tautan yang sudah dipakai atau kedaluwarsa menampilkan "Tautan tidak berlaku" dengan tombol minta tautan baru. Layanan email bawaan Supabase membatasi jumlah email per jam, jadi jangan menguji berulang-ulang.
+13. **Lupa kata sandi**: di dialog login toko klik "Lupa kata sandi?" (halaman `/admin/login` sengaja tidak punya tautan ini), isi email akun uji, lalu buka email yang masuk **di browser yang sama**. Tautan membuka `/reset-password`; isi kata sandi baru dua kali, lalu masuk ulang dengan kata sandi baru. Tautan yang sudah dipakai atau kedaluwarsa menampilkan "Tautan tidak berlaku" dengan tombol minta tautan baru. Layanan email bawaan Supabase membatasi jumlah email per jam, jadi jangan menguji berulang-ulang.
 
 *Hak akses database (SQL Editor, mensimulasikan pembeli; ganti `<uuid-buyer>`)*
 

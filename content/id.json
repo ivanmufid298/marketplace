@@ -669,7 +669,6 @@
       "emailPlaceholder": "admin@email.com",
       "password": "Kata sandi",
       "passwordPlaceholder": "Masukkan kata sandi",
-      "forgot": "Lupa kata sandi?",
       "showPassword": "Tampilkan kata sandi",
       "hidePassword": "Sembunyikan kata sandi",
       "submit": "Masuk ke dashboard",

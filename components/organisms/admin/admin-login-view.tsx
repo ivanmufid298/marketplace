@@ -140,7 +140,6 @@ export function AdminLoginView({ mode, error, next }: AdminLoginViewProps) {
                   </button>
                 </div>
               </div>
-              <Link href="/lupa-sandi" className={styles.forgot}>{t("admin.login.forgot")}</Link>
               <button type="submit" className={styles.submit} disabled={busy}>
                 {busy ? <span className={styles.spinner} aria-hidden="true" /> : null}
                 <span>{busy ? t("admin.login.submitting") : t("admin.login.submit")}</span>
