@@ -42,7 +42,7 @@ npm install
 npm run dev      # http://localhost:3000
 ```
 
-Tanpa konfigurasi apa pun, login memakai mode demo. Untuk memakai Supabase Auth, lihat bagian [Autentikasi](#autentikasi-supabase).
+Tanpa konfigurasi apa pun, `npm run dev` memakai login demo dan membuka `/admin` dengan banner. Untuk memakai Supabase Auth dan memahami mode lainnya, lihat [Autentikasi dan akses admin](#autentikasi-dan-akses-admin).
 
 Perintah lain:
 
@@ -50,6 +50,8 @@ Perintah lain:
 npm run build    # production build
 npm run start    # jalankan hasil build
 npm run lint     # type check (tsc --noEmit)
+npm test         # tes logika keamanan auth dan akses admin
+npm run test:sql # tes migrasi SQL di Postgres sungguhan (PGlite)
 ```
 
 - Marketplace: `http://localhost:3000/`
@@ -65,11 +67,18 @@ app/
 │   ├── layout.tsx
 │   ├── page.tsx
 │   └── store.css
-└── admin/                # dashboard admin (satu route per menu)
-    ├── layout.tsx
+└── admin/                # dashboard admin
+    ├── layout.tsx        # CSS dan pembungkus .admin (dipakai halaman login dan panel)
     ├── admin.css
-    └── page.tsx, products/, orders/, payments/, interactions/,
-        reviews/, promos/, vouchers/, content/, shipping/
+    ├── login/            # /admin/login (di luar guard)
+    └── (panel)/          # semua halaman panel, dilindungi
+        ├── layout.tsx    # pengecekan akses admin di server (lapisan kedua)
+        └── page.tsx, products/, orders/, payments/, interactions/,
+            reviews/, promos/, vouchers/, content/, shipping/
+proxy.ts                  # guard /admin di setiap request + refresh sesi (pengganti middleware.ts di Next 16)
+supabase/
+├── migrations/           # SQL: tabel profiles, role, RLS, is_admin()
+└── tests/                # tes migrasi di Postgres sungguhan (PGlite)
 components/               # atomic design
 ├── atoms/                # Icon, Button, Chip, Switch, Toast, badge, dll.
 ├── molecules/            # ProductCard, CartRow, Field, Select, PaymentRow, dll.
@@ -82,7 +91,8 @@ content/
 └── id.json               # seluruh teks UI (Bahasa Indonesia)
 lib/
 ├── i18n.ts               # t("store.cart.title", { ... })
-├── auth/                 # adapter login: Supabase Auth atau login demo
+├── auth/                 # config.ts (pemilihan mode), adapter Supabase/demo, admin-guard.ts, safe-next.ts, tes
+├── supabase/             # klien Supabase untuk Server Component
 ├── mock/                 # data contoh (pengganti database sementara)
 ├── orders-store.ts       # penyimpanan pesanan bersama (localStorage) untuk storefront dan admin
 ├── order-flow.ts         # status pesanan (pending, shipping, completed, cancelled) dan total
@@ -123,39 +133,96 @@ t("store.cart.subtotal", { count: 3 });      // "Subtotal · 3 barang"
 
 Tailwind CSS v4 sudah terpasang dan token warna tersedia lewat `@theme` di `app/globals.css`, tetapi Preflight sengaja tidak dimuat. Tampilan saat ini masih memakai CSS prototype yang di-scope ke `.store` dan `.admin` (`app/(store)/store.css`, `app/admin/admin.css`) agar hasilnya identik dengan prototype. Konversi ke utility class Tailwind dilakukan bertahap, komponen demi komponen.
 
-### Autentikasi (Supabase)
+### Autentikasi dan akses admin
 
-Login memakai Supabase Auth (email dan kata sandi). Adapternya ada di `lib/auth/`: jika dua variabel lingkungan diisi, dipakai Supabase; jika kosong, dipakai **login demo** yang menerima email dan kata sandi apa saja (min. 8 karakter) dan menampilkan peringatan di dialog. Login demo hanya untuk pengembangan dan preview.
+Login memakai Supabase Auth (email dan kata sandi). Aplikasi memilih satu dari tiga **mode** saat build (`lib/auth/config.ts`):
 
-Menyiapkan Supabase:
+| Mode | Kapan | Perilaku |
+|---|---|---|
+| **supabase** | `NEXT_PUBLIC_SUPABASE_URL` dan `NEXT_PUBLIC_SUPABASE_ANON_KEY` terisi, di environment mana pun | Akun nyata. `/admin` hanya untuk admin. |
+| **demo** | Tanpa env Supabase **dan** (`next dev`, atau build di **Vercel Preview** dengan `NEXT_PUBLIC_DEMO_MODE=1`) | Login menerima email dan kata sandi apa saja, `/admin` terbuka, dan admin menampilkan banner "Mode demo". |
+| **terkunci** | Tanpa env Supabase, dalam kondisi lain apa pun | Login tidak bisa dipakai dan `/admin` terkunci. Storefront tetap bisa dijelajahi. |
 
-1. Buat project di [supabase.com](https://supabase.com).
-2. Buka **Authentication → Providers → Email** dan pastikan aktif. Matikan "Confirm email" jika ingin daftar langsung masuk; jika dibiarkan aktif, pembeli diminta membuka email konfirmasi dulu.
-3. Buka **Authentication → URL Configuration**, isi **Site URL** dengan alamat situs (mis. `http://localhost:3000` untuk lokal dan domain Vercel untuk production), dan tambahkan keduanya ke **Redirect URLs**.
-4. Salin **Project URL** dan **anon/publishable key** dari **Project Settings → API**.
-5. Salin `.env.example` menjadi `.env.local` dan isi:
+Aturannya **allowlist**: demo hanya menyala dalam dua kondisi di atas, dan semua yang tidak dikenal menjadi "terkunci". `NEXT_PUBLIC_DEMO_MODE=1` hanya berlaku jika build berjalan di Vercel Preview (`VERCEL_ENV=preview`, diteruskan ke build lewat `next.config.ts`). Di Vercel Production, di Cloudflare, atau saat `npm start` di laptop, flag itu diabaikan. **Jangan mengisi `NEXT_PUBLIC_DEMO_MODE` di Production.** Kode menolaknya, tetapi jangan mengandalkan itu saja.
 
-   ```bash
-   NEXT_PUBLIC_SUPABASE_URL=https://xxxx.supabase.co
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+Konsekuensinya: **tanpa env Supabase, situs live hanya bisa dijelajahi.** Tombol Akun menampilkan "Login belum siap dipakai", menambah ke keranjang, checkout, chat, dan Pesanan saya tidak bisa dilanjutkan, dan `/admin` mengarah ke halaman yang menjelaskan bahwa login belum dikonfigurasi.
+
+Mencoba demo dalam bentuk production di laptop (karena `npm start` bukan `development`):
+
+```bash
+VERCEL_ENV=preview NEXT_PUBLIC_DEMO_MODE=1 npm run build && npm start
+```
+
+Dengan mode demo, masuk dengan `nadia@demo.test` (kata sandi apa saja, min. 8 karakter) agar pesanan contoh muncul di Pesanan saya.
+
+#### Cara kerja perlindungan `/admin`
+
+- **Role disimpan hanya di tabel `profiles`**, tidak di `user_metadata` (yang bisa diubah pengguna dari browser). Pendaftaran lewat form selalu menghasilkan `buyer`. Admin pertama dibuat manual lewat SQL.
+- **`proxy.ts`** (di Next.js 16 menggantikan `middleware.ts`) berjalan di setiap request ke `/admin`. Ia memverifikasi sesi ke server Auth dengan `getUser()` (bukan `getSession()`, yang hanya membaca cookie) lalu menanyakan `is_admin()` ke database. Gagal, error, atau tidak jelas selalu berarti ditolak.
+- **`app/admin/(panel)/layout.tsx`** memeriksa lagi saat halaman dirender di server, sebagai lapisan kedua jika proxy terlewat atau matcher salah.
+- **`/admin/login`** adalah halaman login admin. Pembeli yang login tetapi bukan admin mendapat pesan "Akun ini bukan admin", bukan halaman kosong. Parameter `next=` hanya menerima path `^/admin(/[a-zA-Z0-9/_-]*)?$`, selain itu diabaikan.
+- Layout tidak dirender ulang saat berpindah halaman di browser, jadi **perlindungan data sesungguhnya tetap harus datang dari RLS dan Route Handler** begitu data admin berpindah ke database.
+
+#### Urutan rilis yang aman
+
+1. Buat project Supabase untuk development (disarankan project terpisah untuk production).
+2. **Authentication → Providers → Email**: pastikan aktif. Matikan "Confirm email" jika ingin daftar langsung masuk; jika dibiarkan aktif, pembeli diminta membuka email konfirmasi dulu.
+3. **Authentication → URL Configuration**: isi **Site URL** dan tambahkan ke **Redirect URLs** alamat lokal (`http://localhost:3000`) serta domain situs.
+4. Salin **Project URL** dan **anon/publishable key** dari **Project Settings → API**. Lokal: salin `.env.example` menjadi `.env.local` dan isi. Vercel: **Settings → Environment Variables**, isi dua variabel itu untuk **Production dan Preview**. Jangan mengisi `NEXT_PUBLIC_DEMO_MODE` di Production.
+5. **Jalankan migrasi**: buka **SQL Editor**, tempel isi `supabase/migrations/20261012000000_profiles_and_roles.sql`, lalu Run. Aman dijalankan berulang. (Atau `supabase db push` jika memakai Supabase CLI.)
+6. **Buat user admin**: **Authentication → Users → Add user** (centang *Auto Confirm User*), atau daftar lewat storefront.
+7. **Jadikan user itu admin** di SQL Editor (ganti emailnya):
+
+   ```sql
+   update public.profiles
+   set role = 'admin'
+   where id = (select id from auth.users where email = 'admin@example.com');
    ```
 
-6. Untuk Vercel, isi dua variabel yang sama di **Project Settings → Environment Variables**, lalu redeploy.
+8. **Baru deploy** (atau redeploy) agar env terbaca. Lanjutkan dengan checklist uji di bawah. Jangan men-deploy sebelum langkah 4 sampai 7 selesai: tanpa env, situs live hanya bisa dijelajahi.
 
-Kedua nilai itu aman dipakai di browser karena akses data dibatasi RLS. **Jangan** pernah memakai service role key di kode browser atau variabel `NEXT_PUBLIC_*`.
+Jangan pernah memakai service role key di kode browser atau variabel `NEXT_PUBLIC_*`. Saat ini aplikasi tidak membutuhkannya.
 
-Yang sudah tersambung ke Supabase baru sesi login (daftar, masuk, keluar). Profil, role, RLS, proteksi `/admin`, dan data pesanan belum; urutannya ada di [PROGRESS.md](PROGRESS.md).
+#### Pengujian
 
-Checklist uji setelah Supabase terhubung (variabel `NEXT_PUBLIC_*` dibaca saat build dan start, jadi restart `npm run dev` atau redeploy setelah mengisinya):
+Otomatis (tanpa Supabase sungguhan):
 
+```bash
+npm test          # logika keamanan: pemilihan mode, validasi next=, keputusan akses admin (64 tes)
+npm run test:sql  # menjalankan migrasi di Postgres sungguhan (PGlite): hak akses, RLS, trigger (40 pengecekan)
+```
+
+`test:sql` meniru Supabase dengan schema `auth` buatan sendiri. Ia membuktikan SQL dan hak aksesnya benar, **bukan** bahwa project Supabase-mu terkonfigurasi benar. Lakukan checklist di bawah pada project sungguhan.
+
+Checklist uji manual pada project Supabase sungguhan (**belum pernah dijalankan**):
+
+*Akun pembeli*
 1. Buka dialog login. Peringatan "Mode demo" harus hilang.
 2. Daftar dengan akun baru. Jika "Confirm email" aktif, muncul pesan untuk membuka email konfirmasi, lalu masuk setelah mengonfirmasi. Jika mati, langsung masuk.
-3. Buka **Authentication → Users** di dashboard Supabase: pengguna baru harus muncul, dan nama lengkap tersimpan di user metadata (`full_name`).
-4. Masuk dengan kata sandi yang salah: harus muncul "Email atau kata sandi salah."
-5. Tambah produk ke keranjang, keluar, lalu masuk lagi dengan akun yang sama: keranjang harus kembali.
-6. Tanpa login, "Tambah ke keranjang", chat, checkout, dan Pesanan saya harus meminta login.
+3. **Authentication → Users**: pengguna baru muncul dan `full_name` tersimpan di user metadata.
+4. Masuk dengan kata sandi salah: muncul "Email atau kata sandi salah."
+5. Tambah produk ke keranjang, keluar, masuk lagi dengan akun yang sama: keranjang kembali.
+6. Tanpa login, "Tambah ke keranjang", chat, checkout, dan Pesanan saya meminta login.
 
-Untuk mencoba login demo, masuk dengan `nadia@demo.test` (kata sandi apa saja, min. 8 karakter) agar pesanan contoh muncul di Pesanan saya.
+*Admin dan role*
+7. Tanpa login, buka `/admin`: diarahkan ke `/admin/login?next=%2Fadmin`.
+8. Masuk di `/admin/login` dengan akun **pembeli**: muncul "Akun ini bukan admin", `/admin` dan `/admin/orders` tetap tertutup.
+9. Masuk dengan akun **admin**: panel terbuka tanpa banner demo, dan sidebar punya tombol Keluar.
+10. Sebagai admin, buka `/admin/login`: langsung masuk ke panel. Klik Keluar: `/admin` tertutup lagi.
+11. Buka `/admin/login?next=https://example.com`, masuk sebagai admin: mendarat di `/admin`, bukan di situs lain.
+12. Daftar akun baru lewat form, lalu `select role from public.profiles order by created_at desc limit 1;`: harus `buyer`.
+
+*Hak akses database (SQL Editor, mensimulasikan pembeli; ganti `<uuid-buyer>`)*
+
+```sql
+begin;
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"<uuid-buyer>","role":"authenticated"}', true);
+select public.is_admin();                                                   -- false
+update public.profiles set full_name = 'Uji' where id = '<uuid-buyer>';     -- berhasil
+update public.profiles set role = 'admin' where id = '<uuid-buyer>';        -- harus ERROR: permission denied for table profiles
+rollback;
+```
 
 ### State contoh
 

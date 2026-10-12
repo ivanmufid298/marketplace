@@ -1,8 +1,8 @@
 # PRD — Toko Online Jastip & Barang Impor
 
 **Status:** Draft untuk diskusi  
-**Versi:** 0.7  
-**Pembaruan:** 1 Oktober 2026
+**Versi:** 0.8  
+**Pembaruan:** 12 Oktober 2026
 
 ## 1. Ringkasan Produk
 
@@ -85,7 +85,12 @@ Keputusan awal:
 - Autentikasi memakai Supabase Auth dengan email dan kata sandi. Pendaftaran meminta nama lengkap, email, dan kata sandi minimal 8 karakter. Nomor telepon dan alamat diisi saat checkout atau di profil.
 - Konfirmasi email mengikuti pengaturan project Supabase. Jika aktif, buyer diminta membuka email konfirmasi sebelum bisa masuk.
 - Cart adalah milik akun buyer, guest tidak punya cart. Isinya tetap divalidasi ulang saat checkout.
-- Route `/admin` dilindungi autentikasi dan pengecekan role di server.
+- Route `/admin` dilindungi autentikasi dan pengecekan role di server. Server memverifikasi sesi ke layanan Auth (bukan hanya membaca cookie) dan membaca role dari database pada setiap request. Pemeriksaan dilakukan di dua tempat (proxy dan layout panel), dan data admin tetap harus dilindungi RLS.
+- **Role disimpan hanya di tabel `profiles`.** Role tidak boleh dibaca dari metadata akun atau dari apa pun yang dikirim klien, dan pemilik profil tidak dapat mengubah role-nya sendiri, termasuk lewat API.
+- Pendaftaran publik selalu menghasilkan `buyer`. Admin pertama dibuat manual lewat SQL oleh pemilik project; penambahan admin berikutnya juga lewat jalur yang sama sampai ada alat khusus.
+- Admin masuk lewat halaman `/admin/login` khusus. Pembeli yang login tetapi bukan admin ditolak dengan pesan yang jelas, bukan diberi halaman kosong. Tujuan setelah login (`next`) hanya boleh berupa path di bawah `/admin`.
+- **Gagal berarti tertutup.** Jika layanan Auth tidak terjangkau atau hasilnya tidak jelas, akses admin ditolak.
+- **Mode demo tidak boleh aktif di production.** Tanpa konfigurasi Supabase di production, login dinonaktifkan dan `/admin` terkunci; situs hanya bisa dijelajahi. Login demo (menerima kredensial apa saja dan membuka `/admin`) hanya untuk pengembangan lokal dan environment preview yang diaktifkan secara eksplisit.
 - RLS memastikan buyer hanya dapat mengakses data miliknya.
 
 ## 6. Sistem Produk
@@ -347,7 +352,7 @@ Order menyimpan snapshot subtotal, diskon, ongkir, dan total. Perubahan harga at
 
 ### Identity
 
-- `Profile`: user, role, nama, telepon, timestamps.
+- `Profile`: user, role (`buyer` atau `admin`, hanya dapat diubah oleh pemilik project lewat SQL), nama, telepon, timestamps. Dibuat otomatis saat pendaftaran.
 - `Address`: buyer, label, penerima, telepon, detail alamat, kota, provinsi, kode pos, default flag.
 
 ### Catalog
@@ -394,7 +399,10 @@ Order menyimpan snapshot subtotal, diskon, ongkir, dan total. Perubahan harga at
 
 - Terapkan RLS pada seluruh data buyer.
 - Buyer hanya dapat membaca order, payment, alamat, dan bukti miliknya.
-- Operasi admin memerlukan sesi valid dan role admin.
+- Operasi admin memerlukan sesi valid dan role admin, diverifikasi di server pada setiap request dan di database lewat RLS.
+- Kolom `role` dilindungi dengan hak akses tingkat kolom, bukan hanya RLS (RLS membatasi baris, bukan kolom).
+- Fungsi yang melewati RLS (`SECURITY DEFINER`) memakai `search_path` kosong dan hanya dapat dipanggil oleh peran yang membutuhkannya.
+- Konfigurasi yang hilang atau tidak dikenal menghasilkan penolakan, bukan akses (fail-closed).
 - Service role key hanya berada di server.
 - Validasi MIME type, ekstensi, dan ukuran upload.
 - Terapkan rate limiting pada login, pembuatan order, dan upload.
@@ -460,6 +468,8 @@ Order menyimpan snapshot subtotal, diskon, ongkir, dan total. Perubahan harga at
 5. Buyer hanya dapat membatalkan sebelum bukti pembayaran diunggah. Tahap berikutnya memerlukan proses admin.
 6. Maksimal satu promo otomatis dan satu voucher dapat dipakai jika voucher mengizinkan stacking.
 7. Notifikasi dalam aplikasi cukup untuk MVP; WhatsApp/email masuk fase berikutnya.
+8. Role admin disimpan hanya di `profiles`, admin pertama dibuat manual lewat SQL, dan pendaftaran publik selalu menjadi buyer.
+9. Tanpa konfigurasi autentikasi di production, situs hanya dapat dijelajahi dan `/admin` terkunci. Mode demo hanya untuk pengembangan lokal dan preview yang diaktifkan secara eksplisit.
 
 ---
 
