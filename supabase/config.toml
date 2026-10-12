@@ -1,0 +1,18 @@
+# Supabase CLI config for the DEV project "vancy-kithz" (ref inphnjaohqzwtyfcixah). Never put secrets in this file.
+#
+# `supabase config push` only changes the properties declared here; everything else on the project is left as it is.
+# So this file declares ONLY the Auth settings the app depends on. Preview with `supabase config diff` before pushing.
+# For a production project, use its own values (Site URL = the production domain, Confirm email ON).
+
+project_id = "marketplace"
+
+[auth]
+# Used for redirects and links in emails.
+site_url = "https://market-by-kith.vercel.app"
+# Exact-match allow-list, in addition to site_url. `**` matches any path.
+additional_redirect_urls = ["https://market-by-kith.vercel.app/**", "http://localhost:3000/**"]
+
+[auth.email]
+# DEV only: the built-in email sender has a very low hourly limit, so sign-ups confirm themselves here.
+# Turn this ON for production.
+enable_confirmations = false
