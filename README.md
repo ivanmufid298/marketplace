@@ -182,6 +182,8 @@ Dengan mode demo, masuk dengan `nadia@demo.test` (kata sandi apa saja, min. 8 ka
 
 8. **Baru deploy** (atau redeploy) agar env terbaca. Lanjutkan dengan checklist uji di bawah. Jangan men-deploy sebelum langkah 4 sampai 7 selesai: tanpa env, situs live hanya bisa dijelajahi.
 
+   Status 12 Oktober 2026: deploy awal sudah berjalan di Vercel (`market-by-kith`) dengan env project dev. `/admin` anonim diarahkan ke `/admin/login`. Karena **SSO Protection Vercel** aktif, domain `*.vercel.app` meminta login Vercel; matikan atau pakai custom domain sebelum dibuka ke publik. Tambahkan domain Vercel ke langkah 3 (Site URL dan Redirect URLs) agar login dan tautan email berfungsi.
+
 Jangan pernah memakai service role key di kode browser atau variabel `NEXT_PUBLIC_*`. Saat ini aplikasi tidak membutuhkannya.
 
 #### Pengujian
