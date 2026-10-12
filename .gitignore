@@ -7,3 +7,7 @@ next-env.d.ts
 .env*
 .vercel
 !.env.example
+
+# Agent instruction files (local only)
+AGENTS.md
+CLAUDE.md

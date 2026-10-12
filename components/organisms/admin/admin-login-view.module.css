@@ -1,0 +1,462 @@
+/* Admin login. Scoped by CSS Modules; selectors that meet the legacy `.admin a/button/input` rules are prefixed with
+   `.shell` so they win on specificity. */
+
+.shell {
+  --ivory: #fffaf0;
+  --cream: #f5ecdf;
+  --pink: #f7b8c7;
+  --rose: #df7895;
+  --wine: #72203d;
+  --wine2: #51142a;
+  --ink: #2e2024;
+  --muted: #7d6d72;
+  --line: #eadfd8;
+  --danger: #a52d45;
+
+  min-height: 100dvh;
+  display: grid;
+  grid-template-columns: minmax(420px, 0.92fr) minmax(500px, 1.08fr);
+  overflow: hidden;
+  line-height: normal;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: var(--ink);
+  background: var(--ivory);
+}
+
+/* ---------- Brand panel ---------- */
+.brand {
+  position: relative;
+  isolation: isolate;
+  min-height: 100dvh;
+  padding: 48px 56px;
+  color: #fff;
+  background: linear-gradient(145deg, #451020 0%, #6f1c3a 48%, #8c3152 100%);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.brand::before,
+.brand::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  border-radius: 50%;
+  filter: blur(1px);
+}
+.brand::before {
+  width: 460px;
+  height: 460px;
+  right: -210px;
+  top: -150px;
+  background: radial-gradient(circle at 35% 35%, rgba(255, 218, 226, 0.36), rgba(247, 184, 199, 0.04) 65%, transparent 67%);
+}
+.brand::after {
+  width: 540px;
+  height: 540px;
+  left: -250px;
+  bottom: -290px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  box-shadow: 0 0 0 56px rgba(255, 255, 255, 0.025), 0 0 0 112px rgba(255, 255, 255, 0.018);
+}
+
+.brandTop {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.mark {
+  width: 50px;
+  height: 50px;
+  border-radius: 16px;
+  background: linear-gradient(145deg, #ffd8e1, #f4a7bb);
+  color: var(--wine2);
+  display: grid;
+  place-items: center;
+  font: 700 30px/1 Georgia, serif;
+  box-shadow: 0 12px 30px rgba(20, 0, 8, 0.18);
+}
+.brandName {
+  font-weight: 850;
+  letter-spacing: 0.02em;
+}
+.brandName small {
+  display: block;
+  margin-top: 2px;
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.18em;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.brandCopy {
+  margin: auto 0;
+  max-width: 580px;
+}
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 11px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.07);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+.eyebrow i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--pink);
+  box-shadow: 0 0 0 5px rgba(247, 184, 199, 0.1);
+}
+.brand h1 {
+  font: 500 clamp(44px, 5vw, 74px) / 0.97 Georgia, serif;
+  letter-spacing: -0.045em;
+  margin: 24px 0 20px;
+  max-width: 620px;
+}
+.intro {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.75;
+  color: rgba(255, 255, 255, 0.67);
+  max-width: 500px;
+}
+.features {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 36px;
+}
+.feature {
+  min-height: 108px;
+  padding: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 17px;
+  background: rgba(255, 255, 255, 0.055);
+  backdrop-filter: blur(10px);
+}
+.feature svg {
+  width: 20px;
+  height: 20px;
+  color: var(--pink);
+  margin-bottom: 14px;
+}
+.feature b {
+  display: block;
+  font-size: 12px;
+}
+.feature span {
+  display: block;
+  margin-top: 3px;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.5);
+}
+.brandFoot {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+/* ---------- Form side ---------- */
+.loginSide {
+  position: relative;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 54px;
+  background:
+    radial-gradient(circle at 88% 10%, rgba(247, 184, 199, 0.22), transparent 24%),
+    radial-gradient(circle at 12% 86%, rgba(234, 196, 171, 0.18), transparent 26%),
+    var(--ivory);
+}
+.loginSide::before {
+  content: "";
+  position: absolute;
+  inset: 24px;
+  border: 1px solid rgba(114, 32, 61, 0.06);
+  border-radius: 28px;
+  pointer-events: none;
+}
+.login {
+  width: min(100%, 450px);
+  position: relative;
+}
+.mobileBrand {
+  display: none;
+}
+.security {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--wine);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+.security svg {
+  width: 15px;
+}
+.login h2 {
+  font: 500 42px/1.06 Georgia, serif;
+  color: var(--wine);
+  letter-spacing: -0.025em;
+  margin: 16px 0 10px;
+}
+.lead {
+  margin: 0 0 34px;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.field {
+  margin-bottom: 18px;
+}
+.field label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #4b3c41;
+}
+.control {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.84);
+  border-radius: 15px;
+  box-shadow: 0 7px 22px rgba(60, 25, 36, 0.035);
+  transition: 0.2s;
+}
+.control:focus-within {
+  border-color: var(--rose);
+  box-shadow: 0 0 0 4px rgba(223, 120, 149, 0.13), 0 10px 28px rgba(60, 25, 36, 0.05);
+  background: #fff;
+}
+.control svg {
+  width: 19px;
+  margin-left: 16px;
+  color: #a38d94;
+  flex: none;
+}
+.shell .control input {
+  height: 100%;
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  padding: 0 15px;
+  color: var(--ink);
+}
+.shell .control input::placeholder {
+  color: #ac9ca1;
+}
+.shell .toggle {
+  width: 48px;
+  height: 100%;
+  flex: none;
+  border: 0;
+  background: transparent;
+  color: var(--wine);
+  display: grid;
+  place-items: center;
+}
+.shell .toggle svg {
+  margin: 0;
+  width: 20px;
+  color: inherit;
+}
+
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  margin: 0 0 16px;
+  border: 1px solid #f0bbc6;
+  background: #fff0f3;
+  color: var(--danger);
+  border-radius: 13px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.alert svg {
+  width: 16px;
+  flex: none;
+  margin-top: 1px;
+}
+
+.shell .submit {
+  height: 56px;
+  width: 100%;
+  border: 0;
+  border-radius: 15px;
+  margin-top: 6px;
+  color: #fff;
+  font-weight: 850;
+  background: linear-gradient(135deg, var(--wine), #8c2b4d);
+  box-shadow: 0 14px 30px rgba(114, 32, 61, 0.23);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  transition: 0.2s;
+}
+.shell .submit:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 18px 34px rgba(114, 32, 61, 0.28);
+}
+.shell .submit:active:not(:disabled) {
+  transform: translateY(0);
+}
+.shell .submit:disabled {
+  opacity: 0.76;
+  cursor: progress;
+}
+.submit svg {
+  width: 18px;
+}
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.signOut {
+  margin-top: 12px;
+}
+
+.shell .back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 25px;
+  color: var(--wine);
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+}
+.back svg {
+  width: 17px;
+  transition: 0.2s;
+}
+.back:hover svg {
+  transform: translateX(-3px);
+}
+.secureNote {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 35px;
+  padding-top: 19px;
+  border-top: 1px solid var(--line);
+  font-size: 11px;
+  color: #9a898e;
+}
+.secureNote svg {
+  width: 16px;
+  flex: none;
+  color: var(--wine);
+}
+
+.shell :focus-visible {
+  outline: 3px solid rgba(223, 120, 149, 0.4);
+  outline-offset: 3px;
+}
+/* The control already shows a focus ring through :focus-within. */
+.shell .control input:focus-visible {
+  outline: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation-duration: 2s;
+  }
+  .shell .submit,
+  .control,
+  .back svg {
+    transition: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .shell {
+    grid-template-columns: 1fr;
+  }
+  .brand {
+    display: none;
+  }
+  .loginSide {
+    padding: 32px 22px;
+    place-items: start center;
+  }
+  .loginSide::before {
+    inset: 10px;
+    border-radius: 22px;
+  }
+  .login {
+    padding-top: max(24px, 5vh);
+    max-width: 500px;
+  }
+  .mobileBrand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: clamp(44px, 10vh, 90px);
+  }
+  .mobileBrand .mark {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    font-size: 27px;
+  }
+  .mobileBrand .brandName {
+    color: var(--ink);
+  }
+  .mobileBrand .brandName small {
+    color: var(--muted);
+  }
+  .login h2 {
+    font-size: 38px;
+  }
+}
+
+@media (max-width: 480px) {
+  .loginSide {
+    padding: 20px;
+  }
+  .loginSide::before {
+    display: none;
+  }
+  .login {
+    padding-top: 12px;
+  }
+  .mobileBrand {
+    margin-bottom: 48px;
+  }
+  .login h2 {
+    font-size: 34px;
+  }
+  .lead {
+    margin-bottom: 28px;
+  }
+  .control,
+  .shell .submit {
+    height: 54px;
+  }
+  .secureNote {
+    margin-top: 28px;
+  }
+}
