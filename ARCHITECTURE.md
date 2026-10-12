@@ -25,6 +25,7 @@ features/
   admin/       shell admin (sidebar, topbar, modal) dan panel per modul
 shared/
   ui/          atoms dan molecules (atomic design hanya berlaku di sini)
+  ui-state/    UiProvider: panel yang terbuka, toast, kunci scroll, tombol Escape
   lib/         format, i18n, chart
 app/           route tipis: hanya merakit modul, tanpa logika
 ```
@@ -72,6 +73,7 @@ Fitur baru dibuat langsung sebagai modul. Skema produk, misalnya, menjadi `featu
 | `catalog`, `cart`, `checkout`, `chat`, `reviews` | belum | Berasal dari memecah `StoreProvider`. Satu modul per commit. |
 | `orders` | belum | Termasuk `lib/orders-store.ts` dan `lib/order-flow.ts`. |
 | `admin` | belum | Dipindah saat disentuh, tidak sekaligus. |
-| `shared` | belum | `ui` (atoms, molecules), `lib` (format, i18n, chart). |
+| `shared/ui-state` | **selesai** (12 Okt 2026) | `UiProvider` dan `useUi()`: panel, toast, kunci scroll, Escape. Dipakai `StoreProvider` dan langsung oleh `StoreToast`, `StoreLoginDialog`, dan `AccountMenu`. Dipasang di `StoreTemplate` di antara `AuthProvider` dan `StoreProvider`. |
+| `shared/ui`, `shared/lib` | belum | `ui` (atoms, molecules), `lib` (format, i18n, chart). |
 
 Teks `content/id.json` bisa dipecah per modul belakangan tanpa mengubah key-nya (`t("store.cart.title")` tetap sama).

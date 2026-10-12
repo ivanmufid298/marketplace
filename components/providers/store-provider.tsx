@@ -6,11 +6,11 @@ import { INITIAL_MY_REVIEWS, type MyReview, type Order } from "@/lib/mock/orders
 import { products, SHIPPING_OPTIONS, type Product, type ShippingValue, type SortMode } from "@/lib/mock/store";
 import * as ordersStore from "@/lib/orders-store";
 import { useAuth, type LoginIntent } from "@/features/auth";
+import { useUi, type PanelId } from "@/shared/ui-state/ui-provider";
 
 /** Sentinel for "no category filter". Display text comes from content/id.json. */
 export const ALL_CATEGORIES = "all";
 
-export type PanelId = "drawer" | "detail" | "checkout" | "categorySheet" | "chat" | "orders";
 export type CartLine = { id: number; qty: number };
 export type Address = { fullName: string; phone: string; address: string; city: string; postcode: string; note: string };
 export type ChatMessage = { from: "user" | "admin"; text: string; meta: string };
@@ -21,7 +21,6 @@ const REQUIRED_ADDRESS_FIELDS: (keyof Address)[] = ["fullName", "phone", "addres
 const MAX_PROOF_BYTES = 5 * 1024 * 1024;
 const CART_KEY_PREFIX = "marketplace-cart-v2:";
 const LEGACY_CART_KEY = "marketplace-cart-v1";
-const ALL_PANELS_CLOSED: Record<PanelId, boolean> = { drawer: false, detail: false, checkout: false, categorySheet: false, chat: false, orders: false };
 
 type StoreContextValue = {
   products: Product[];
@@ -93,7 +92,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [liked, setLiked] = useState<Set<number>>(new Set());
   const [cart, setCart] = useState<CartLine[]>([]);
   const [selected, setSelected] = useState<Product | null>(null);
-  const [panels, setPanels] = useState(ALL_PANELS_CLOSED);
+  const { panels, setPanel, openPanel, closePanel, togglePanel, toast, showToast } = useUi();
   const [checkoutStep, setCheckoutStep] = useState(1);
   const [address, setAddress] = useState<Address>(EMPTY_ADDRESS);
   const [shipping, setShipping] = useState<ShippingValue>("regular");
@@ -144,15 +143,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const allOrders = ordersStore.useOrders();
   const orders = useMemo(() => (user ? allOrders.filter((o) => o.buyerId === user.id) : []), [allOrders, user]);
-  const [toast, setToast] = useState("");
-  const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
-
-  const showToast = useCallback((msg: string) => {
-    setToast(msg);
-    clearTimeout(toastTimer.current);
-    toastTimer.current = setTimeout(() => setToast(""), 1800);
-  }, []);
-
   const setCategory = useCallback((c: string) => {
     setCategoryState(c);
     setSavedOnly(false);
@@ -182,11 +172,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     },
     [liked, showToast],
   );
-
-  const setPanel = useCallback((id: PanelId, on: boolean) => setPanels((p) => ({ ...p, [id]: on })), []);
-  const openPanel = useCallback((id: PanelId) => setPanel(id, true), [setPanel]);
-  const closePanel = useCallback((id: PanelId) => setPanel(id, false), [setPanel]);
-  const togglePanel = useCallback((id: PanelId) => setPanels((p) => ({ ...p, [id]: !p[id] })), []);
 
   const openDetail = useCallback(
     (p: Product) => {
@@ -400,21 +385,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     },
     [liked.size, scrollToProducts, setPanel, showToast],
   );
-
-  useEffect(() => {
-    document.body.style.overflow = panels.drawer || panels.detail || panels.checkout || panels.categorySheet || panels.orders ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [panels.drawer, panels.detail, panels.checkout, panels.categorySheet, panels.orders]);
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setPanels(ALL_PANELS_CLOSED);
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, []);
 
   const value: StoreContextValue = {
     products, visibleProducts, category, setCategory, query, setQuery, sort, setSort, savedOnly, liked, toggleLike,

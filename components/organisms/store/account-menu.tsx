@@ -5,12 +5,12 @@ import { t } from "@/lib/i18n";
 import { Icon } from "../../atoms/icon";
 import { IconButton } from "../../atoms/icon-button";
 import { useAuth } from "@/features/auth";
-import { useStore } from "../../providers/store-provider";
+import { useUi } from "@/shared/ui-state/ui-provider";
 
 /** Header account button: opens the login dialog for guests, a small menu for signed-in buyers. */
 export function AccountMenu() {
   const { user, openLogin, signOut } = useAuth();
-  const { openPanel, showToast } = useStore();
+  const { openPanel, showToast } = useUi();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 

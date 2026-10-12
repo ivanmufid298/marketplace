@@ -11,7 +11,7 @@ export const ALLOWED: Record<string, string[]> = {
 };
 
 /** Code every feature may use and that must never import a feature. */
-const SHARED_PREFIXES = ["components/atoms/", "components/molecules/", "lib/"];
+const SHARED_PREFIXES = ["components/atoms/", "components/molecules/", "lib/", "shared/"];
 /** The only files other code may import from a feature. */
 const ENTRY_POINTS = (feature: string) => [`features/${feature}`, `features/${feature}/server`];
 /** What a server entry point must never reach, because proxy.ts and layouts import it. */

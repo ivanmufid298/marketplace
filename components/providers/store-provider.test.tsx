@@ -8,6 +8,7 @@ import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AuthProvider, useAuth } from "@/features/auth";
 import { products } from "@/lib/mock/store";
+import { UiProvider } from "@/shared/ui-state/ui-provider";
 import { resetOrders } from "@/lib/orders-store";
 import { StoreProvider, useStore } from "./store-provider";
 
@@ -17,7 +18,9 @@ const [mug, tote, headphone] = products; // stock 2, 1, 8
 
 const wrapper = ({ children }: { children: ReactNode }) => (
   <AuthProvider>
-    <StoreProvider>{children}</StoreProvider>
+    <UiProvider>
+      <StoreProvider>{children}</StoreProvider>
+    </UiProvider>
   </AuthProvider>
 );
 
