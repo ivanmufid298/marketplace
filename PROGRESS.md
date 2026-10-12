@@ -64,12 +64,18 @@ Urutan mengikuti dependensi teknis:
    - Uji manual di browser dengan akun sungguhan (checklist README butir 1 sampai 3, 5, 6, 12) termasuk login lewat tampilan baru `/admin/login`.
    - ~~Isi env Supabase di Vercel, lalu deploy.~~ Selesai 12 Oktober 2026 (project `market-by-kith`, lihat "Selesai sejauh ini"). Domain Vercel sudah ditambahkan ke URL Configuration (lihat di atas).
    - ~~Lupa kata sandi~~ Kodenya selesai 12 Oktober 2026 (lihat "Selesai sejauh ini"); tinggal diuji dengan email sungguhan (checklist README butir 13). Sisa: UI profil.
-2. Skema database: kategori, produk, varian, foto, batch PO.
-3. Cart, reservasi stok/kuota, order expiry, dan checkout yang menyimpan pesanan ke database (fulfillment group per kelompok pengiriman ditunda).
-4. Pembayaran manual, riwayat bukti transfer, dan penyimpanan privat di R2.
-5. Batch PO di admin, serta menyambungkan order, interaction, review, promo, voucher, banner, popup, dan scheduler ke database.
-6. RLS, audit log, rate limiting, dan automated testing.
-7. Deploy ke Cloudflare Workers.
+2. **Restrukturisasi per modul** (rencana dan aturan di [ARCHITECTURE.md](ARCHITECTURE.md)), sebelum data pindah ke database:
+   - [ ] Pilot `features/auth` (alias path, `index.ts`, dan tes batas impor).
+   - [ ] Pecah `StoreProvider` menjadi provider per modul (`catalog`, `cart`, `checkout`, `chat`, `reviews`) plus satu provider kecil untuk panel dan toast. Satu modul per commit.
+   - [ ] `orders`, lalu `shared/ui` dan `shared/lib`.
+   - [ ] `admin` dipindah saat disentuh. Teks `id.json` boleh dipecah per modul belakangan.
+   - Setiap langkah dibuktikan dengan `npm test`, `tsc`, `next build`, dan HTML render yang identik sebelum dan sesudah.
+3. Skema database: kategori, produk, varian, foto, batch PO. Dibuat langsung sebagai modul `features/catalog`.
+4. Cart, reservasi stok/kuota, order expiry, dan checkout yang menyimpan pesanan ke database (fulfillment group per kelompok pengiriman ditunda).
+5. Pembayaran manual, riwayat bukti transfer, dan penyimpanan privat di R2.
+6. Batch PO di admin, serta menyambungkan order, interaction, review, promo, voucher, banner, popup, dan scheduler ke database.
+7. RLS, audit log, rate limiting, dan automated testing.
+8. Deploy ke Cloudflare Workers.
 
 Utang teknis yang sudah diketahui:
 

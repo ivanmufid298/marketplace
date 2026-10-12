@@ -60,6 +60,8 @@ npm run test:sql # tes migrasi SQL di Postgres sungguhan (PGlite)
 
 ## Struktur project
 
+> Struktur di bawah adalah kondisi sekarang (per lapisan). Rencana pemecahan per fitur ada di [ARCHITECTURE.md](ARCHITECTURE.md).
+
 ```text
 app/
 ├── layout.tsx            # root layout + globals.css (Tailwind theme)
