@@ -6,7 +6,7 @@ import { Button } from "../../atoms/button";
 import { CloseButton } from "../../atoms/close-button";
 import { CartRow } from "../../molecules/cart-row";
 import { SummaryLine } from "../../molecules/summary-box";
-import { useAuth } from "../../providers/auth-provider";
+import { useAuth } from "@/features/auth";
 import { useStore } from "../../providers/store-provider";
 
 export function CartDrawer() {

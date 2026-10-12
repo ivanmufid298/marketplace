@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { AdminLoginView, type AdminLoginError } from "@/components/organisms/admin/admin-login-view";
-import { authMode } from "@/lib/auth/config";
-import { safeAdminNext } from "@/lib/auth/safe-next";
+import { AdminLoginView, type AdminLoginError } from "@/features/auth";
+import { authMode, safeAdminNext } from "@/features/auth/server";
 import { t } from "@/lib/i18n";
 
 export const metadata: Metadata = { title: t("admin.login.title") };

@@ -1,8 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { checkAdminAccess, CONFIG_REDIRECT, loginRedirect } from "@/lib/auth/admin-guard";
-import { authMode } from "@/lib/auth/config";
-import { safeAdminNext } from "@/lib/auth/safe-next";
+import { authMode, checkAdminAccess, CONFIG_REDIRECT, loginRedirect, safeAdminNext } from "@/features/auth/server";
 
 // Runs before every /admin request (Next.js 16 calls this file "proxy"; it used to be "middleware").
 // It refreshes the Supabase session cookie and turns visitors away from /admin unless they are a signed-in admin.

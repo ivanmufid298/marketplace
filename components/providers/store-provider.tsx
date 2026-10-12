@@ -5,7 +5,7 @@ import { t } from "@/lib/i18n";
 import { INITIAL_MY_REVIEWS, type MyReview, type Order } from "@/lib/mock/orders";
 import { products, SHIPPING_OPTIONS, type Product, type ShippingValue, type SortMode } from "@/lib/mock/store";
 import * as ordersStore from "@/lib/orders-store";
-import { useAuth, type LoginIntent } from "./auth-provider";
+import { useAuth, type LoginIntent } from "@/features/auth";
 
 /** Sentinel for "no category filter". Display text comes from content/id.json. */
 export const ALL_CATEGORIES = "all";

@@ -1,8 +1,7 @@
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { AdminTemplate } from "@/components/templates/admin-template";
-import { checkAdminAccess, CONFIG_REDIRECT, loginRedirect } from "@/lib/auth/admin-guard";
-import { authMode } from "@/lib/auth/config";
+import { authMode, checkAdminAccess, CONFIG_REDIRECT, loginRedirect } from "@/features/auth/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 // The second lock. proxy.ts already screens every /admin request, but a layout is not re-run when the visitor

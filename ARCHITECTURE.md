@@ -35,7 +35,8 @@ Alias path `@/*` sudah menunjuk ke root (`tsconfig.json`), jadi impor berbentuk 
 
 ```
 features/<nama>/
-  index.ts          API publik: satu-satunya yang boleh diimpor dari luar
+  index.ts          API publik untuk kode klien: satu-satunya pintu masuk dari luar
+  server.ts         API publik untuk kode server (proxy.ts, layout). Opsional; hanya jika modul punya logika server
   components/       komponen khusus modul
   <nama>-provider.tsx   state modul (jika perlu)
   lib/              logika murni (bisa dites tanpa browser)
@@ -45,12 +46,13 @@ features/<nama>/
 
 ## Aturan
 
-1. **Impor lewat `index.ts`.** Kode di luar modul hanya boleh mengimpor `@/features/<nama>`, tidak boleh `@/features/<nama>/components/...`.
+1. **Impor lewat pintu publik.** Kode di luar modul hanya boleh mengimpor `@/features/<nama>` atau `@/features/<nama>/server`, tidak boleh `@/features/<nama>/components/...`.
+   - `server.ts` ada karena `index.ts` mengekspor komponen React dan hook. Kode seperti `proxy.ts` tidak boleh ikut membawa itu.
 2. **Arah dependensi satu arah:** `auth` dan `catalog` paling bawah; lalu `cart`; lalu `checkout`; lalu `orders`. `reviews` dan `chat` bergantung pada `auth`. `admin` boleh membaca modul lain lewat API publiknya. Modul bawah tidak boleh mengimpor modul di atasnya.
 3. **`shared` tidak mengimpor `features`.**
 4. **State lintas modul** (panel yang terbuka, toast) ada di satu provider kecil di `shared`, bukan di salah satu modul.
 5. **Kebutuhan database** ditulis sebagai migrasi di `supabase/migrations/` dan disebut di README modul pemiliknya. Satu tabel punya satu modul pemilik.
-6. Aturan 1 sampai 3 dijaga oleh satu tes kecil yang memindai impor (ditambahkan saat modul pertama pindah), karena proyek ini belum memakai ESLint.
+6. Aturan 1 sampai 3, ditambah larangan `server.ts` menjangkau React atau berkas `"use client"`, dijaga oleh `features/architecture.test.mts` (jalan di `npm test`). Tes itu membaca pernyataan impor dan punya contoh pelanggaran sendiri supaya terbukti bisa menangkapnya. Proyek ini belum memakai ESLint. Setiap modul baru ditambahkan ke tabel `ALLOWED` di tes itu.
 
 ## Cara memindahkan atau menambah modul
 
@@ -66,7 +68,7 @@ Fitur baru dibuat langsung sebagai modul. Skema produk, misalnya, menjadi `featu
 
 | Modul | Status | Catatan |
 | --- | --- | --- |
-| `auth` | belum | Pilot. Kodenya sudah terisolasi di `lib/auth`, `components/providers/auth-provider.tsx`, dan beberapa organisms. |
+| `auth` | **selesai** (12 Okt 2026) | Pilot. Dependensi ke modul lain: tidak ada. Dialog login tidak lagi memakai `useStore()`; ia menerima `onSignedIn`, dan `StoreLoginDialog` di storefront yang menyambungkannya ke toast. HTML render enam halaman identik sebelum dan sesudah. |
 | `catalog`, `cart`, `checkout`, `chat`, `reviews` | belum | Berasal dari memecah `StoreProvider`. Satu modul per commit. |
 | `orders` | belum | Termasuk `lib/orders-store.ts` dan `lib/order-flow.ts`. |
 | `admin` | belum | Dipindah saat disentuh, tidak sekaligus. |

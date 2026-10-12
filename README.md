@@ -60,7 +60,7 @@ npm run test:sql # tes migrasi SQL di Postgres sungguhan (PGlite)
 
 ## Struktur project
 
-> Struktur di bawah adalah kondisi sekarang (per lapisan). Rencana pemecahan per fitur ada di [ARCHITECTURE.md](ARCHITECTURE.md).
+> Kode sedang dipecah per fitur (modul). `features/auth` sudah pindah; sisanya masih per lapisan di `components/` dan `lib/`. Rencana, aturan batas impor, dan status tiap modul ada di [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ```text
 app/
@@ -73,12 +73,20 @@ app/
 └── admin/                # dashboard admin
     ├── layout.tsx        # CSS dan pembungkus .admin (dipakai halaman login dan panel)
     ├── admin.css
-    ├── login/            # /admin/login (di luar guard); tampilannya di components/organisms/admin/admin-login-view(.module.css)
+    ├── login/            # /admin/login (di luar guard); tampilannya di features/auth/components/admin-login-view(.module.css)
     └── (panel)/          # semua halaman panel, dilindungi
         ├── layout.tsx    # pengecekan akses admin di server (lapisan kedua)
         └── page.tsx, products/, orders/, payments/, interactions/,
             reviews/, promos/, vouchers/, content/, shipping/
 proxy.ts                  # guard /admin di setiap request + refresh sesi (pengganti middleware.ts di Next 16)
+features/                 # modul per fitur; kode luar hanya boleh mengimpor index.ts atau server.ts sebuah modul
+├── auth/                 # login, daftar, lupa kata sandi, guard admin, adapter Supabase/demo, tes
+│   ├── index.ts          # API publik untuk kode klien (AuthProvider, useAuth, LoginDialog, ...)
+│   ├── server.ts         # API publik untuk kode server (guard admin, authMode, safeAdminNext); tanpa React
+│   ├── auth-provider.tsx
+│   ├── components/       # LoginDialog, ForgotPasswordView, ResetPasswordView, AdminLoginView
+│   └── lib/              # config.ts (pemilihan mode), adapter Supabase/demo, admin-guard.ts, safe-next.ts, tes
+└── architecture.test.mts # tes yang menjaga aturan batas impor antar modul
 supabase/
 ├── migrations/           # SQL: tabel profiles, role, RLS, is_admin(), pencabutan EXECUTE rls_auto_enable()
 └── tests/                # tes migrasi di Postgres sungguhan (PGlite)
@@ -94,7 +102,6 @@ content/
 └── id.json               # seluruh teks UI (Bahasa Indonesia)
 lib/
 ├── i18n.ts               # t("store.cart.title", { ... })
-├── auth/                 # config.ts (pemilihan mode), adapter Supabase/demo, admin-guard.ts, safe-next.ts, tes
 ├── supabase/             # klien Supabase untuk Server Component
 ├── mock/                 # data contoh (pengganti database sementara)
 ├── orders-store.ts       # penyimpanan pesanan bersama (localStorage) untuk storefront dan admin
@@ -138,7 +145,7 @@ Tailwind CSS v4 sudah terpasang dan token warna tersedia lewat `@theme` di `app/
 
 ### Autentikasi dan akses admin
 
-Login memakai Supabase Auth (email dan kata sandi). Aplikasi memilih satu dari tiga **mode** saat build (`lib/auth/config.ts`):
+Login memakai Supabase Auth (email dan kata sandi). Aplikasi memilih satu dari tiga **mode** saat build (`features/auth/lib/config.ts`):
 
 | Mode | Kapan | Perilaku |
 |---|---|---|

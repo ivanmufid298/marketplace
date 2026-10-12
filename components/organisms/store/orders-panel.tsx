@@ -4,7 +4,7 @@ import { t } from "@/lib/i18n";
 import { Button } from "../../atoms/button";
 import { CloseButton } from "../../atoms/close-button";
 import { OrderCard } from "../../molecules/order-card";
-import { useAuth } from "../../providers/auth-provider";
+import { useAuth } from "@/features/auth";
 import { useStore } from "../../providers/store-provider";
 
 export function OrdersPanel() {

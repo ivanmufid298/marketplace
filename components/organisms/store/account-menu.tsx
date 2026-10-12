@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { t } from "@/lib/i18n";
 import { Icon } from "../../atoms/icon";
 import { IconButton } from "../../atoms/icon-button";
-import { useAuth } from "../../providers/auth-provider";
+import { useAuth } from "@/features/auth";
 import { useStore } from "../../providers/store-provider";
 
 /** Header account button: opens the login dialog for guests, a small menu for signed-in buyers. */

@@ -6,11 +6,11 @@ import { CheckoutFlow } from "../organisms/store/checkout-flow";
 import { DetailPanel } from "../organisms/store/detail-panel";
 import { Footer } from "../organisms/store/footer";
 import { Header } from "../organisms/store/header";
-import { LoginDialog } from "../organisms/store/login-dialog";
+import { StoreLoginDialog } from "../organisms/store/store-login-dialog";
 import { MobileNav } from "../organisms/store/mobile-nav";
 import { OrdersPanel } from "../organisms/store/orders-panel";
 import { StoreToast } from "../organisms/store/store-toast";
-import { AuthProvider } from "../providers/auth-provider";
+import { AuthProvider } from "@/features/auth";
 import { StoreProvider } from "../providers/store-provider";
 
 /** Page frame shared by every storefront route: header, footer, and all overlay panels. */
@@ -29,7 +29,7 @@ export function StoreTemplate({ children }: { children: ReactNode }) {
           <CategorySheet />
           <MobileNav />
           <ChatWidget />
-          <LoginDialog />
+          <StoreLoginDialog />
           <StoreToast />
         </StoreProvider>
       </AuthProvider>

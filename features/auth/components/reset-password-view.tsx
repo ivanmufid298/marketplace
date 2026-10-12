@@ -3,10 +3,10 @@
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { t } from "@/lib/i18n";
-import type { AuthErrorKey } from "@/lib/auth";
-import { Button } from "../../atoms/button";
-import { Field } from "../../molecules/field";
-import { useAuth } from "../../providers/auth-provider";
+import type { AuthErrorKey } from "../lib/client";
+import { Button } from "@/components/atoms/button";
+import { Field } from "@/components/molecules/field";
+import { useAuth } from "../auth-provider";
 
 type FormError = AuthErrorKey | "required" | "shortPassword" | "passwordMismatch";
 

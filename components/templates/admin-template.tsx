@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { authMode } from "@/lib/auth/config";
+import { authMode } from "@/features/auth/server";
 import { AdminModal } from "../organisms/admin/admin-modal";
 import { AdminToast } from "../organisms/admin/admin-toast";
 import { DemoBanner } from "../organisms/admin/demo-banner";

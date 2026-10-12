@@ -6,7 +6,7 @@ import { CloseButton } from "../../atoms/close-button";
 import { Icon } from "../../atoms/icon";
 import { Button } from "../../atoms/button";
 import { ChatBubble } from "../../molecules/chat-bubble";
-import { useAuth } from "../../providers/auth-provider";
+import { useAuth } from "@/features/auth";
 import { useStore } from "../../providers/store-provider";
 
 export function ChatWidget() {

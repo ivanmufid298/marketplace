@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ADMIN_NAV } from "@/lib/admin-nav";
-import { authMode, getAuthClient } from "@/lib/auth";
+import { authMode, getAuthClient } from "@/features/auth";
 import { t } from "@/lib/i18n";
 import { Icon } from "../../atoms/icon";
 import { SidebarLink } from "../../molecules/sidebar-link";

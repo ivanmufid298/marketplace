@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { authMode, getAuthClient, type ActionResult, type AuthMode, type AuthResult, type AuthUser, type SignUpInput } from "@/lib/auth";
+import { authMode, getAuthClient, type ActionResult, type AuthMode, type AuthResult, type AuthUser, type SignUpInput } from "./lib/client";
 
 /** What the buyer was trying to do when asked to sign in. Used for the dialog text and to resume afterwards. */
 export type LoginIntent = "default" | "chat" | "checkout" | "orders" | "cart";

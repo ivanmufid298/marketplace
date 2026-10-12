@@ -3,10 +3,10 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { getAuthClient, type AuthErrorKey } from "@/lib/auth";
+import { getAuthClient, type AuthErrorKey } from "../lib/client";
 import { t } from "@/lib/i18n";
-import { Icon, type IconName } from "../../atoms/icon";
-import { AdminButton } from "../../atoms/admin-button";
+import { Icon, type IconName } from "@/components/atoms/icon";
+import { AdminButton } from "@/components/atoms/admin-button";
 import styles from "./admin-login-view.module.css";
 
 export type AdminLoginError = "forbidden" | "config" | "unavailable";

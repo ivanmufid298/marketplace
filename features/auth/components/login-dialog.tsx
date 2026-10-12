@@ -3,12 +3,11 @@
 import Link from "next/link";
 import { useEffect, useState, type FormEvent } from "react";
 import { t } from "@/lib/i18n";
-import type { AuthErrorKey } from "@/lib/auth";
-import { Button } from "../../atoms/button";
-import { CloseButton } from "../../atoms/close-button";
-import { Field } from "../../molecules/field";
-import { useAuth } from "../../providers/auth-provider";
-import { useStore } from "../../providers/store-provider";
+import type { AuthErrorKey } from "../lib/client";
+import { Button } from "@/components/atoms/button";
+import { CloseButton } from "@/components/atoms/close-button";
+import { Field } from "@/components/molecules/field";
+import { useAuth } from "../auth-provider";
 
 type Mode = "signIn" | "signUp";
 type FormError = AuthErrorKey | "required" | "invalidEmail" | "shortPassword";
@@ -16,10 +15,14 @@ type FormError = AuthErrorKey | "required" | "invalidEmail" | "shortPassword";
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_PASSWORD = 8;
 
+type LoginDialogProps = {
+  /** Called with the display name after a successful sign in or sign up. The host decides how to greet them. */
+  onSignedIn?: (name: string) => void;
+};
+
 /** Sign in or register. Opened whenever a guest tries to chat, check out, or open their orders. */
-export function LoginDialog() {
+export function LoginDialog({ onSignedIn }: LoginDialogProps) {
   const { loginOpen, closeLogin, intent, signIn, signUp, demo, mode: authMode } = useAuth();
-  const { showToast } = useStore();
   const [mode, setMode] = useState<Mode>("signIn");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -65,7 +68,7 @@ export function LoginDialog() {
     if (!result.ok) return setError(result.error);
     if (result.needsConfirmation) return setConfirmEmail(true);
     // Closing and resuming what the buyer was doing happens in StoreProvider once the user state arrives.
-    showToast(t("store.auth.welcome", { name: result.user?.name ?? email }));
+    onSignedIn?.(result.user?.name ?? email);
   }
 
   const signUpMode = mode === "signUp";
