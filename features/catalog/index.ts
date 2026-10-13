@@ -21,3 +21,6 @@ export {
 } from "./lib/product-form";
 export { createSupabasePhotoStorage, PHOTO_BUCKET, PhotoStorageError, type PhotoStorage } from "./lib/photo-storage";
 export { attachPhotos, removePhotoFully, type AttachOutcome, type PhotoDraft } from "./lib/save-photos";
+
+// The admin product screen (list, form, photos). Mounted by app/admin/(panel)/products.
+export { AdminProductsView } from "./components/admin/admin-products-view";

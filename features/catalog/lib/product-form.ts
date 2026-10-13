@@ -12,6 +12,8 @@ export const LIMITS = {
   slug: 80,
   weightGram: 1_000_000,
   stock: 1_000_000,
+  /** Photos per product. Keeps the form usable and the storage bill small. */
+  photos: 8,
   /** Far above any real price, and well inside what a JavaScript number holds exactly. */
   price: 100_000_000_000,
 } as const;

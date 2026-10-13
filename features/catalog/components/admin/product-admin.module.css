@@ -1,0 +1,200 @@
+/* Styles for the admin product screens. The admin shell supplies the colour tokens (--wine, --line, ...) and the base
+   modal, field, and button classes; only what those do not cover lives here. */
+
+.cover {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  background: var(--cream);
+  color: var(--muted);
+  border-radius: 16px 16px 0 0;
+}
+.cover img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.cover small {
+  font-size: 12px;
+}
+.photoCount {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(46, 32, 36, 0.72);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.statusPill {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  background: var(--cream);
+  color: var(--muted);
+}
+.statusPill[data-status="active"] {
+  background: #e7f6ef;
+  color: var(--green);
+}
+.statusPill[data-status="draft"] {
+  background: #fff2dc;
+  color: var(--amber);
+}
+.coverBadge {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+}
+
+.compare {
+  margin-left: 6px;
+  color: var(--muted);
+  font-weight: 400;
+  font-size: 12px;
+  text-decoration: line-through;
+}
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  color: var(--muted);
+  font-size: 12px;
+  margin: 2px 0 12px;
+}
+
+.notice {
+  padding: 28px 16px;
+  border: 1px dashed var(--line);
+  border-radius: 16px;
+  text-align: center;
+  color: var(--muted);
+  background: var(--paper);
+}
+.errorText {
+  margin: 6px 0 0;
+  color: var(--red);
+  font-size: 12px;
+}
+.formError {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #fdecef;
+  color: var(--red);
+  font-size: 13px;
+}
+.formWarning {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #fff2dc;
+  color: var(--amber);
+  font-size: 13px;
+}
+.hint {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.photos {
+  grid-column: 1 / -1;
+}
+.photoGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  gap: 10px;
+  margin: 10px 0;
+  padding: 0;
+  list-style: none;
+}
+.photo {
+  position: relative;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--paper);
+}
+.photo img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+}
+.photoBar {
+  display: flex;
+  justify-content: space-between;
+  gap: 4px;
+  padding: 4px;
+}
+.photoBar button {
+  flex: 1;
+  border: 0;
+  border-radius: 8px;
+  padding: 4px 0;
+  background: var(--cream);
+  color: var(--wine);
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.photoBar button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.photoBar button[data-danger] {
+  color: var(--red);
+}
+.coverTag {
+  position: absolute;
+  left: 6px;
+  top: 6px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--wine);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+}
+.newTag {
+  composes: coverTag;
+  left: auto;
+  right: 6px;
+  background: var(--green);
+}
+.photoWarn {
+  margin: 0;
+  padding: 4px 6px 6px;
+  color: var(--amber);
+  font-size: 11px;
+}
+.fileInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.inlineCreate {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+.inlineCreate input {
+  flex: 1;
+  min-width: 0;
+}
