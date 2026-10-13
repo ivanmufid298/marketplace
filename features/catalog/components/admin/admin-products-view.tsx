@@ -159,7 +159,6 @@ export function AdminProductsView({ services: provided, notify = () => {} }: Adm
           services={services}
           product={dialog.product}
           categories={categories}
-          onCategoryAdded={(c) => setCategories((list) => [...list, c])}
           onSaved={saved}
           onClose={() => setDialog(null)}
           notify={notify}

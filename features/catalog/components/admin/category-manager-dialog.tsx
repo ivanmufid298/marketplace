@@ -118,7 +118,7 @@ export function CategoryManagerDialog({ services, categories, productCounts, onA
 
           <form className={styles.inlineCreate} onSubmit={add}>
             <input value={newName} aria-label={t("admin.catalog.categories.newName")} placeholder={t("admin.catalog.categories.newPlaceholder")} onChange={(e) => setNewName(e.target.value)} />
-            <AdminButton type="submit" variant="primary" small disabled={busy || !newName.trim()}>{t("admin.catalog.categories.add")}</AdminButton>
+            <AdminButton type="submit" variant="primary" disabled={busy || !newName.trim()}>{t("admin.catalog.categories.add")}</AdminButton>
           </form>
 
           {error && <p className={styles.errorText} role="alert">{error}</p>}

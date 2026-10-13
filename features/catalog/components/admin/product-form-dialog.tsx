@@ -21,7 +21,6 @@ type ProductFormDialogProps = {
   /** null opens an empty form for a new product. */
   product: AdminProduct | null;
   categories: Category[];
-  onCategoryAdded: (category: Category) => void;
   /** Called as soon as the product itself is saved, even if some photo steps then reported a problem. */
   onSaved: (product: AdminProduct, created: boolean) => void;
   onClose: () => void;
@@ -40,7 +39,7 @@ function warningText(warning: SaveWarning): string {
   }
 }
 
-export function ProductFormDialog({ services, product, categories, onCategoryAdded, onSaved, onClose, notify }: ProductFormDialogProps) {
+export function ProductFormDialog({ services, product, categories, onSaved, onClose, notify }: ProductFormDialogProps) {
   // After a save that reported a problem the dialog stays open on the saved product, so a second save updates it.
   const [current, setCurrent] = useState<AdminProduct | null>(product);
   const [values, setValues] = useState<ProductFormValues>(product ? toFormValues(product) : EMPTY_PRODUCT_FORM);
@@ -54,10 +53,6 @@ export function ProductFormDialog({ services, product, categories, onCategoryAdd
   const [pending, setPending] = useState<PendingPhoto[]>([]);
   const [photoError, setPhotoError] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
-
-  const [newCategory, setNewCategory] = useState("");
-  const [categoryError, setCategoryError] = useState<string | null>(null);
-  const [addingCategory, setAddingCategory] = useState(false);
 
   // Preview URLs are made in this form and must be released when a photo is dropped or the form closes.
   const previews = useRef<Set<string>>(new Set());
@@ -124,20 +119,6 @@ export function ProductFormDialog({ services, product, categories, onCategoryAdd
     setPending((list) => list.filter((p) => p.id !== id));
   }
 
-  async function addCategory() {
-    const name = newCategory.trim();
-    if (!name || addingCategory) return;
-    setAddingCategory(true);
-    setCategoryError(null);
-    const result = await services.repo.createCategory(name);
-    setAddingCategory(false);
-    if (!result.ok) return setCategoryError(saveErrorText(result.error));
-    onCategoryAdded(result.value);
-    set("categoryId", String(result.value.id));
-    setNewCategory("");
-    notify(t("admin.catalog.toast.categoryCreated"));
-  }
-
   async function submit(e: FormEvent) {
     e.preventDefault();
     if (saving) return;
@@ -200,11 +181,6 @@ export function ProductFormDialog({ services, product, categories, onCategoryAdd
                 <Select options={categoryOptions} value={values.categoryId} onChange={(v) => set("categoryId", v)} />
                 {categories.length === 0 && <p className={styles.hint}>{t("admin.catalog.form.noCategories")}</p>}
                 {fieldError("categoryId")}
-                <div className={styles.inlineCreate}>
-                  <input value={newCategory} aria-label={t("admin.catalog.form.newCategory")} placeholder={t("admin.catalog.form.newCategoryPlaceholder")} onChange={(e) => setNewCategory(e.target.value)} />
-                  <AdminButton small disabled={addingCategory || !newCategory.trim()} onClick={addCategory}>{t("admin.catalog.form.newCategoryAdd")}</AdminButton>
-                </div>
-                {categoryError && <p className={styles.errorText} role="alert">{categoryError}</p>}
               </Field>
 
               <Field label={t("admin.catalog.form.status")}>

@@ -194,10 +194,7 @@
   gap: 8px;
   margin-top: 8px;
 }
-.inlineCreate input {
-  flex: 1;
-  min-width: 0;
-}
+
 
 .categoryList {
   list-style: none;
@@ -240,13 +237,32 @@
 .categoryEdit {
   flex: 1;
 }
-.categoryEdit input {
-  flex: 1;
-  min-width: 0;
-}
 
 .headActions {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+/* Text inputs outside a .field wrapper (the admin shell only styles inputs inside one), matched to the form's look. */
+.inlineCreate input,
+.categoryEdit input {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 11px 12px;
+  background: #fff;
+  color: var(--ink);
+  outline: 0;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.inlineCreate input::placeholder,
+.categoryEdit input::placeholder {
+  color: #b3a3a9;
+}
+.inlineCreate input:focus,
+.categoryEdit input:focus {
+  border-color: var(--rose);
+  box-shadow: 0 0 0 3px rgba(223, 120, 149, 0.12);
 }

@@ -220,20 +220,6 @@ describe("the form", () => {
     expect(names()).toEqual(["Mug Blush Daily", "Tote Kanvas Besar", "Lampu Meja"]);
   });
 
-  it("includes a category created in the form in the list's category filter", async () => {
-    show(seeded());
-    await screen.findByText("Mug Blush Daily");
-    fireEvent.click(screen.getByRole("button", { name: "＋ Tambah produk" }));
-    fireEvent.change(screen.getByLabelText("Kategori baru"), { target: { value: "Kecantikan" } });
-    fireEvent.click(screen.getByRole("button", { name: "Tambah kategori" }));
-    await waitFor(() => expect((screen.getByLabelText("Kategori baru") as HTMLInputElement).value).toBe(""));
-    // The new category is offered in the form and already chosen for this product.
-    const inForm = within(screen.getByRole("dialog")).getByRole("option", { name: "Kecantikan" });
-    expect(inForm.getAttribute("aria-selected")).toBe("true");
-    fireEvent.click(screen.getByRole("button", { name: "Batal" }));
-    expect(screen.getAllByRole("option", { name: "Kecantikan" }).length).toBeGreaterThan(0);
-  });
-
   it("closes without changing the list when cancelled", async () => {
     show(seeded());
     await screen.findByText("Mug Blush Daily");

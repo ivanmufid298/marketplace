@@ -21,7 +21,7 @@ function fillValid() {
 }
 
 function open(fake: FakeServices, props: Partial<Parameters<typeof ProductFormDialog>[0]> = {}) {
-  const spies = { onSaved: vi.fn(), onClose: vi.fn(), notify: vi.fn(), onCategoryAdded: vi.fn() };
+  const spies = { onSaved: vi.fn(), onClose: vi.fn(), notify: vi.fn() };
   render(<ProductFormDialog services={fake.services} product={null} categories={fake.state().categories} {...spies} {...props} />);
   return spies;
 }
@@ -134,35 +134,15 @@ describe("a new product", () => {
 });
 
 describe("categories", () => {
-  it("creates a category inline and selects it", async () => {
-    const fake = makeFakeServices();
-    const { onCategoryAdded, notify } = open(fake);
-    fireEvent.change(screen.getByLabelText("Kategori baru"), { target: { value: "Fashion" } });
-    fireEvent.click(screen.getByRole("button", { name: "Tambah kategori" }));
-    await waitFor(() => expect(onCategoryAdded).toHaveBeenCalledWith(expect.objectContaining({ name: "Fashion" })));
-    expect(fake.repo.createCategory).toHaveBeenCalledWith("Fashion");
-    expect(notify).toHaveBeenCalledWith("Kategori ditambahkan");
-    expect((screen.getByLabelText("Kategori baru") as HTMLInputElement).value).toBe("");
+  it("has no way to create a category in the form; that is the category manager's job", () => {
+    open(makeFakeServices());
+    expect(screen.queryByLabelText("Kategori baru")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Tambah kategori" })).toBeNull();
   });
 
-  it("will not add an empty category", () => {
-    const fake = makeFakeServices();
-    open(fake);
-    expect((screen.getByRole("button", { name: "Tambah kategori" }) as HTMLButtonElement).disabled).toBe(true);
-  });
-
-  it("shows why a category could not be added", async () => {
-    const fake = makeFakeServices();
-    fake.repo.createCategory.mockResolvedValueOnce({ ok: false, error: { kind: "categoryNameTaken" } } as never);
-    open(fake);
-    fireEvent.change(screen.getByLabelText("Kategori baru"), { target: { value: "rumah" } });
-    fireEvent.click(screen.getByRole("button", { name: "Tambah kategori" }));
-    expect(await screen.findByText("Nama kategori itu sudah ada.")).toBeTruthy();
-  });
-
-  it("tells the admin to make a category first when there are none", () => {
+  it("points the admin to the category manager when there are no categories", () => {
     open(makeFakeServices({ categories: [] }));
-    expect(screen.getByText("Belum ada kategori. Buat dulu di bawah.")).toBeTruthy();
+    expect(screen.getByText("Belum ada kategori. Tutup form ini, lalu buat lewat tombol Kelola kategori.")).toBeTruthy();
   });
 });
 
