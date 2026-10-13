@@ -3,19 +3,26 @@
 
 export type Category = "Rumah" | "Fashion" | "Elektronik" | "Kecantikan";
 
+/** One product photo, ready to show: `src` is the mid size and `srcSet` lists every size. Built where the photos are read. */
+export type ProductPhoto = { src: string; srcSet: string; alt: string; width: number | null; height: number | null };
+
 export type Product = {
   id: number;
   name: string;
-  shop: string;
-  cat: Category;
+  cat: string;
   price: number;
   oldPrice?: number;
   stock: number;
-  rating: string;
-  pos: number;
-  tag: string;
+  tag?: string;
   promo?: string;
   desc: string;
+  /** Photos from the database, cover first. Left out by the demo catalog, which shows a piece of the demo sprite instead. */
+  photos?: ProductPhoto[];
+  // The fields below only exist in the demo catalog: the database has no shop (the store has one seller), no rating
+  // until reviews are stored, and no sprite position because real products have photos.
+  shop?: string;
+  rating?: string;
+  pos?: number;
 };
 
 export const CATEGORIES: Category[] = ["Rumah", "Fashion", "Elektronik", "Kecantikan"];

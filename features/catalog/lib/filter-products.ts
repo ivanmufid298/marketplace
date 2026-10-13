@@ -17,7 +17,7 @@ export function filterProducts(products: readonly Product[], { category, query, 
   const list = products.filter(
     (p) =>
       (category === ALL_CATEGORIES || p.cat === category) &&
-      (p.name + " " + p.shop + " " + p.cat).toLowerCase().includes(query) &&
+      (p.name + " " + (p.shop ?? "") + " " + p.cat).toLowerCase().includes(query) &&
       (!savedOnly || liked.has(p.id)),
   );
   if (sort === "low") list.sort((a, b) => a.price - b.price);

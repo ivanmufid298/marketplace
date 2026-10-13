@@ -1,7 +1,8 @@
-import { money, spritePosition } from "@/lib/format";
+import { money } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import type { Product } from "@/lib/mock/store";
 import { CloseButton } from "../atoms/close-button";
+import { ProductImage } from "../atoms/product-image";
 import { QuantityStepper } from "./quantity-stepper";
 
 type CartRowProps = {
@@ -14,10 +15,10 @@ type CartRowProps = {
 export function CartRow({ product: p, qty, onChangeQty, onRemove }: CartRowProps) {
   return (
     <div className="cart-row">
-      <div className="cart-thumb" style={{ backgroundPosition: spritePosition(p.pos) }} />
+      <ProductImage product={p} className="cart-thumb" sizes="74px" />
       <div className="cart-meta">
         <b>{p.name}</b>
-        <small>{p.shop}</small>
+        {p.shop && <small>{p.shop}</small>}
         <div className="price">{money(p.price)}</div>
         <QuantityStepper
           qty={qty}

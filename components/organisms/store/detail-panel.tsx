@@ -1,9 +1,10 @@
 "use client";
 
-import { money, spritePosition } from "@/lib/format";
+import { money } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import { PRODUCT_REVIEWS } from "@/lib/mock/store";
 import { StockBadge } from "../../atoms/badges";
+import { ProductImage } from "../../atoms/product-image";
 import { Button } from "../../atoms/button";
 import { CloseButton } from "../../atoms/close-button";
 import { RatingSummary, ReviewItem } from "../../molecules/review-summary";
@@ -22,7 +23,7 @@ export function DetailPanel() {
       <div className="overlay" onClick={() => closePanel("detail")} />
       <div className="panel">
         <CloseButton label={t("common.close")} onClick={() => closePanel("detail")} />
-        <div className="detail-photo" style={{ backgroundPosition: p ? spritePosition(p.pos) : undefined }} />
+        {p ? <ProductImage product={p} className="detail-photo" sizes="(max-width: 700px) 100vw, 640px" /> : <div className="detail-photo" />}
         <div className="detail-body">
           <span className="eyebrow">{p?.cat}</span>
           <h2>{p?.name}</h2>

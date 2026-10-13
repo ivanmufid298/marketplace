@@ -7,7 +7,7 @@ import { SortMenu } from "../../molecules/sort-menu";
 import { useCatalog } from "@/features/catalog";
 
 export function ProductSection() {
-  const { visibleProducts, liked, toggleLike, openDetail, sort, setSort } = useCatalog();
+  const { visibleProducts, liked, toggleLike, openDetail, sort, setSort, status, reload, products } = useCatalog();
   const sortOptions = SORT_VALUES.map((value) => ({ value, label: t(`store.products.sort.${value}`) }));
 
   return (
@@ -20,7 +20,13 @@ export function ProductSection() {
         <SortMenu options={sortOptions} value={sort} onChange={setSort} />
       </div>
       <div className="grid">
-        <div className="empty" style={{ display: visibleProducts.length ? "none" : "block" }}>{t("store.products.empty")}</div>
+        {status === "loading" && <div className="empty" role="status">{t("store.products.loading")}</div>}
+        {status === "error" && (
+          <div className="empty" role="alert">
+            {t("store.products.loadError")} <button type="button" className="link-btn" onClick={reload}>{t("store.products.retry")}</button>
+          </div>
+        )}
+        {status === "ready" && visibleProducts.length === 0 && <div className="empty">{t(products.length === 0 ? "store.products.emptyStore" : "store.products.empty")}</div>}
         {visibleProducts.map((p) => (
           <ProductCard key={p.id} product={p} liked={liked.has(p.id)} onOpen={() => openDetail(p)} onToggleLike={() => toggleLike(p.id)} />
         ))}

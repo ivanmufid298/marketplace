@@ -1,20 +1,19 @@
 "use client";
 
 import { t } from "@/lib/i18n";
-import { CATEGORIES } from "@/lib/mock/store";
 import { CloseButton } from "../../atoms/close-button";
 import { ALL_CATEGORIES, useCatalog } from "@/features/catalog";
 import { useUi } from "@/shared/ui-state/ui-provider";
 
 export function CategorySheet() {
   const { panels, closePanel } = useUi();
-  const { category, setCategory, scrollToProducts } = useCatalog();
+  const { category, setCategory, scrollToProducts, categories } = useCatalog();
   const pick = (value: string) => {
     setCategory(value);
     closePanel("categorySheet");
     setTimeout(scrollToProducts, 0);
   };
-  const options = [{ value: ALL_CATEGORIES, label: t("store.categorySheet.all") }, ...CATEGORIES.map((c) => ({ value: c, label: c }))];
+  const options = [{ value: ALL_CATEGORIES, label: t("store.categorySheet.all") }, ...categories.map((c) => ({ value: c, label: c }))];
 
   return (
     <aside className={`category-sheet${panels.categorySheet ? " open" : ""}`} aria-hidden={!panels.categorySheet}>

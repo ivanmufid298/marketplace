@@ -79,3 +79,5 @@
 .store .chat-login{padding:16px;border-top:1px solid var(--line);background:#fff;display:grid;gap:10px;text-align:center}
 .store .chat-login p{margin:0;color:var(--muted);font-size:14px}
 @media(max-width:500px){.store .actions{display:flex}.store .actions .icon-btn:not(.account-btn){display:none}}
+.store .photo.has-photo,.store .hot-thumb.has-photo,.store .cart-thumb.has-photo,.store .order-thumb.has-photo,.store .detail-photo.has-photo{background-image:none;background-color:var(--cream);position:relative;overflow:hidden}
+.store .has-photo>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}

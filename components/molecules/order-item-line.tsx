@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { money, spritePosition } from "@/lib/format";
+import { money } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import type { MyReview } from "@/lib/mock/orders";
 import type { Product } from "@/lib/mock/store";
 import { Button } from "../atoms/button";
+import { ProductImage } from "../atoms/product-image";
 import { ReviewForm } from "./review-form";
 import { stars } from "./review-summary";
 
@@ -24,7 +25,7 @@ export function OrderItemLine({ product: p, qty, canReview, review, onSaveReview
 
   return (
     <div className="order-item">
-      <div className="order-thumb" style={{ backgroundPosition: spritePosition(p.pos) }} />
+      <ProductImage product={p} className="order-thumb" sizes="56px" />
       <div className="order-item-main">
         <b>{p.name}</b>
         <small>{t("store.orders.itemQty", { qty })} · {money(p.price)}</small>

@@ -83,7 +83,7 @@ export function useStore() {
 }
 
 export function StoreProvider({ children }: { children: ReactNode }) {
-  const { products, getProduct, visibleProducts, category, setCategory, query, setQuery, sort, setSort, savedOnly, liked, toggleLike, selected, openDetail, showSaved, showAll, scrollToProducts } = useCatalog();
+  const { products, status: catalogStatus, getProduct, visibleProducts, category, setCategory, query, setQuery, sort, setSort, savedOnly, liked, toggleLike, selected, openDetail, showSaved, showAll, scrollToProducts } = useCatalog();
   const [cart, setCart] = useState<CartLine[]>([]);
   const { panels, setPanel, openPanel, closePanel, togglePanel, toast, showToast } = useUi();
   const [checkoutStep, setCheckoutStep] = useState(1);
@@ -102,7 +102,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [cartOwner, setCartOwner] = useState<string | null>(null);
   const [pendingAdd, setPendingAdd] = useState<Product | null>(null);
   useEffect(() => {
-    if (!ready) return;
+    // The saved cart is checked against the catalog, so wait until the catalog has loaded; checking against an empty list would wipe it.
+    if (!ready || catalogStatus !== "ready") return;
     let stored: CartLine[] = [];
     if (userId) {
       try {
@@ -124,7 +125,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
     setCart(stored);
     setCartOwner(userId);
-  }, [ready, userId, getProduct]);
+  }, [ready, catalogStatus, userId, getProduct]);
   useEffect(() => {
     if (!userId || cartOwner !== userId) return;
     try {

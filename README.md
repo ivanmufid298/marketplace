@@ -232,6 +232,7 @@ Pada 12 Oktober 2026 hak akses database dan guard `/admin` sudah diuji otomatis 
 16. **Aktif dan draf**: klik **Nonaktifkan** pada produk. Statusnya menjadi Draf dan ia tidak terbaca pengunjung anonim (`select` ke `products` tanpa login tidak mengembalikannya). Klik **Aktifkan** untuk mengembalikan.
 17. **Pembeli tidak bisa**: masuk sebagai pembeli di jendela Incognito lalu buka `/admin/products`; harus ditolak dengan "Akun ini bukan admin".
 18. **Kelola kategori**: di `/admin/products` klik **Kelola kategori**. Tambah kategori, ubah namanya (kartu produk ikut berganti nama), nonaktifkan lalu cek bahwa ia hilang dari pilihan di **Tambah produk**, dan coba hapus kategori yang masih dipakai produk (tombol Hapus harus mati). Kategori tanpa produk bisa dihapus setelah konfirmasi.
+19. **Toko membaca database**: buka halaman toko (`/`) di Incognito (tanpa login). Produk berstatus Aktif tampil dengan foto aslinya, dan chip kategori hanya berisi kategori yang punya produk. Nonaktifkan produknya di admin lalu muat ulang toko: produk hilang. Nonaktifkan kategorinya: kategori dan produknya hilang dari toko. Di Network tab, foto yang dimuat harus berukuran 400 atau 800 px (`-400.webp`/`-800.webp`), bukan 1600 px, di layar biasa.
 
 *Hak akses database (SQL Editor, mensimulasikan pembeli; ganti `<uuid-buyer>`)*
 
