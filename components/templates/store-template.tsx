@@ -11,6 +11,7 @@ import { MobileNav } from "../organisms/store/mobile-nav";
 import { OrdersPanel } from "../organisms/store/orders-panel";
 import { StoreToast } from "../organisms/store/store-toast";
 import { AuthProvider } from "@/features/auth";
+import { CatalogProvider } from "@/features/catalog";
 import { UiProvider } from "@/shared/ui-state/ui-provider";
 import { StoreProvider } from "../providers/store-provider";
 
@@ -20,20 +21,22 @@ export function StoreTemplate({ children }: { children: ReactNode }) {
     <div className="store">
       <AuthProvider>
         <UiProvider>
-          <StoreProvider>
-            <Header />
-            {children}
-            <Footer />
-            <CartDrawer />
-            <OrdersPanel />
-            <DetailPanel />
-            <CheckoutFlow />
-            <CategorySheet />
-            <MobileNav />
-            <ChatWidget />
-            <StoreLoginDialog />
-            <StoreToast />
-          </StoreProvider>
+          <CatalogProvider>
+            <StoreProvider>
+              <Header />
+              {children}
+              <Footer />
+              <CartDrawer />
+              <OrdersPanel />
+              <DetailPanel />
+              <CheckoutFlow />
+              <CategorySheet />
+              <MobileNav />
+              <ChatWidget />
+              <StoreLoginDialog />
+              <StoreToast />
+            </StoreProvider>
+          </CatalogProvider>
         </UiProvider>
       </AuthProvider>
     </div>

@@ -2,10 +2,10 @@
 
 import { t } from "@/lib/i18n";
 import { HotPromoItem } from "../../molecules/hot-promo-item";
-import { useStore } from "../../providers/store-provider";
+import { useCatalog } from "@/features/catalog";
 
 export function HotPromoSection() {
-  const { products, openDetail } = useStore();
+  const { products, openDetail } = useCatalog();
   return (
     <section className="hot-section">
       <div className="hot-head">

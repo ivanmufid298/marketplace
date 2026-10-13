@@ -2,10 +2,10 @@
 
 import { t } from "@/lib/i18n";
 import { Button } from "../../atoms/button";
-import { useStore } from "../../providers/store-provider";
+import { useCatalog } from "@/features/catalog";
 
 export function Hero() {
-  const { scrollToProducts } = useStore();
+  const { scrollToProducts } = useCatalog();
   return (
     <section className="hero">
       <div className="hero-card">

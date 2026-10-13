@@ -3,13 +3,11 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { t } from "@/lib/i18n";
 import { INITIAL_MY_REVIEWS, type MyReview, type Order } from "@/lib/mock/orders";
-import { products, SHIPPING_OPTIONS, type Product, type ShippingValue, type SortMode } from "@/lib/mock/store";
+import { SHIPPING_OPTIONS, type ShippingValue } from "@/lib/mock/store";
 import * as ordersStore from "@/lib/orders-store";
 import { useAuth, type LoginIntent } from "@/features/auth";
+import { useCatalog, type Product, type SortMode } from "@/features/catalog";
 import { useUi, type PanelId } from "@/shared/ui-state/ui-provider";
-
-/** Sentinel for "no category filter". Display text comes from content/id.json. */
-export const ALL_CATEGORIES = "all";
 
 export type CartLine = { id: number; qty: number };
 export type Address = { fullName: string; phone: string; address: string; city: string; postcode: string; note: string };
@@ -85,13 +83,8 @@ export function useStore() {
 }
 
 export function StoreProvider({ children }: { children: ReactNode }) {
-  const [category, setCategoryState] = useState(ALL_CATEGORIES);
-  const [query, setQuery] = useState("");
-  const [sort, setSort] = useState<SortMode>("popular");
-  const [savedOnly, setSavedOnly] = useState(false);
-  const [liked, setLiked] = useState<Set<number>>(new Set());
+  const { products, getProduct, visibleProducts, category, setCategory, query, setQuery, sort, setSort, savedOnly, liked, toggleLike, selected, openDetail, showSaved, showAll, scrollToProducts } = useCatalog();
   const [cart, setCart] = useState<CartLine[]>([]);
-  const [selected, setSelected] = useState<Product | null>(null);
   const { panels, setPanel, openPanel, closePanel, togglePanel, toast, showToast } = useUi();
   const [checkoutStep, setCheckoutStep] = useState(1);
   const [address, setAddress] = useState<Address>(EMPTY_ADDRESS);
@@ -116,7 +109,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         const raw: unknown = JSON.parse(window.localStorage.getItem(CART_KEY_PREFIX + userId) ?? "[]");
         if (Array.isArray(raw)) {
           stored = raw.flatMap((line: Partial<CartLine>) => {
-            const product = products.find((p) => p.id === line.id);
+            const product = getProduct(line.id as number);
             return product && typeof line.qty === "number" && line.qty > 0 ? [{ id: product.id, qty: Math.min(line.qty, product.stock) }] : [];
           });
         }
@@ -131,7 +124,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
     setCart(stored);
     setCartOwner(userId);
-  }, [ready, userId]);
+  }, [ready, userId, getProduct]);
   useEffect(() => {
     if (!userId || cartOwner !== userId) return;
     try {
@@ -143,44 +136,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const allOrders = ordersStore.useOrders();
   const orders = useMemo(() => (user ? allOrders.filter((o) => o.buyerId === user.id) : []), [allOrders, user]);
-  const setCategory = useCallback((c: string) => {
-    setCategoryState(c);
-    setSavedOnly(false);
-  }, []);
-
-  const visibleProducts = useMemo(() => {
-    const list = products.filter(
-      (p) =>
-        (category === ALL_CATEGORIES || p.cat === category) &&
-        (p.name + " " + p.shop + " " + p.cat).toLowerCase().includes(query) &&
-        (!savedOnly || liked.has(p.id)),
-    );
-    if (sort === "low") list.sort((a, b) => a.price - b.price);
-    if (sort === "high") list.sort((a, b) => b.price - a.price);
-    return list;
-  }, [category, query, savedOnly, liked, sort]);
-
-  const toggleLike = useCallback(
-    (id: number) => {
-      setLiked((prev) => {
-        const next = new Set(prev);
-        if (next.has(id)) next.delete(id);
-        else next.add(id);
-        return next;
-      });
-      showToast(liked.has(id) ? t("store.toast.wishlistRemoved") : t("store.toast.wishlistAdded"));
-    },
-    [liked, showToast],
-  );
-
-  const openDetail = useCallback(
-    (p: Product) => {
-      setSelected(p);
-      setPanel("detail", true);
-    },
-    [setPanel],
-  );
-
   const addToCart = useCallback(
     (p: Product) => {
       if (!user) {
@@ -202,19 +157,19 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   );
 
   const changeQty = useCallback((id: number, delta: number) => {
-    const product = products.find((p) => p.id === id);
+    const product = getProduct(id);
     if (!product) return;
     setCart((prev) =>
       prev
         .map((l) => (l.id === id ? { ...l, qty: Math.min(product.stock, l.qty + delta) } : l))
         .filter((l) => l.qty > 0),
     );
-  }, []);
+  }, [getProduct]);
 
   const removeFromCart = useCallback((id: number) => setCart((prev) => prev.filter((l) => l.id !== id)), []);
 
   const cartCount = cart.reduce((s, l) => s + l.qty, 0);
-  const subtotal = cart.reduce((s, l) => s + (products.find((p) => p.id === l.id)?.price ?? 0) * l.qty, 0);
+  const subtotal = cart.reduce((s, l) => s + (getProduct(l.id)?.price ?? 0) * l.qty, 0);
   const shippingCost = SHIPPING_OPTIONS.find((o) => o.value === shipping)?.cost ?? SHIPPING_OPTIONS[0].cost;
 
   /** Returns true when signed in. Otherwise opens the login dialog for `why` and returns false. */
@@ -304,7 +259,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       phone: address.phone.trim(),
       address: [address.address, address.city, address.postcode].map((part) => part.trim()).filter(Boolean).join(", "),
       items: cart.flatMap((line) => {
-        const product = products.find((p) => p.id === line.id);
+        const product = getProduct(line.id);
         return product ? [{ productId: product.id, qty: line.qty, price: product.price }] : [];
       }),
       shippingMethod: method.label,
@@ -312,7 +267,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     });
     setOrderNumber(number);
     setCheckoutStep(4);
-  }, [address, cart, openLogin, shipping, showToast, user]);
+  }, [address, cart, getProduct, openLogin, shipping, showToast, user]);
 
   const finishOrder = useCallback(() => {
     setCart([]);
@@ -338,8 +293,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     },
     [requireLogin],
   );
-
-  const scrollToProducts = useCallback(() => document.getElementById("products")?.scrollIntoView({ behavior: "smooth" }), []);
 
   const completeOrder = useCallback(
     (orderNumber: string) => {
@@ -371,19 +324,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       if (mode === "category") return setPanel("categorySheet", true);
       if (mode === "cart") return setPanel("drawer", true);
       if (mode === "orders") return setPanel("orders", true);
-      if (mode === "saved") {
-        setSavedOnly(true);
-        setCategoryState(ALL_CATEGORIES);
-        setTimeout(scrollToProducts, 0);
-        if (!liked.size) showToast(t("store.toast.wishlistEmpty"));
-        return;
-      }
-      setSavedOnly(false);
-      setCategoryState(ALL_CATEGORIES);
-      setQuery("");
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      if (mode === "saved") return showSaved();
+      showAll();
     },
-    [liked.size, scrollToProducts, setPanel, showToast],
+    [setPanel, showAll, showSaved],
   );
 
   const value: StoreContextValue = {

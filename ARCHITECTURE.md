@@ -70,7 +70,8 @@ Fitur baru dibuat langsung sebagai modul. Skema produk, misalnya, menjadi `featu
 | Modul | Status | Catatan |
 | --- | --- | --- |
 | `auth` | **selesai** (12 Okt 2026) | Pilot. Dependensi ke modul lain: tidak ada. Dialog login tidak lagi memakai `useStore()`; ia menerima `onSignedIn`, dan `StoreLoginDialog` di storefront yang menyambungkannya ke toast. HTML render enam halaman identik sebelum dan sesudah. |
-| `catalog`, `cart`, `checkout`, `chat`, `reviews` | belum | Berasal dari memecah `StoreProvider`. Satu modul per commit. |
+| `catalog` | **selesai** sisi klien (12 Okt 2026) | `CatalogProvider` dan `useCatalog()`: `products`, `getProduct`, filter, cari, urut, wishlist, produk terpilih, `showSaved`, `showAll`, `scrollToProducts`. Satu-satunya pembaca daftar produk mock; cart dan checkout memakai `getProduct`. Sumber data masih mock, nanti diganti database di modul ini saja. Aturan itu dijaga `architecture.test.mts` (kecuali satu berkas admin lama). |
+| `cart`, `checkout`, `chat`, `reviews` | belum | Berasal dari memecah `StoreProvider`. Satu modul per commit. |
 | `orders` | belum | Termasuk `lib/orders-store.ts` dan `lib/order-flow.ts`. |
 | `admin` | belum | Dipindah saat disentuh, tidak sekaligus. |
 | `shared/ui-state` | **selesai** (12 Okt 2026) | `UiProvider` dan `useUi()`: panel, toast, kunci scroll, Escape. Dipakai `StoreProvider` dan langsung oleh `StoreToast`, `StoreLoginDialog`, dan `AccountMenu`. Dipasang di `StoreTemplate` di antara `AuthProvider` dan `StoreProvider`. |

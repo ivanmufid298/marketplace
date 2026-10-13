@@ -4,10 +4,10 @@ import { t } from "@/lib/i18n";
 import { SORT_VALUES } from "@/lib/mock/store";
 import { ProductCard } from "../../molecules/product-card";
 import { SortMenu } from "../../molecules/sort-menu";
-import { useStore } from "../../providers/store-provider";
+import { useCatalog } from "@/features/catalog";
 
 export function ProductSection() {
-  const { visibleProducts, liked, toggleLike, openDetail, sort, setSort } = useStore();
+  const { visibleProducts, liked, toggleLike, openDetail, sort, setSort } = useCatalog();
   const sortOptions = SORT_VALUES.map((value) => ({ value, label: t(`store.products.sort.${value}`) }));
 
   return (

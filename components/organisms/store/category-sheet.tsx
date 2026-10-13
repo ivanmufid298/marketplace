@@ -3,10 +3,12 @@
 import { t } from "@/lib/i18n";
 import { CATEGORIES } from "@/lib/mock/store";
 import { CloseButton } from "../../atoms/close-button";
-import { ALL_CATEGORIES, useStore } from "../../providers/store-provider";
+import { ALL_CATEGORIES, useCatalog } from "@/features/catalog";
+import { useUi } from "@/shared/ui-state/ui-provider";
 
 export function CategorySheet() {
-  const { panels, closePanel, category, setCategory, scrollToProducts } = useStore();
+  const { panels, closePanel } = useUi();
+  const { category, setCategory, scrollToProducts } = useCatalog();
   const pick = (value: string) => {
     setCategory(value);
     closePanel("categorySheet");

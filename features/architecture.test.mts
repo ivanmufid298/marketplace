@@ -8,12 +8,18 @@ import { describe, it } from "node:test";
 /** Which other features each feature may import. Dependencies only point downwards: auth and catalog sit at the bottom. */
 export const ALLOWED: Record<string, string[]> = {
   auth: [],
+  catalog: [],
 };
 
 /** Code every feature may use and that must never import a feature. */
 const SHARED_PREFIXES = ["components/atoms/", "components/molecules/", "lib/", "shared/"];
 /** The only files other code may import from a feature. */
 const ENTRY_POINTS = (feature: string) => [`features/${feature}`, `features/${feature}/server`];
+/** Files allowed to read the mock product list directly (test files may use it as fixture data). Everything else goes through useCatalog(), so swapping the mock
+ *  for the database later touches one module. The admin order modal is legacy and moves with the admin module. */
+const PRODUCT_DATA_READERS = ["features/catalog/", "components/organisms/admin/order-detail-modal.tsx"];
+const PRODUCT_DATA_IMPORT = /import\s*\{[^}]*\bproducts\b[^}]*\}\s*from\s*["']@\/lib\/mock\/store["']/;
+
 /** What a server entry point must never reach, because proxy.ts and layouts import it. */
 const SERVER_FORBIDDEN_MODULES = ["react", "react-dom", "next/link"];
 
@@ -52,6 +58,10 @@ export function checkBoundaries(files: Record<string, string>): string[] {
       if (!ENTRY_POINTS(target).includes(clean)) problems.push(`${file}: imports inside ${target} (${spec}); use "@/features/${target}" or "@/features/${target}/server"`);
       if (own && !(ALLOWED[own] ?? []).includes(target)) problems.push(`${file}: feature "${own}" may not depend on "${target}"`);
     }
+  }
+
+  for (const [file, source] of Object.entries(files)) {
+    if (PRODUCT_DATA_IMPORT.test(source) && !/\.test\.[mt]sx?$/.test(file) && !PRODUCT_DATA_READERS.some((p) => file.startsWith(p))) problems.push(`${file}: reads the mock product list directly; use useCatalog() from "@/features/catalog"`);
   }
 
   // A server entry point must stay free of React and "use client" files, however deep the chain goes.
@@ -129,6 +139,18 @@ describe("checkBoundaries (catches what it should)", () => {
   it("rejects a server entry that reaches React", () => {
     const files = { ...base, "features/auth/server.ts": `export * from "./lib/z";`, "features/auth/lib/z.ts": `import { useState } from "react";` };
     assert.ok(checkBoundaries(files).some((p) => p.includes('"react"')));
+  });
+  it("rejects reading the mock product list outside the catalog module", () => {
+    const files = { ...base, "components/a.tsx": `import { products } from "@/lib/mock/store";` };
+    assert.ok(checkBoundaries(files).some((p) => p.includes("mock product list")));
+  });
+  it("allows reading the mock product list inside the catalog module", () => {
+    const files = { ...base, "features/catalog/catalog-provider.tsx": `import { products as mock } from "@/lib/mock/store";` };
+    assert.deepEqual(checkBoundaries(files), []);
+  });
+  it("allows importing only types from the mock store elsewhere", () => {
+    const files = { ...base, "components/a.tsx": `import { SHIPPING_OPTIONS, type Product } from "@/lib/mock/store";` };
+    assert.deepEqual(checkBoundaries(files), []);
   });
   it("reads multi-line imports", () => {
     const files = { ...base, "app/page.tsx": `import {\n  a,\n  b,\n} from "@/features/auth/lib/x";` };

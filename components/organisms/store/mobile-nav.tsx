@@ -3,10 +3,14 @@
 import { t } from "@/lib/i18n";
 import { Icon } from "../../atoms/icon";
 import { MobileTab } from "../../molecules/mobile-tab";
+import { useCatalog } from "@/features/catalog";
+import { useUi } from "@/shared/ui-state/ui-provider";
 import { useStore } from "../../providers/store-provider";
 
 export function MobileNav() {
-  const { panels, savedOnly, mobileNav, cartCount } = useStore();
+  const { panels } = useUi();
+  const { savedOnly } = useCatalog();
+  const { mobileNav, cartCount } = useStore();
   const overlayOpen = panels.drawer || panels.orders || panels.categorySheet;
 
   return (

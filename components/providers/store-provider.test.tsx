@@ -7,6 +7,7 @@ import { act, cleanup, renderHook } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AuthProvider, useAuth } from "@/features/auth";
+import { CatalogProvider } from "@/features/catalog";
 import { products } from "@/lib/mock/store";
 import { UiProvider } from "@/shared/ui-state/ui-provider";
 import { resetOrders } from "@/lib/orders-store";
@@ -19,7 +20,9 @@ const [mug, tote, headphone] = products; // stock 2, 1, 8
 const wrapper = ({ children }: { children: ReactNode }) => (
   <AuthProvider>
     <UiProvider>
-      <StoreProvider>{children}</StoreProvider>
+      <CatalogProvider>
+        <StoreProvider>{children}</StoreProvider>
+      </CatalogProvider>
     </UiProvider>
   </AuthProvider>
 );

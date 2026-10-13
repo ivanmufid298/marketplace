@@ -7,10 +7,14 @@ import { StockBadge } from "../../atoms/badges";
 import { Button } from "../../atoms/button";
 import { CloseButton } from "../../atoms/close-button";
 import { RatingSummary, ReviewItem } from "../../molecules/review-summary";
+import { useCatalog } from "@/features/catalog";
+import { useUi } from "@/shared/ui-state/ui-provider";
 import { useStore } from "../../providers/store-provider";
 
 export function DetailPanel() {
-  const { panels, closePanel, selected: p, liked, toggleLike, addToCart } = useStore();
+  const { panels, closePanel } = useUi();
+  const { selected: p, liked, toggleLike } = useCatalog();
+  const { addToCart } = useStore();
   const isLiked = p ? liked.has(p.id) : false;
 
   return (
