@@ -1,14 +1,28 @@
 // Run with `npm run test:ui`. The shop's catalog sections reading from a database-backed catalog: loading, failing,
 // an empty store, products with and without photos, and the category menus built from the products.
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
-import { CatalogProvider } from "@/features/catalog";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { CatalogProvider, useCatalog } from "@/features/catalog";
 import type { Product } from "@/lib/mock/store";
 import { UiProvider } from "@/shared/ui-state/ui-provider";
 import { CategoryNav } from "./category-nav";
 import { CategorySheet } from "./category-sheet";
 import { HotPromoSection } from "./hot-promo-section";
 import { ProductSection } from "./product-section";
+
+const push = vi.fn();
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
+
+/** Shows which product the side panel would be open for. */
+function PanelProbe() {
+  const { selected } = useCatalog();
+  return <p data-testid="panel">{selected?.name ?? "closed"}</p>;
+}
+
+/** Pretends the screen is, or is not, a phone. */
+function screenIs(phone: boolean) {
+  window.matchMedia = vi.fn((query: string) => ({ matches: phone && query === "(max-width: 500px)", media: query })) as never;
+}
 
 type Catalog = { products: Product[]; categories: string[] };
 const photo = { src: "https://cdn.test/a-800.webp", srcSet: "https://cdn.test/a-400.webp 400w", alt: "", width: 1600, height: 1200 };
@@ -23,12 +37,18 @@ function show(listCatalog: () => Promise<{ ok: true; value: Catalog } | { ok: fa
         <CategorySheet />
         <HotPromoSection />
         <ProductSection />
+        <PanelProbe />
       </CatalogProvider>
     </UiProvider>,
   );
 }
 const loaded = (products: Product[], categories: string[]) => async () => ({ ok: true as const, value: { products, categories } });
-afterEach(cleanup);
+beforeEach(() => push.mockClear());
+afterEach(() => {
+  cleanup();
+  // @ts-expect-error -- jsdom has no matchMedia; put it back to that
+  delete window.matchMedia;
+});
 
 describe("product list states", () => {
   it("says it is loading, and shows no products or empty message meanwhile", () => {
@@ -111,5 +131,57 @@ describe("category menus", () => {
     fireEvent.click(within(screen.getByRole("navigation")).getByRole("button", { name: "Fashion" }));
     await waitFor(() => expect(screen.queryByRole("heading", { name: "Mug Blush" })).toBeNull());
     expect(screen.getByRole("heading", { name: "Tote Canvas" })).toBeTruthy();
+  });
+});
+
+describe("tapping a product", () => {
+  const withSlug: Product = { ...mug, slug: "mug-blush" };
+  const sampleLike: Product = { ...tote, slug: undefined };
+
+  it("opens the product's own page on a phone, not the side panel", async () => {
+    screenIs(true);
+    show(loaded([withSlug], ["Rumah"]));
+    fireEvent.click((await screen.findByRole("heading", { name: "Mug Blush" })).closest("article")!);
+    expect(push).toHaveBeenCalledWith("/produk/mug-blush");
+    expect(screen.getByTestId("panel").textContent).toBe("closed");
+  });
+  it("opens the side panel on a bigger screen and stays on the list", async () => {
+    screenIs(false);
+    show(loaded([withSlug], ["Rumah"]));
+    fireEvent.click((await screen.findByRole("heading", { name: "Mug Blush" })).closest("article")!);
+    expect(screen.getByTestId("panel").textContent).toBe("Mug Blush");
+    expect(push).not.toHaveBeenCalled();
+  });
+  it("opens the side panel on a phone for a product that has no address", async () => {
+    screenIs(true);
+    show(loaded([sampleLike], ["Fashion"]));
+    fireEvent.click((await screen.findByRole("heading", { name: "Tote Canvas" })).closest("article")!);
+    expect(screen.getByTestId("panel").textContent).toBe("Tote Canvas");
+    expect(push).not.toHaveBeenCalled();
+  });
+  it("uses the side panel when the browser cannot measure the screen", async () => {
+    show(loaded([withSlug], ["Rumah"]));
+    fireEvent.click((await screen.findByRole("heading", { name: "Mug Blush" })).closest("article")!);
+    expect(screen.getByTestId("panel").textContent).toBe("Mug Blush");
+    expect(push).not.toHaveBeenCalled();
+  });
+  it("measures the screen at the tap, so turning the phone needs no refresh", async () => {
+    screenIs(false);
+    show(loaded([withSlug], ["Rumah"]));
+    const card = (await screen.findByRole("heading", { name: "Mug Blush" })).closest("article")!;
+    screenIs(true);
+    fireEvent.click(card);
+    expect(push).toHaveBeenCalledWith("/produk/mug-blush");
+  });
+  it("does the same from the promo list", async () => {
+    screenIs(true);
+    show(loaded([withSlug], ["Rumah"]));
+    await screen.findByRole("heading", { name: "Mug Blush" });
+    fireEvent.click(within(document.querySelector(".hot-list") as HTMLElement).getByRole("button"));
+    expect(push).toHaveBeenCalledWith("/produk/mug-blush");
+    expect(screen.getByTestId("panel").textContent).toBe("closed");
+    screenIs(false);
+    fireEvent.click(within(document.querySelector(".hot-list") as HTMLElement).getByRole("button"));
+    expect(screen.getByTestId("panel").textContent).toBe("Mug Blush");
   });
 });

@@ -5,9 +5,11 @@ import { SORT_VALUES } from "@/lib/mock/store";
 import { ProductCard } from "../../molecules/product-card";
 import { SortMenu } from "../../molecules/sort-menu";
 import { useCatalog } from "@/features/catalog";
+import { useOpenProduct } from "./use-open-product";
 
 export function ProductSection() {
-  const { visibleProducts, liked, toggleLike, openDetail, sort, setSort, status, reload, products } = useCatalog();
+  const { visibleProducts, liked, toggleLike, sort, setSort, status, reload, products } = useCatalog();
+  const openProduct = useOpenProduct();
   const sortOptions = SORT_VALUES.map((value) => ({ value, label: t(`store.products.sort.${value}`) }));
 
   return (
@@ -28,7 +30,7 @@ export function ProductSection() {
         )}
         {status === "ready" && visibleProducts.length === 0 && <div className="empty">{t(products.length === 0 ? "store.products.emptyStore" : "store.products.empty")}</div>}
         {visibleProducts.map((p) => (
-          <ProductCard key={p.id} product={p} liked={liked.has(p.id)} onOpen={() => openDetail(p)} onToggleLike={() => toggleLike(p.id)} />
+          <ProductCard key={p.id} product={p} liked={liked.has(p.id)} onOpen={() => openProduct(p)} onToggleLike={() => toggleLike(p.id)} />
         ))}
       </div>
     </section>
