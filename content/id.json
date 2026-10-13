@@ -175,7 +175,9 @@
       "shipping": "Ongkos kirim",
       "total": "Total",
       "status": {
-        "pending": "Menunggu pembayaran",
+        "awaiting_payment": "Menunggu pembayaran",
+        "verifying": "Sedang diverifikasi",
+        "rejected": "Pembayaran ditolak",
         "shipping": "Barang sedang dikirim",
         "completed": "Selesai",
         "cancelled": "Dibatalkan"

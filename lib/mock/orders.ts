@@ -20,6 +20,8 @@ export type Order = {
   shippingMethod: string;
   shippingFee: number;
   payment: PaymentState;
+  /** True while no transfer proof has been sent yet (database orders only). Orders from the local checkout always carry a proof. */
+  awaitingProof?: boolean;
   /** Set when the buyer taps "Pesanan selesai". */
   received: boolean;
   /** Present when the order was cancelled; holds the admin's reason. */

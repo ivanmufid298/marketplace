@@ -5,13 +5,15 @@ import { money } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import type { MyReview, Order } from "@/lib/mock/orders";
 import type { Product } from "@/lib/mock/store";
-import { deriveStatus, total, type OrderStatus } from "@/lib/order-flow";
+import { buyerStatus, deriveStatus, total, type BuyerStatus } from "@/lib/order-flow";
 import { StatusPill, type PillTone } from "../atoms/badges";
 import { Button } from "../atoms/button";
 import { OrderItemLine } from "./order-item-line";
 
-const STATUS_TONE: Record<OrderStatus, PillTone> = {
-  pending: "pending",
+const STATUS_TONE: Record<BuyerStatus, PillTone> = {
+  awaiting_payment: "pending",
+  verifying: "progress",
+  rejected: "danger",
   shipping: "progress",
   completed: "success",
   cancelled: "danger",
@@ -28,6 +30,7 @@ type OrderCardProps = {
 export function OrderCard({ order, products, reviews, onSaveReview, onComplete }: OrderCardProps) {
   const [confirming, setConfirming] = useState(false);
   const status = deriveStatus(order);
+  const label = buyerStatus(order);
   const lines = order.items.flatMap((item) => {
     const product = products.find((p) => p.id === item.productId);
     return product ? [{ product, qty: item.qty }] : [];
@@ -40,7 +43,7 @@ export function OrderCard({ order, products, reviews, onSaveReview, onComplete }
           <b>{t("store.orders.orderLabel", { number: order.number })}</b>
           <small>{order.date}</small>
         </div>
-        <StatusPill tone={STATUS_TONE[status]}>{t(`store.orders.status.${status}`)}</StatusPill>
+        <StatusPill tone={STATUS_TONE[label]}>{t(`store.orders.status.${label}`)}</StatusPill>
       </div>
       {lines.map(({ product, qty }) => (
         <OrderItemLine
