@@ -1,7 +1,7 @@
 # PRD — Toko Online Jastip & Barang Impor
 
 **Status:** Draft untuk diskusi  
-**Versi:** 0.9  
+**Versi:** 0.10  
 **Pembaruan:** 12 Oktober 2026
 
 ## 1. Ringkasan Produk
@@ -21,7 +21,7 @@ Produk ini bukan marketplace multi-seller. MVP tidak mencakup onboarding seller,
 ### Di luar MVP
 
 - Multi-seller.
-- Payment gateway dan ongkir otomatis.
+- Payment gateway dan ongkir otomatis (rancangan ongkir otomatis ada di bagian 10.2).
 - Notifikasi WhatsApp/email otomatis.
 - Wishlist tersimpan lintas perangkat.
 - Sistem deposit/cicilan PO.
@@ -69,6 +69,8 @@ Target development dan MVP awal adalah biaya nol selama penggunaan masih berada 
 - Gunakan Node.js runtime dan aktifkan `nodejs_compat` pada Cloudflare.
 - Jangan bergantung pada filesystem lokal persisten.
 - Simpan file di R2; database hanya menyimpan object key, URL, ukuran, MIME type, dan metadata.
+- **Foto produk:** diubah ukurannya di browser admin sebelum diunggah, menjadi beberapa varian WebP (misalnya 400, 800, dan 1600 px) yang dibuat sekali dan disimpan; tidak memakai resize otomatis saat diminta, karena fitur itu berbayar di Supabase dan tidak tersedia di plan gratis. Resize dikerjakan di browser karena library server seperti `sharp` tidak berjalan di Cloudflare Workers. Server tetap memvalidasi tipe dan batas ukuran file. Database menyimpan satu object key dasar per foto; URL tiap ukuran diturunkan dari kunci itu, dengan cache-control panjang.
+- **Tahap development:** foto disimpan di Supabase Storage (bucket publik untuk foto produk, tulis hanya oleh admin lewat RLS `is_admin()`) di balik adapter penyimpanan. Pindah ke R2 saat peluncuran atau saat egress Supabase mulai terasa, cukup dengan menyalin file dan mengganti adapter, tanpa mengubah skema.
 
 ## 5. Role dan Akses
 
@@ -181,7 +183,9 @@ Aturan upload:
 - Bukti transfer bersifat privat dan dibuka lewat signed URL singkat.
 - Rekening pembayaran dikelola admin, bukan ditulis langsung di source code.
 
-## 10. Ongkir MVP
+## 10. Ongkir
+
+### 10.1 MVP: zona dan tarif manual
 
 MVP memakai zona dan tarif yang dikelola manual oleh admin:
 
@@ -193,7 +197,36 @@ MVP memakai zona dan tarif yang dikelola manual oleh admin:
 
 Jika alamat tidak cocok dengan zona aktif, buyer tidak dapat menyelesaikan checkout dan diarahkan menghubungi admin.
 
-Ongkir disalin ke order saat checkout. Perubahan tarif berikutnya tidak boleh mengubah histori order. Integrasi Biteship/RajaOngkir masuk fase berikutnya.
+Ongkir disalin ke order saat checkout. Perubahan tarif berikutnya tidak boleh mengubah histori order. Tarif otomatis lewat API ekspedisi dirancang di bagian 10.2 dan masuk fase berikutnya.
+
+### 10.2 Fase berikutnya: tarif otomatis lewat API agregator ekspedisi
+
+**Tujuan.** Saat buyer mengisi alamat, sistem menghitung ongkir sebenarnya per kurir dan layanan, sehingga admin tidak perlu memperbarui tarif manual dan tarif tidak salah untuk tujuan di luar zona.
+
+**Alur.**
+
+1. Buyer mengisi alamat sampai tingkat kecamatan dan kode pos. Daftar provinsi, kota/kabupaten, dan kecamatan diambil dari API penyedia agar ID wilayahnya cocok.
+2. Server (Route Handler, bukan browser) memanggil API tarif penyedia dengan alamat asal toko, alamat tujuan, dan berat total keranjang (gram). Dimensi dan nilai barang ikut dikirim jika penyedia memintanya.
+3. Hasilnya daftar layanan: kurir, layanan, tarif, dan estimasi tiba. Buyer memilih satu.
+4. Saat order dibuat, server menghitung ulang tarif dan **tidak mempercayai angka dari browser**. Tarif yang dipilih disalin ke order sebagai snapshot (kurir, layanan, tarif, estimasi, berat, dan ID tarif dari penyedia). Aturan lama tetap berlaku: perubahan tarif sesudahnya tidak mengubah histori order.
+
+**Prasyarat data.** Setiap produk (dan varian bila beratnya berbeda) wajib punya **berat dalam gram**; dimensi bersifat opsional. Alamat toko sebagai titik asal diatur admin. Alamat buyer menyimpan kecamatan dan ID wilayah penyedia.
+
+**Kegagalan dan fallback.** Jika API gagal, timeout, atau kena batas pemakaian, checkout memakai zona manual (bagian 10.1) bila alamat cocok; jika tidak cocok, buyer diarahkan menghubungi admin. Ongkir tidak boleh ditebak atau ditampilkan salah. Hasil tarif boleh di-cache singkat (menit) per kombinasi tujuan dan berat untuk menghemat panggilan. Kunci API hanya ada di server dan tidak pernah memakai prefiks `NEXT_PUBLIC_`.
+
+**Pengaturan admin.** Penyedia aktif, kurir yang diizinkan, alamat toko, serta opsi markup atau subsidi ongkir. Minimal belanja gratis ongkir tetap berlaku di atas hasil API.
+
+**Kandidat penyedia (belum diputuskan).** Informasi di bawah berasal dari pencarian 12 Oktober 2026 dan harus diverifikasi di dokumentasi serta halaman harga resmi sebelum memilih.
+
+| Penyedia | Yang diketahui | Yang masih perlu dicek |
+| --- | --- | --- |
+| KiriminAja | API publik dengan sandbox dan SDK (PHP, Node.js, Go); ada API wilayah (provinsi, kota, kecamatan) dan pembuatan order | Path dan parameter endpoint tarif, biaya penggunaan API, batas pemakaian |
+| Biteship | Rates API (`/v1/rates/couriers`), lebih dari 30 kurir, satu produk untuk tarif, order, dan pelacakan; situsnya menyebut harga mulai dari Rp5 per permintaan | Harga terkini dan struktur biaya per volume |
+| RajaOngkir (Komerce) | Paket langganan dengan batas hit harian (Starter 100 per hari, Pro 20.000 per hari) | Harga paket; pembuatan order/resi ada di produk terpisah |
+
+**Kriteria memilih.** (1) Biaya sesuai constraint biaya nol selama masih mungkin, (2) cakupan kurir yang dipakai pasar target, (3) sandbox untuk pengujian, (4) ID wilayah yang mudah dipetakan ke alamat buyer, dan (5) kemampuan lanjutan seperti membuat order, jemput paket, dan pelacakan resi, karena fulfillment akan membutuhkannya.
+
+Keputusan MVP tidak berubah: sampai bagian ini dikerjakan, ongkir memakai zona manual (bagian 10.1).
 
 ## 11. Dashboard Admin MVP
 
@@ -246,6 +279,7 @@ Ongkir disalin ke order saat checkout. Perubahan tarif berikutnya tidak boleh me
 ### Ongkir
 
 - CRUD layanan/tarif, aktif/nonaktif, dan gratis ongkir.
+- Fase berikutnya (bagian 10.2): memilih penyedia API ongkir, kurir yang diizinkan, alamat toko sebagai titik asal, dan markup atau subsidi ongkir.
 
 ### Interactions
 
@@ -353,14 +387,14 @@ Order menyimpan snapshot subtotal, diskon, ongkir, dan total. Perubahan harga at
 ### Identity
 
 - `Profile`: user, role (`buyer` atau `admin`, hanya dapat diubah oleh pemilik project lewat SQL), nama, telepon, timestamps. Dibuat otomatis saat pendaftaran.
-- `Address`: buyer, label, penerima, telepon, detail alamat, kota, provinsi, kode pos, default flag.
+- `Address`: buyer, label, penerima, telepon, detail alamat, kota, provinsi, kode pos, default flag. Fase berikutnya (bagian 10.2) menambah kecamatan dan ID wilayah dari penyedia ongkir.
 
 ### Catalog
 
 - `Category`: nama, slug, status, urutan.
-- `Product`: nama, slug, deskripsi, tipe, status, harga dasar, ready stock.
+- `Product`: nama, slug, deskripsi, tipe, status, harga dasar, ready stock, **berat (gram)** dan dimensi opsional. Berat dibutuhkan untuk menghitung ongkir otomatis (bagian 10.2) dan sebaiknya sudah ada sejak skema produk pertama.
 - `ProductImage`: product, object key, URL, alt text, urutan.
-- `ProductVariant`: product, nama, SKU, harga override, stok, urutan, status.
+- `ProductVariant`: product, nama, SKU, harga override, stok, urutan, status, berat override opsional.
 - `PreorderBatch`: product, waktu buka, deadline, kuota, reserved, sold, ETA, status.
 
 ### Commerce
@@ -368,7 +402,7 @@ Order menyimpan snapshot subtotal, diskon, ongkir, dan total. Perubahan harga at
 - `Cart`, `CartItem`: cart milik satu buyer (guest tidak punya cart).
 - `Order`: buyer, nomor, payment status, snapshot alamat dan harga, expiry, `received_at` (saat buyer menekan Pesanan selesai), `cancelled_at` beserta catatan pembatalan, dan status refund.
 - `OrderItem`: referensi produk/varian, snapshot nama/harga, quantity, batch PO.
-- `FulfillmentGroup`: order, tipe ready/PO, batch/ETA, shipping method, shipping fee snapshot, fulfillment status.
+- `FulfillmentGroup`: order, tipe ready/PO, batch/ETA, shipping method, shipping fee snapshot, fulfillment status. Dengan ongkir otomatis, snapshot juga memuat kurir, layanan, estimasi, berat, dan ID tarif dari penyedia.
 - `FulfillmentGroupItem`: relasi item order ke kelompok pengiriman.
 - `StockReservation`: product/variant/batch, quantity, expiry, status.
 - `Payment`: amount, status, submission/verification time, verifier, rejection reason.
@@ -378,6 +412,7 @@ Order menyimpan snapshot subtotal, diskon, ongkir, dan total. Perubahan harga at
 ### Marketing dan operasional
 
 - `ShippingZone`, `ShippingZoneArea`, `ShippingMethod`, `ShippingRate`.
+- Fase berikutnya: `ShippingProviderSetting` (penyedia aktif, kurir diizinkan, alamat asal toko, markup).
 - `Promotion` dan aturan target.
 - `Voucher`, `VoucherRedemption`.
 - `Banner`, `PopupCampaign`.
@@ -442,7 +477,7 @@ Order menyimpan snapshot subtotal, diskon, ongkir, dan total. Perubahan harga at
 ### Fase berikutnya
 
 - Payment gateway.
-- Integrasi ongkir.
+- Integrasi ongkir otomatis lewat API agregator ekspedisi (bagian 10.2).
 - Notifikasi WhatsApp/email otomatis.
 - Wishlist tersimpan lintas perangkat.
 - Sistem deposit/cicilan PO.
@@ -468,6 +503,7 @@ Order menyimpan snapshot subtotal, diskon, ongkir, dan total. Perubahan harga at
 5. Buyer hanya dapat membatalkan sebelum bukti pembayaran diunggah. Tahap berikutnya memerlukan proses admin.
 6. Maksimal satu promo otomatis dan satu voucher dapat dipakai jika voucher mengizinkan stacking.
 7. Notifikasi dalam aplikasi cukup untuk MVP; WhatsApp/email masuk fase berikutnya.
+8. Ongkir otomatis lewat API agregator ekspedisi (KiriminAja, Biteship, atau RajaOngkir) dirancang di bagian 10.2 tetapi belum dijadwalkan dan penyedianya belum dipilih. Berat produk (gram) masuk skema produk sejak awal supaya fitur ini tidak memaksa migrasi data.
 8. Role admin disimpan hanya di `profiles`, admin pertama dibuat manual lewat SQL, dan pendaftaran publik selalu menjadi buyer.
 9. Tanpa konfigurasi autentikasi di production, situs hanya dapat dijelajahi dan `/admin` terkunci. Mode demo hanya untuk pengembangan lokal dan preview yang diaktifkan secara eksplisit.
 

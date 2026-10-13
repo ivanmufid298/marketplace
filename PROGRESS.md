@@ -80,7 +80,7 @@ Urutan mengikuti dependensi teknis:
    - [ ] `orders`, lalu `shared/ui` dan `shared/lib`.
    - [ ] `admin` dipindah saat disentuh. Teks `id.json` boleh dipecah per modul belakangan.
    - Setiap langkah dibuktikan dengan `npm test`, `tsc`, `next build`, dan HTML render yang identik sebelum dan sesudah.
-3. Skema database: kategori, produk, varian, foto, batch PO. Dibuat langsung sebagai modul `features/catalog`.
+3. Skema database: kategori, produk, varian, foto, batch PO. Dibuat langsung sebagai modul `features/catalog`. Keputusan yang sudah diambil (13 Oktober 2026): foto di-resize di browser admin menjadi beberapa varian WebP lalu disimpan di Supabase Storage lewat adapter (R2 menyusul, sesuai PRD); versi pertama produk sederhana tanpa varian dan batch PO; **berat produk (gram) masuk skema sejak awal** karena ongkir otomatis lewat API ekspedisi (PRD bagian 10.2, penyedia belum dipilih) membutuhkannya.
 4. Cart, reservasi stok/kuota, order expiry, dan checkout yang menyimpan pesanan ke database (fulfillment group per kelompok pengiriman ditunda).
 5. Pembayaran manual, riwayat bukti transfer, dan penyimpanan privat di R2.
 6. Batch PO di admin, serta menyambungkan order, interaction, review, promo, voucher, banner, popup, dan scheduler ke database.
