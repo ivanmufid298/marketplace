@@ -25,7 +25,7 @@ vi.mock("@supabase/supabase-js", () => ({
   },
 }));
 
-const { getStoreProductBySlug, listStoreSitemapEntries } = await import("./storefront-server");
+const { getStoreProductBySlug, listStoreSitemapEntries, StorefrontUnavailableError } = await import("./storefront-server");
 const row = { id: 1, slug: "mug", name: "Mug", description: "d", price: 1000, compare_at_price: null, stock: 1, badge: null, categories: { name: "Rumah", sort_order: 0 }, product_images: [] };
 
 beforeEach(() => {
@@ -56,9 +56,7 @@ describe("getStoreProductBySlug", () => {
     await getStoreProductBySlug("x".repeat(80));
     expect(queries).toHaveLength(1);
   });
-  it("returns null when there is no such product, when the read fails, and when the shop has no database", async () => {
-    expect(await getStoreProductBySlug("mug")).toBeNull();
-    answer = { data: null, error: { message: "Failed to fetch" } };
+  it("returns null when there is no such product, and when the shop has no database", async () => {
     expect(await getStoreProductBySlug("mug")).toBeNull();
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "");
     expect(await getStoreProductBySlug("mug")).toBeNull();
@@ -68,14 +66,24 @@ describe("getStoreProductBySlug", () => {
   });
 });
 
+describe("a failed read", () => {
+  it("throws instead of pretending the product does not exist, so a crawler is told to come back and not that the page is gone", async () => {
+    answer = { data: null, error: { message: "Failed to fetch" } };
+    await expect(getStoreProductBySlug("mug")).rejects.toBeInstanceOf(StorefrontUnavailableError);
+    await expect(getStoreProductBySlug("mug")).rejects.toMatchObject({ reason: "network" });
+  });
+  it("throws for the sitemap too, rather than serving one with products missing", async () => {
+    answer = { data: null, error: { message: "Failed to fetch" } };
+    await expect(listStoreSitemapEntries()).rejects.toBeInstanceOf(StorefrontUnavailableError);
+  });
+});
+
 describe("listStoreSitemapEntries", () => {
   it("lists the products to show to search engines", async () => {
     answer = { data: [{ slug: "mug", updated_at: "2026-10-01T00:00:00Z" }], error: null };
     expect(await listStoreSitemapEntries()).toEqual([{ slug: "mug", updatedAt: "2026-10-01T00:00:00Z" }]);
   });
-  it("is empty when the read fails or the shop has no database", async () => {
-    answer = { data: null, error: { message: "Failed to fetch" } };
-    expect(await listStoreSitemapEntries()).toEqual([]);
+  it("is empty when the shop has no database", async () => {
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "");
     expect(await listStoreSitemapEntries()).toEqual([]);
   });

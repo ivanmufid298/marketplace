@@ -9,6 +9,7 @@ import { describe, it } from "node:test";
 export const ALLOWED: Record<string, string[]> = {
   auth: [],
   catalog: [],
+  reviews: [],
 };
 
 /** Code every feature may use and that must never import a feature. */

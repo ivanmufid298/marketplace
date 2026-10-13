@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 import { ProductPage } from "@/components/organisms/store/product-page";
+import { aggregateRatingJsonLd, getProductReviews } from "@/features/reviews/server";
 import { getStoreProductBySlug, jsonLdScript, largestPhotoUrl, metaDescription, productJsonLd } from "@/features/catalog/server";
 import { t } from "@/lib/i18n";
 import { siteUrl } from "@/lib/site-url";
@@ -42,10 +43,15 @@ export default async function ProductRoute({ params }: Params) {
   const product = await loadProduct(slug);
   if (!product) notFound();
 
+  const reviews = await getProductReviews(product.id);
+  // A product with no reviews says nothing about a rating; only real reviews are reported to search engines.
+  const rating = aggregateRatingJsonLd(reviews.stats);
+  const structuredData = { ...productJsonLd(product, `${siteUrl()}/produk/${slug}`), ...(rating ? { aggregateRating: rating } : {}) };
+
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(productJsonLd(product, `${siteUrl()}/produk/${slug}`)) }} />
-      <ProductPage product={product} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(structuredData) }} />
+      <ProductPage product={product} reviews={reviews} />
     </>
   );
 }

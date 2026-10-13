@@ -4,7 +4,7 @@ import { PRODUCT_REVIEWS } from "@/lib/mock/store";
 export const stars = (rating: number) => "★".repeat(rating) + "☆".repeat(5 - rating);
 
 /** Average score plus per-star distribution bars. */
-export function RatingSummary({ summary = PRODUCT_REVIEWS }: { summary?: typeof PRODUCT_REVIEWS }) {
+export function RatingSummary({ summary = PRODUCT_REVIEWS }: { summary?: Pick<typeof PRODUCT_REVIEWS, "score" | "count" | "bars"> }) {
   return (
     <div className="review-score">
       <div>
@@ -25,16 +25,18 @@ export function RatingSummary({ summary = PRODUCT_REVIEWS }: { summary?: typeof 
   );
 }
 
-type ReviewItemProps = { name: string; rating: number; when: string; text: string };
+type ReviewItemProps = { name: string; rating: number; when: string; text: string; verified?: boolean };
 
-export function ReviewItem({ name, rating, when, text }: ReviewItemProps) {
+export function ReviewItem({ name, rating, when, text, verified = false }: ReviewItemProps) {
   return (
     <article className="review-item">
       <div className="reviewer">
         <div><b>{name}</b><div className="stars">{stars(rating)}</div></div>
-        <span className="sub">{when}</span>
+        {/* The relative time can differ by a moment between the server render and the browser. */}
+        <span className="sub" suppressHydrationWarning>{when}</span>
       </div>
       <p>{text}</p>
+      {verified && <span className="review-verified">{t("store.reviews.verified")}</span>}
     </article>
   );
 }

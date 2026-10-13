@@ -6,7 +6,9 @@ import type { Product } from "@/lib/mock/store";
 
 const load = vi.fn();
 vi.mock("@/features/catalog/server", async (original) => ({ ...(await original<typeof import("@/features/catalog/server")>()), getStoreProductBySlug: (slug: string) => load(slug) }));
-vi.mock("@/components/organisms/store/product-page", () => ({ ProductPage: ({ product }: { product: Product }) => <p data-testid="page">{product.name}</p> }));
+vi.mock("@/components/organisms/store/product-page", () => ({ ProductPage: ({ product, reviews }: { product: Product; reviews: { stats: { count: number } } }) => <p data-testid="page">{product.name}:{reviews.stats.count}</p> }));
+const loadReviews = vi.fn();
+vi.mock("@/features/reviews/server", async (original) => ({ ...(await original<typeof import("@/features/reviews/server")>()), getProductReviews: (id: number) => loadReviews(id) }));
 const notFound = vi.fn(() => { throw new Error("NEXT_NOT_FOUND"); });
 vi.mock("next/navigation", () => ({ notFound: () => notFound() }));
 
@@ -16,7 +18,8 @@ const photo = { src: "https://cdn.test/1-800.webp", srcSet: "https://cdn.test/1-
 const mug: Product = { id: 7, slug: "mug", name: "Mug Blush", cat: "Rumah", price: 89000, stock: 3, desc: "Mug keramik berglasir.", photos: [photo] };
 const params = (slug: string) => ({ params: Promise.resolve({ slug }) });
 
-beforeEach(() => { load.mockReset(); notFound.mockClear(); vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://tokoku.id"); });
+const none = { stats: { count: 0, average: 0, stars: [0, 0, 0, 0, 0] }, reviews: [] };
+beforeEach(() => { loadReviews.mockReset(); loadReviews.mockResolvedValue(none); load.mockReset(); notFound.mockClear(); vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://tokoku.id"); });
 
 describe("generateMetadata", () => {
   it("titles the page with the product, describes it, and points search engines at its own address", async () => {
@@ -53,10 +56,23 @@ describe("the page", () => {
   it("shows the product and its structured data", async () => {
     load.mockResolvedValue(mug);
     const { container, getByTestId } = render(await ProductRoute(params("mug")));
-    expect(getByTestId("page").textContent).toBe("Mug Blush");
+    expect(getByTestId("page").textContent).toBe("Mug Blush:0");
+    expect(loadReviews).toHaveBeenCalledWith(7);
     const script = container.querySelector('script[type="application/ld+json"]')!;
     const data = JSON.parse(script.textContent!);
     expect(data).toMatchObject({ "@type": "Product", name: "Mug Blush", offers: { price: 89000, priceCurrency: "IDR", url: "https://tokoku.id/produk/mug" } });
+  });
+  it("reports a rating to search engines only when there are real reviews", async () => {
+    load.mockResolvedValue(mug);
+    const without = render(await ProductRoute(params("mug")));
+    expect(JSON.parse(without.container.querySelector('script[type="application/ld+json"]')!.textContent!)).not.toHaveProperty("aggregateRating");
+    without.unmount();
+
+    loadReviews.mockResolvedValue({ stats: { count: 5, average: 3.8, stars: [0, 1, 1, 1, 2] }, reviews: [] });
+    const withReviews = render(await ProductRoute(params("mug")));
+    const data = JSON.parse(withReviews.container.querySelector('script[type="application/ld+json"]')!.textContent!);
+    expect(data.aggregateRating).toEqual({ "@type": "AggregateRating", ratingValue: 3.8, reviewCount: 5, bestRating: 5, worstRating: 1 });
+    expect(data.offers.price).toBe(89000);
   });
   it("answers not found for an address with no product", async () => {
     load.mockResolvedValue(null);

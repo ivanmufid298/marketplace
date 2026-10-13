@@ -6,12 +6,13 @@ import { money } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import type { Product } from "@/lib/mock/store";
 import { useCatalog } from "@/features/catalog";
+import { ProductReviews, type ProductReviewsData } from "@/features/reviews";
 import { StockBadge } from "../../atoms/badges";
 import { Button } from "../../atoms/button";
 import { useStore } from "../../providers/store-provider";
 
 /** The full page of one product: all its photos, the details, and the same cart and wishlist actions as the detail panel. */
-export function ProductPage({ product: p }: { product: Product }) {
+export function ProductPage({ product: p, reviews }: { product: Product; reviews: ProductReviewsData }) {
   const { liked, toggleLike } = useCatalog();
   const { addToCart } = useStore();
   const photos = p.photos ?? [];
@@ -66,6 +67,10 @@ export function ProductPage({ product: p }: { product: Product }) {
             <Button variant="secondary" onClick={() => toggleLike(p.id)}>{isLiked ? t("store.detail.wishlistRemove") : t("store.detail.wishlistAdd")}</Button>
             <Button disabled={soldOut} onClick={() => addToCart(p)}>{soldOut ? t("store.productPage.soldOutButton") : t("store.detail.addToCart")}</Button>
           </div>
+        </div>
+
+        <div className="product-page-reviews">
+          <ProductReviews data={reviews} />
         </div>
       </article>
     </main>

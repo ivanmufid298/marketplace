@@ -10,6 +10,7 @@ import { Button } from "../../atoms/button";
 import { CloseButton } from "../../atoms/close-button";
 import { RatingSummary, ReviewItem } from "../../molecules/review-summary";
 import { useCatalog } from "@/features/catalog";
+import { ProductReviewsLoader } from "@/features/reviews";
 import { useUi } from "@/shared/ui-state/ui-provider";
 import { useStore } from "../../providers/store-provider";
 
@@ -36,14 +37,20 @@ export function DetailPanel() {
           )}
           <p className="detail-desc">{p?.desc}</p>
           {p?.slug && <Link className="detail-page-link" href={`/produk/${p.slug}`} onClick={() => closePanel("detail")}>{t("store.detail.openPage")}</Link>}
-          <section className="review-block">
-            <div className="review-title">
-              <h3>{t("store.detail.reviewsTitle")}</h3>
-              <span className="verified">{t("store.detail.verified")}</span>
-            </div>
-            <RatingSummary />
-            {PRODUCT_REVIEWS.items.map((r) => <ReviewItem key={r.name} {...r} />)}
-          </section>
+          {/* A database product shows its own reviews; the sample products keep the sample reviews below. While nothing
+              is open the panel shows no reviews at all, so the sample ones never reach the page's HTML (and a search engine). */}
+          {!p ? null : p.photos !== undefined ? (
+            <ProductReviewsLoader key={p.id} productId={p.id} />
+          ) : (
+            <section className="review-block">
+              <div className="review-title">
+                <h3>{t("store.detail.reviewsTitle")}</h3>
+                <span className="verified">{t("store.detail.verified")}</span>
+              </div>
+              <RatingSummary />
+              {PRODUCT_REVIEWS.items.map((r) => <ReviewItem key={r.name} {...r} />)}
+            </section>
+          )}
           <div className="detail-actions">
             <Button variant="secondary" onClick={() => p && toggleLike(p.id)}>
               {isLiked ? t("store.detail.wishlistRemove") : t("store.detail.wishlistAdd")}

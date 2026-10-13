@@ -79,6 +79,23 @@
       "addToCart": "Tambah ke keranjang",
       "openPage": "Buka halaman produk"
     },
+    "reviews": {
+      "empty": "Belum ada ulasan untuk produk ini. Ulasan muncul setelah pembeli menyelesaikan pesanan.",
+      "loading": "Memuat ulasan…",
+      "loadError": "Ulasan belum bisa dimuat.",
+      "retry": "Coba lagi",
+      "verified": "✓ Pembelian terverifikasi",
+      "showing": "Menampilkan {shown} dari {count} ulasan terbaru.",
+      "ago": {
+        "now": "Baru saja",
+        "minutes": "{n} menit lalu",
+        "hours": "{n} jam lalu",
+        "days": "{n} hari lalu",
+        "weeks": "{n} minggu lalu",
+        "months": "{n} bulan lalu",
+        "years": "{n} tahun lalu"
+      }
+    },
     "productPage": {
       "metaTitle": "{name} — Marketplace",
       "back": "← Kembali ke toko",

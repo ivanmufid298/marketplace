@@ -6,6 +6,7 @@ import { AuthProvider } from "@/features/auth";
 import { CatalogProvider } from "@/features/catalog";
 import type { Product } from "@/lib/mock/store";
 import { resetOrders } from "@/lib/orders-store";
+import { NO_REVIEWS, type ProductReviewsData } from "@/features/reviews";
 import { UiProvider } from "@/shared/ui-state/ui-provider";
 import { StoreProvider, useStore } from "../../providers/store-provider";
 import { ProductPage } from "./product-page";
@@ -21,14 +22,14 @@ function CartProbe() {
   return <p data-testid="cart">{cartCount}</p>;
 }
 
-function show(product: Product, signedIn = true) {
+function show(product: Product, signedIn = true, reviews: ProductReviewsData = NO_REVIEWS) {
   if (signedIn) window.localStorage.setItem(SESSION_KEY, JSON.stringify({ id: "nadia", email: "n@demo.test", name: "Nadia" }));
   render(
     <AuthProvider>
       <UiProvider>
         <CatalogProvider services={{ repo: { listCatalog: async () => ({ ok: true, value: { products: [product], categories: [product.cat] } }) } }}>
           <StoreProvider>
-            <ProductPage product={product} />
+            <ProductPage product={product} reviews={reviews} />
             <CartProbe />
           </StoreProvider>
         </CatalogProvider>
@@ -92,6 +93,30 @@ describe("photos", () => {
     show({ ...mug, photos: [] });
     expect(document.querySelector(".product-page-photo img")).toBeNull();
     expect(document.querySelector(".product-page-photo")).not.toBeNull();
+  });
+});
+
+describe("reviews", () => {
+  it("says there are no reviews yet, with no sample reviews or score", () => {
+    show(mug);
+    expect(screen.getByRole("heading", { name: "Ulasan pembeli" })).toBeTruthy();
+    expect(screen.getByText("Belum ada ulasan untuk produk ini. Ulasan muncul setelah pembeli menyelesaikan pesanan.")).toBeTruthy();
+    expect(screen.queryByText("Nadia P.")).toBeNull();
+    expect(document.querySelector(".review-score")).toBeNull();
+  });
+  it("shows the score, the bars, and the reviews it is given", () => {
+    const now = Date.now();
+    show(mug, true, {
+      stats: { count: 2, average: 4.5, stars: [0, 0, 0, 1, 1] },
+      reviews: [{ id: 1, author: "Nadia P.", rating: 5, body: "Cantik", verified: true, createdAt: new Date(now - 2 * 86_400_000).toISOString() }, { id: 2, author: "Sarah A.", rating: 4, body: "Bagus", verified: false, createdAt: new Date(now - 10 * 86_400_000).toISOString() }],
+    });
+    expect(document.querySelector(".score-big")!.textContent).toBe("4,5");
+    expect(screen.getByText("2 ulasan")).toBeTruthy();
+    expect(screen.getByText("Nadia P.")).toBeTruthy();
+    expect(screen.getByText("2 hari lalu")).toBeTruthy();
+    expect(screen.getByText("1 minggu lalu")).toBeTruthy();
+    expect(screen.getAllByText("✓ Pembelian terverifikasi")).toHaveLength(1);
+    expect(screen.queryByText("Belum ada ulasan untuk produk ini. Ulasan muncul setelah pembeli menyelesaikan pesanan.")).toBeNull();
   });
 });
 
