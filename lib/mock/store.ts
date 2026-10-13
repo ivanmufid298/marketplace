@@ -8,6 +8,8 @@ export type ProductPhoto = { src: string; srcSet: string; alt: string; width: nu
 
 export type Product = {
   id: number;
+  /** The product's address on the web (/produk/<slug>). Database products only. */
+  slug?: string;
   name: string;
   cat: string;
   price: number;

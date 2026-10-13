@@ -10,6 +10,7 @@ import type { DbClientLike, Result } from "./product-repository";
 type PhotoRow = { object_key: string; alt: string; sort_order: number; id?: number; width: number | null; height: number | null };
 type Row = {
   id: number;
+  slug: string;
   name: string;
   description: string;
   price: number;
@@ -21,7 +22,10 @@ type Row = {
 };
 
 const SELECT =
-  "id, name, description, price, compare_at_price, stock, badge, categories!inner(name, sort_order, is_active), product_images(id, object_key, alt, sort_order, width, height)";
+  "id, slug, name, description, price, compare_at_price, stock, badge, categories!inner(name, sort_order, is_active), product_images(id, object_key, alt, sort_order, width, height)";
+
+/** One product page for search engines: its address and when it last changed. */
+export type SitemapEntry = { slug: string; updatedAt: string };
 
 export type StoreCatalog = {
   products: Product[];
@@ -49,6 +53,7 @@ export function toStoreProduct(row: Row, urlFor: (key: string) => string): Produ
     }));
   return {
     id: row.id,
+    slug: row.slug,
     name: row.name,
     cat: category?.name ?? "",
     categorySort: category?.sort_order ?? 0,
@@ -64,6 +69,33 @@ export function toStoreProduct(row: Row, urlFor: (key: string) => string): Produ
 
 export function createStorefrontRepository(db: DbClientLike, urlFor: (key: string) => string) {
   return {
+    /** One product that is on sale, by address. `null` when there is none (unknown, a draft, or in a hidden category). */
+    async getBySlug(slug: string): Promise<Result<Product | null>> {
+      const { data, error } = await db
+        .from("products")
+        .select(SELECT)
+        .eq("slug", slug)
+        .eq("status", "active")
+        .eq("categories.is_active", true)
+        .maybeSingle();
+      if (error) return { ok: false, error: mapDbError(error) };
+      if (!data) return { ok: true, value: null };
+      const { categorySort: _sort, ...product } = toStoreProduct(data as unknown as Row, urlFor);
+      return { ok: true, value: product };
+    },
+
+    /** Every product page that should be listed for search engines. */
+    async listSitemapEntries(): Promise<Result<SitemapEntry[]>> {
+      const { data, error } = await db
+        .from("products")
+        .select("slug, updated_at, categories!inner(is_active)")
+        .eq("status", "active")
+        .eq("categories.is_active", true)
+        .order("id", { ascending: true });
+      if (error) return { ok: false, error: mapDbError(error) };
+      return { ok: true, value: ((data ?? []) as unknown as { slug: string; updated_at: string }[]).map((r) => ({ slug: r.slug, updatedAt: r.updated_at })) };
+    },
+
     async listCatalog(): Promise<Result<StoreCatalog>> {
       const { data, error } = await db
         .from("products")

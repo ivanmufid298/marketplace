@@ -76,7 +76,20 @@
       "reviewCount": "{count} ulasan",
       "wishlistAdd": "Simpan ke wishlist",
       "wishlistRemove": "Hapus dari wishlist",
-      "addToCart": "Tambah ke keranjang"
+      "addToCart": "Tambah ke keranjang",
+      "openPage": "Buka halaman produk"
+    },
+    "productPage": {
+      "metaTitle": "{name} — Marketplace",
+      "back": "← Kembali ke toko",
+      "categoryLabel": "Kategori",
+      "photoAlt": "Foto {number} dari {total}",
+      "showPhoto": "Lihat foto {number}",
+      "soldOut": "Stok habis",
+      "soldOutButton": "Stok habis",
+      "notFoundTitle": "Produk tidak ditemukan",
+      "notFoundText": "Produk ini sudah tidak dijual atau alamatnya salah.",
+      "notFoundCta": "Lihat semua produk"
     },
     "checkout": {
       "title": "Checkout",

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { money } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import { PRODUCT_REVIEWS } from "@/lib/mock/store";
@@ -34,6 +35,7 @@ export function DetailPanel() {
             </StockBadge>
           )}
           <p className="detail-desc">{p?.desc}</p>
+          {p?.slug && <Link className="detail-page-link" href={`/produk/${p.slug}`} onClick={() => closePanel("detail")}>{t("store.detail.openPage")}</Link>}
           <section className="review-block">
             <div className="review-title">
               <h3>{t("store.detail.reviewsTitle")}</h3>

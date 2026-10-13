@@ -446,7 +446,7 @@ Order menyimpan snapshot subtotal, diskon, ongkir, dan total. Perubahan harga at
 ## 17. Non-Functional Requirements
 
 - Responsive mobile, tablet, dan desktop.
-- Metadata SEO untuk katalog/detail produk.
+- Metadata SEO untuk katalog/detail produk. (Halaman detail `/produk/[slug]`, sitemap, robots, dan data terstruktur sudah ada sejak 13 Okt 2026; beranda masih memuat produk di browser.)
 - Loading, empty, error, dan success state pada alur utama.
 - Pembuatan order dan reservasi bersifat idempotent.
 - Stok/kuota/order memakai transaksi atau fungsi Postgres atomik.

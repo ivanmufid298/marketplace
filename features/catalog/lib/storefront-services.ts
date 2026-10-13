@@ -4,7 +4,8 @@ import { publicObjectUrl } from "./image-variants";
 import { createStorefrontRepository, type StorefrontRepository } from "./storefront-repository";
 
 /** Everything the storefront needs from the outside world, so tests can swap it. */
-export type StorefrontServices = { repo: StorefrontRepository };
+/** The shop screens only list the catalog; the product page and sitemap use the repository on the server instead. */
+export type StorefrontServices = { repo: Pick<StorefrontRepository, "listCatalog"> };
 
 /**
  * True when the build has Supabase credentials, which is when the shop reads its products from the database. Without

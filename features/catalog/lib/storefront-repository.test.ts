@@ -28,7 +28,7 @@ const opsOf = (call: Call, name: string) => call.ops.filter(([op]) => op === nam
 const urlFor = (key: string) => `https://cdn.test/${key}`;
 const photo = (id: number, over: Record<string, unknown> = {}) => ({ id, object_key: `products/1/p${id}aaaaaaaa.webp`, alt: "", sort_order: id, width: 1600, height: 1200, ...over });
 const row = (over: Record<string, unknown> = {}) => ({
-  id: 1, name: "Mug Blush Daily", description: "Halus", price: 89000, compare_at_price: 119000, stock: 5, badge: "Best seller",
+  id: 1, slug: "mug-blush-daily", name: "Mug Blush Daily", description: "Halus", price: 89000, compare_at_price: 119000, stock: 5, badge: "Best seller",
   categories: { name: "Rumah", sort_order: 0 }, product_images: [photo(1)], ...over,
 });
 
@@ -110,5 +110,44 @@ describe("listCatalog", () => {
   it("reports a failed read with the mapped reason", async () => {
     const { db } = fakeDb({ error: { message: "Failed to fetch" } });
     expect(await createStorefrontRepository(db, urlFor).listCatalog()).toEqual({ ok: false, error: { kind: "network" } });
+  });
+});
+
+describe("getBySlug", () => {
+  it("asks for one active product in an active category by its address", async () => {
+    const { db, calls } = fakeDb({ data: row() });
+    await createStorefrontRepository(db, urlFor).getBySlug("mug-blush-daily");
+    expect(calls[0].table).toBe("products");
+    expect(opsOf(calls[0], "eq")).toEqual([["slug", "mug-blush-daily"], ["status", "active"], ["categories.is_active", true]]);
+    expect(calls[0].ops.map(([name]) => name)).toContain("maybeSingle");
+  });
+  it("returns the product with its address and without the sorting helper", async () => {
+    const result = await createStorefrontRepository(fakeDb({ data: row() }).db, urlFor).getBySlug("mug-blush-daily");
+    expect(result.ok && result.value).toMatchObject({ id: 1, slug: "mug-blush-daily", name: "Mug Blush Daily", cat: "Rumah" });
+    expect(result.ok && result.value).not.toHaveProperty("categorySort");
+  });
+  it("returns null when nothing matches, which is not an error", async () => {
+    expect(await createStorefrontRepository(fakeDb({ data: null }).db, urlFor).getBySlug("nope")).toEqual({ ok: true, value: null });
+  });
+  it("reports a failed read", async () => {
+    const result = await createStorefrontRepository(fakeDb({ error: { message: "Failed to fetch" } }).db, urlFor).getBySlug("x");
+    expect(result).toEqual({ ok: false, error: { kind: "network" } });
+  });
+  it("gives every product an address in the list too", async () => {
+    const result = await createStorefrontRepository(fakeDb({ data: [row({ slug: "a" }), row({ id: 2, slug: "b" })] }).db, urlFor).listCatalog();
+    expect(result.ok && result.value.products.map((p) => p.slug)).toEqual(["a", "b"]);
+  });
+});
+
+describe("listSitemapEntries", () => {
+  it("lists active products in active categories with their last change", async () => {
+    const { db, calls } = fakeDb({ data: [{ slug: "a", updated_at: "2026-10-01T00:00:00Z" }, { slug: "b", updated_at: "2026-10-02T00:00:00Z" }] });
+    const result = await createStorefrontRepository(db, urlFor).listSitemapEntries();
+    expect(result).toEqual({ ok: true, value: [{ slug: "a", updatedAt: "2026-10-01T00:00:00Z" }, { slug: "b", updatedAt: "2026-10-02T00:00:00Z" }] });
+    expect(opsOf(calls[0], "eq")).toEqual([["status", "active"], ["categories.is_active", true]]);
+  });
+  it("is empty for no products and reports a failed read", async () => {
+    expect(await createStorefrontRepository(fakeDb({ data: null }).db, urlFor).listSitemapEntries()).toEqual({ ok: true, value: [] });
+    expect(await createStorefrontRepository(fakeDb({ error: { message: "Failed to fetch" } }).db, urlFor).listSitemapEntries()).toEqual({ ok: false, error: { kind: "network" } });
   });
 });
