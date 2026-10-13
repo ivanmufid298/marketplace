@@ -2,7 +2,7 @@
 
 import { money } from "@/lib/format";
 import { t } from "@/lib/i18n";
-import { BANK_ACCOUNT, formatAccountNumber, SHIPPING_OPTIONS } from "@/lib/mock/store";
+import { BANK_ACCOUNT, formatAccountNumber } from "@/lib/mock/store";
 import { Button } from "../../atoms/button";
 import { CloseButton } from "../../atoms/close-button";
 import { BankCard } from "../../molecules/bank-card";
@@ -63,13 +63,13 @@ function AddressStep({ active }: { active: boolean }) {
 }
 
 function ShippingStep({ active }: { active: boolean }) {
-  const { shipping, setShipping, goCheckoutStep } = useStore();
+  const { shipping, setShipping, shippingMethods, goCheckoutStep } = useStore();
   return (
     <section className={`co-page${active ? " active" : ""}`}>
       <h3>{t("store.checkout.shipping.title")}</h3>
       <p className="co-note">{t("store.checkout.shipping.note")}</p>
       <div className="option-list">
-        {SHIPPING_OPTIONS.map((o) => (
+        {shippingMethods.map((o) => (
           <ShippingOption key={o.value} value={o.value} label={o.label} note={o.note} price={money(o.cost)} checked={shipping === o.value} onSelect={() => setShipping(o.value)} />
         ))}
       </div>
@@ -83,7 +83,7 @@ function ShippingStep({ active }: { active: boolean }) {
 }
 
 function PaymentStep({ active }: { active: boolean }) {
-  const { goCheckoutStep, placeOrder, proofName, setProof, showToast } = useStore();
+  const { goCheckoutStep, placeOrder, placing, proofName, setProof, showToast } = useStore();
   return (
     <section className={`co-page${active ? " active" : ""}`}>
       <h3>{t("store.checkout.payment.title")}</h3>
@@ -102,14 +102,14 @@ function PaymentStep({ active }: { active: boolean }) {
       <UploadField
         title={proofName ? "✓ " + proofName : t("store.checkout.payment.uploadTitle")}
         hint={t("store.checkout.payment.uploadHint")}
-        accept="image/*,.pdf"
+        accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf"
         onFile={(file, input) => {
           if (!setProof(file)) input.value = "";
         }}
       />
       <div className="co-actions">
         <Button variant="secondary" onClick={() => goCheckoutStep(2)}>{t("common.back")}</Button>
-        <Button onClick={placeOrder}>{t("store.checkout.payment.placeOrder")}</Button>
+        <Button disabled={placing} onClick={placeOrder}>{placing ? t("store.checkout.payment.placing") : t("store.checkout.payment.placeOrder")}</Button>
       </div>
     </section>
   );

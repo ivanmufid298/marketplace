@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { money } from "@/lib/format";
+import { formatDateTime, money } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import type { MyReview, Order } from "@/lib/mock/orders";
 import type { Product } from "@/lib/mock/store";
@@ -9,11 +9,13 @@ import { buyerStatus, deriveStatus, total, type BuyerStatus } from "@/lib/order-
 import { StatusPill, type PillTone } from "../atoms/badges";
 import { Button } from "../atoms/button";
 import { OrderItemLine } from "./order-item-line";
+import { UploadField } from "./upload-field";
 
 const STATUS_TONE: Record<BuyerStatus, PillTone> = {
   awaiting_payment: "pending",
   verifying: "progress",
   rejected: "danger",
+  expired: "danger",
   shipping: "progress",
   completed: "success",
   cancelled: "danger",
@@ -25,15 +27,28 @@ type OrderCardProps = {
   reviews: Record<string, MyReview>;
   onSaveReview: (productId: number, review: MyReview) => boolean;
   onComplete: () => void;
+  /** Sends a transfer proof for an order that has none yet. Only database orders can use it. */
+  onSendProof?: (file: File) => void;
+  /** True while a proof is being sent. */
+  sendingProof?: boolean;
 };
 
-export function OrderCard({ order, products, reviews, onSaveReview, onComplete }: OrderCardProps) {
+/** "14.35" in Asia/Jakarta, for a deadline. */
+const timeOf = (iso: string) => formatDateTime(new Date(iso)).split(", ")[1] ?? "";
+
+export function OrderCard({ order, products, reviews, onSaveReview, onComplete, onSendProof, sendingProof = false }: OrderCardProps) {
   const [confirming, setConfirming] = useState(false);
   const status = deriveStatus(order);
   const label = buyerStatus(order);
+  // A database order carries a copy of each product as it was bought, which is what the order should show. A sample
+  // order uses the catalog; either way the price shown is the one paid, not today's.
   const lines = order.items.flatMap((item) => {
+    if (item.name !== undefined) {
+      const copy: Product = { id: item.productId, name: item.name, cat: "", price: item.price, stock: 0, desc: "", photos: item.photos ?? [] };
+      return [{ product: copy, qty: item.qty }];
+    }
     const product = products.find((p) => p.id === item.productId);
-    return product ? [{ product, qty: item.qty }] : [];
+    return product ? [{ product: { ...product, price: item.price }, qty: item.qty }] : [];
   });
 
   return (
@@ -59,6 +74,20 @@ export function OrderCard({ order, products, reviews, onSaveReview, onComplete }
         <span>{t("store.orders.shipping")} {money(order.shippingFee)}</span>
         <span>{t("store.orders.total")} <b>{money(total(order))}</b></span>
       </div>
+      {label === "awaiting_payment" && onSendProof && (
+        <div className="order-proof">
+          {order.payBefore && <p className="order-proof-deadline">{t("store.orders.proof.deadline", { time: timeOf(order.payBefore) })}</p>}
+          <UploadField
+            title={sendingProof ? t("store.orders.proof.sending") : t("store.orders.proof.title")}
+            hint={t("store.orders.proof.hint")}
+            accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf"
+            onFile={(file, input) => {
+              if (file && !sendingProof) onSendProof(file);
+              input.value = "";
+            }}
+          />
+        </div>
+      )}
       {status === "shipping" && (
         <div className="order-complete">
           {confirming ? (

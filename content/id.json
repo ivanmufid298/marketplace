@@ -79,6 +79,24 @@
       "addToCart": "Tambah ke keranjang",
       "openPage": "Buka halaman produk"
     },
+    "orderErrors": {
+      "thisProduct": "produk ini",
+      "notSignedIn": "Masuk dulu untuk membuat pesanan.",
+      "invalidItems": "Keranjang tidak valid. Muat ulang halaman lalu coba lagi.",
+      "invalidAddress": "Alamat pengiriman belum lengkap atau terlalu panjang.",
+      "invalidShipping": "Layanan pengiriman ini tidak tersedia. Pilih yang lain.",
+      "tooManyPending": "Kamu punya 3 pesanan yang belum dibayar. Selesaikan salah satunya dulu, atau tunggu sampai kedaluwarsa.",
+      "productUnavailable": "{name} sudah tidak dijual. Hapus dari keranjang.",
+      "outOfStock": "Stok {name} tidak cukup. Kurangi jumlahnya.",
+      "proofType": "Bukti harus berformat JPG, PNG, atau PDF.",
+      "proofSize": "Ukuran bukti maksimal 5 MB.",
+      "orderNotFound": "Pesanan tidak ditemukan.",
+      "notPayable": "Pesanan ini sudah tidak bisa dibayar: batas waktunya habis atau buktinya sudah dikirim.",
+      "invalidProof": "Bukti tidak bisa diterima. Coba berkas lain.",
+      "forbidden": "Akun ini tidak bisa melakukan itu. Coba masuk ulang.",
+      "network": "Tidak bisa terhubung. Periksa koneksi lalu coba lagi.",
+      "unknown": "Terjadi kesalahan. Coba lagi."
+    },
     "reviews": {
       "empty": "Belum ada ulasan untuk produk ini. Ulasan muncul setelah pembeli menyelesaikan pesanan.",
       "loading": "Memuat ulasan…",
@@ -144,7 +162,8 @@
         "copyAccount": "Salin nomor rekening",
         "uploadTitle": "Unggah bukti transfer",
         "uploadHint": "JPG, PNG, atau PDF · Maksimal 5 MB",
-        "placeOrder": "Buat pesanan"
+        "placeOrder": "Buat pesanan",
+        "placing": "Memproses pesanan…"
       },
       "summary": {
         "subtotal": "Subtotal",
@@ -172,12 +191,22 @@
       "empty": "Kamu belum punya pesanan.",
       "orderLabel": "Order #MKP-{number}",
       "itemQty": "{qty} barang",
+      "proof": {
+        "title": "Unggah bukti transfer",
+        "sending": "Mengirim bukti…",
+        "hint": "JPG, PNG, atau PDF, maksimal 5 MB.",
+        "deadline": "Bayar dan kirim bukti sebelum pukul {time} WIB."
+      },
+      "loading": "Memuat pesanan…",
+      "loadError": "Pesanan belum bisa dimuat.",
+      "retry": "Coba lagi",
       "shipping": "Ongkos kirim",
       "total": "Total",
       "status": {
         "awaiting_payment": "Menunggu pembayaran",
         "verifying": "Sedang diverifikasi",
         "rejected": "Pembayaran ditolak",
+        "expired": "Kedaluwarsa",
         "shipping": "Barang sedang dikirim",
         "completed": "Selesai",
         "cancelled": "Dibatalkan"
@@ -232,6 +261,8 @@
       "stockMax": "Jumlah sudah mencapai stok tersedia",
       "fillAddress": "Lengkapi alamat pengiriman dulu",
       "fileTooBig": "Ukuran file maksimal 5 MB",
+      "proofPending": "Pesanan dibuat, tetapi bukti belum terunggah. Kirim lewat Pesanan saya dalam 2 jam.",
+      "proofSent": "Bukti transfer terkirim. Admin akan memeriksanya.",
       "needProof": "Unggah bukti transfer dulu",
       "accountCopied": "Nomor rekening disalin",
       "reviewSent": "Terima kasih, ulasanmu terkirim",

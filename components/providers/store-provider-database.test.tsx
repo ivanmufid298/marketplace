@@ -8,6 +8,7 @@ import { AuthProvider } from "@/features/auth";
 import { CatalogProvider } from "@/features/catalog";
 import type { Product } from "@/lib/mock/store";
 import { resetOrders } from "@/lib/orders-store";
+import { OrdersProvider } from "@/features/orders";
 import { UiProvider } from "@/shared/ui-state/ui-provider";
 import { StoreProvider, useStore } from "./store-provider";
 
@@ -23,7 +24,7 @@ function mountWith(listCatalog: () => Promise<Result>) {
     <AuthProvider>
       <UiProvider>
         <CatalogProvider services={{ repo: { listCatalog } as never }}>
-          <StoreProvider>{children}</StoreProvider>
+          <OrdersProvider><StoreProvider>{children}</StoreProvider></OrdersProvider>
         </CatalogProvider>
       </UiProvider>
     </AuthProvider>

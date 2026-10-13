@@ -1,6 +1,8 @@
 // Public API of the catalog module: what the storefront shows and how a shopper narrows it down.
 
 export { CatalogProvider, useCatalog, type CatalogStatus } from "./catalog-provider";
+// True when this build has Supabase credentials, i.e. the shop works from the database instead of the sample data.
+export { databaseConfigured } from "./lib/storefront-services";
 export { ALL_CATEGORIES, filterProducts, type CatalogFilter } from "./lib/filter-products";
 export type { Product, SortMode } from "@/lib/mock/store";
 

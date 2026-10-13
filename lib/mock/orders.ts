@@ -1,15 +1,29 @@
 // Placeholder orders shared by the storefront ("Pesanan saya") and the admin (Pesanan, Pembayaran).
 // Replaced by database queries once the backend exists. UI copy lives in content/id.json.
 
+import type { ProductPhoto } from "./store";
+
 export type PaymentState = "pending" | "success" | "failed";
 
-export type OrderItem = { productId: number; qty: number; price: number };
+export type OrderItem = {
+  productId: number;
+  qty: number;
+  /** The unit price when it was bought. */
+  price: number;
+  // Database orders carry a copy of the product as it was when bought, so an order still reads right after the product
+  // is renamed, repriced, or switched off. The sample orders leave these out and use the catalog.
+  name?: string;
+  slug?: string;
+  photos?: ProductPhoto[];
+};
 
 export type HistoryEvent = "created" | "payment_accepted" | "payment_rejected" | "received" | "cancelled" | "refunded";
 
 export type HistoryEntry = { at: string; event: HistoryEvent; actor: string; note?: string };
 
 export type Order = {
+  /** The database id of the order. Sample orders have none. */
+  id?: string;
   number: string;
   buyerId: string;
   buyer: string;
@@ -22,6 +36,10 @@ export type Order = {
   payment: PaymentState;
   /** True while no transfer proof has been sent yet (database orders only). Orders from the local checkout always carry a proof. */
   awaitingProof?: boolean;
+  /** Until when the buyer may still pay (database orders that await proof). ISO time. */
+  payBefore?: string;
+  /** The order ran out of time without payment, so its stock went back on sale. */
+  expired?: boolean;
   /** Set when the buyer taps "Pesanan selesai". */
   received: boolean;
   /** Present when the order was cancelled; holds the admin's reason. */

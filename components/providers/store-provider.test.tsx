@@ -9,6 +9,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AuthProvider, useAuth } from "@/features/auth";
 import { CatalogProvider } from "@/features/catalog";
 import { products } from "@/lib/mock/store";
+import { OrdersProvider } from "@/features/orders";
 import { UiProvider } from "@/shared/ui-state/ui-provider";
 import { resetOrders } from "@/lib/orders-store";
 import { StoreProvider, useStore } from "./store-provider";
@@ -21,7 +22,7 @@ const wrapper = ({ children }: { children: ReactNode }) => (
   <AuthProvider>
     <UiProvider>
       <CatalogProvider>
-        <StoreProvider>{children}</StoreProvider>
+        <OrdersProvider><StoreProvider>{children}</StoreProvider></OrdersProvider>
       </CatalogProvider>
     </UiProvider>
   </AuthProvider>

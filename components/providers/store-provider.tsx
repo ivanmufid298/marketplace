@@ -3,10 +3,10 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { t } from "@/lib/i18n";
 import { INITIAL_MY_REVIEWS, type MyReview, type Order } from "@/lib/mock/orders";
-import { SHIPPING_OPTIONS, type ShippingValue } from "@/lib/mock/store";
-import * as ordersStore from "@/lib/orders-store";
+import { formatDateTime } from "@/lib/format";
 import { useAuth, type LoginIntent } from "@/features/auth";
 import { useCatalog, type Product, type SortMode } from "@/features/catalog";
+import { useBuyerOrders, type OrderError, type ShippingMethod } from "@/features/orders";
 import { useUi, type PanelId } from "@/shared/ui-state/ui-provider";
 
 export type CartLine = { id: number; qty: number };
@@ -50,12 +50,18 @@ type StoreContextValue = {
   startCheckout: () => void;
   address: Address;
   setAddressField: (k: keyof Address, v: string) => void;
-  shipping: ShippingValue;
-  setShipping: (s: ShippingValue) => void;
+  /** The code of the chosen shipping method. */
+  shipping: string;
+  setShipping: (s: string) => void;
+  shippingMethods: ShippingMethod[];
   shippingCost: number;
   proofName: string;
   setProof: (file: File | null) => boolean;
+  /** Places the order and sends the proof. False while a request is already running. */
   placeOrder: () => void;
+  placing: boolean;
+  /** Sends a transfer proof for an order that has none yet. */
+  sendOrderProof: (order: Order, file: File) => Promise<boolean>;
   orderNumber: string;
   finishOrder: () => void;
   chatMessages: ChatMessage[];
@@ -84,11 +90,13 @@ export function useStore() {
 
 export function StoreProvider({ children }: { children: ReactNode }) {
   const { products, status: catalogStatus, getProduct, visibleProducts, category, setCategory, query, setQuery, sort, setSort, savedOnly, liked, toggleLike, selected, openDetail, showSaved, showAll, scrollToProducts } = useCatalog();
+  const { orders, shippingMethods, placeOrder: submitOrder, sendProof, confirmReceived } = useBuyerOrders();
   const [cart, setCart] = useState<CartLine[]>([]);
   const { panels, setPanel, openPanel, closePanel, togglePanel, toast, showToast } = useUi();
   const [checkoutStep, setCheckoutStep] = useState(1);
   const [address, setAddress] = useState<Address>(EMPTY_ADDRESS);
-  const [shipping, setShipping] = useState<ShippingValue>("regular");
+  const [shipping, setShipping] = useState("regular");
+  const [placing, setPlacing] = useState(false);
   const [proofName, setProofName] = useState("");
   const [orderNumber, setOrderNumber] = useState("000000");
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([{ from: "admin", text: t("store.chat.welcome"), meta: t("store.chat.metaAdmin") }]);
@@ -135,8 +143,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
   }, [cart, cartOwner, userId]);
 
-  const allOrders = ordersStore.useOrders();
-  const orders = useMemo(() => (user ? allOrders.filter((o) => o.buyerId === user.id) : []), [allOrders, user]);
   const addToCart = useCallback(
     (p: Product) => {
       if (!user) {
@@ -171,7 +177,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const cartCount = cart.reduce((s, l) => s + l.qty, 0);
   const subtotal = cart.reduce((s, l) => s + (getProduct(l.id)?.price ?? 0) * l.qty, 0);
-  const shippingCost = SHIPPING_OPTIONS.find((o) => o.value === shipping)?.cost ?? SHIPPING_OPTIONS[0].cost;
+  const chosenShipping = shippingMethods.find((m) => m.value === shipping) ?? shippingMethods[0];
+  const shippingCost = chosenShipping?.cost ?? 0;
 
   /** Returns true when signed in. Otherwise opens the login dialog for `why` and returns false. */
   const requireLogin = useCallback(
@@ -244,7 +251,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [showToast],
   );
 
-  const placeOrder = useCallback(() => {
+  /** The words for a failed order action; products are named so the buyer knows which line to fix. */
+  const orderErrorText = useCallback(
+    (error: OrderError) => t(`store.orderErrors.${error.kind}`, { name: (error.productId ? getProduct(error.productId)?.name : undefined) ?? t("store.orderErrors.thisProduct") }),
+    [getProduct],
+  );
+
+  const placeOrder = useCallback(async () => {
+    if (placing) return;
     if (!proofFile.current) {
       showToast(t("store.toast.needProof"));
       return;
@@ -253,22 +267,38 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       openLogin("checkout");
       return;
     }
-    const method = SHIPPING_OPTIONS.find((o) => o.value === shipping) ?? SHIPPING_OPTIONS[0];
-    const number = ordersStore.createOrder({
-      buyerId: user.id,
-      buyer: address.fullName.trim() || user.name,
-      phone: address.phone.trim(),
-      address: [address.address, address.city, address.postcode].map((part) => part.trim()).filter(Boolean).join(", "),
+    setPlacing(true);
+    const result = await submitOrder({
       items: cart.flatMap((line) => {
         const product = getProduct(line.id);
         return product ? [{ productId: product.id, qty: line.qty, price: product.price }] : [];
       }),
-      shippingMethod: method.label,
-      shippingFee: method.cost,
+      shippingCode: chosenShipping?.value ?? shipping,
+      recipient: address.fullName.trim() || user.name,
+      phone: address.phone.trim(),
+      address: address.address.trim(),
+      city: address.city.trim(),
+      postcode: address.postcode.trim(),
+      proof: proofFile.current,
     });
-    setOrderNumber(number);
+    setPlacing(false);
+    if (!result.ok) {
+      showToast(orderErrorText(result.error));
+      return;
+    }
+    if (!result.value.proofSent) showToast(t("store.toast.proofPending"));
+    setOrderNumber(result.value.number);
     setCheckoutStep(4);
-  }, [address, cart, getProduct, openLogin, shipping, showToast, user]);
+  }, [address, cart, chosenShipping, getProduct, openLogin, orderErrorText, placing, shipping, showToast, submitOrder, user]);
+
+  const sendOrderProof = useCallback(
+    async (order: Order, file: File) => {
+      const result = await sendProof(order, file);
+      showToast(result.ok ? t("store.toast.proofSent") : orderErrorText(result.error));
+      return result.ok;
+    },
+    [orderErrorText, sendProof, showToast],
+  );
 
   const finishOrder = useCallback(() => {
     setCart([]);
@@ -297,9 +327,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const completeOrder = useCallback(
     (orderNumber: string) => {
-      if (ordersStore.confirmReceived(orderNumber)) showToast(t("store.toast.orderCompleted"));
+      if (confirmReceived(orderNumber)) showToast(t("store.toast.orderCompleted"));
     },
-    [showToast],
+    [confirmReceived, showToast],
   );
 
   const saveReview = useCallback(
@@ -337,7 +367,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     panels, openPanel, closePanel, togglePanel, mobileNav,
     checkoutStep, goCheckoutStep, startCheckout,
     address, setAddressField: (k, v) => setAddress((a) => ({ ...a, [k]: v })),
-    shipping, setShipping, shippingCost, proofName, setProof, placeOrder, orderNumber, finishOrder,
+    shipping, setShipping, shippingMethods, shippingCost, proofName, setProof, placeOrder, placing, sendOrderProof, orderNumber, finishOrder,
     chatMessages, sendChat, toast, showToast, scrollToProducts, signedIn: Boolean(user), orders, completeOrder, myReviews, saveReview,
   };
 

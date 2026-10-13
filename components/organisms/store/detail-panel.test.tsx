@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { AuthProvider } from "@/features/auth";
 import { CatalogProvider, useCatalog } from "@/features/catalog";
 import type { Product } from "@/lib/mock/store";
+import { OrdersProvider } from "@/features/orders";
 import { UiProvider } from "@/shared/ui-state/ui-provider";
 import { StoreProvider } from "../../providers/store-provider";
 import { DetailPanel } from "./detail-panel";
@@ -27,10 +28,12 @@ function show(product: Product) {
     <AuthProvider>
       <UiProvider>
         <CatalogProvider services={{ repo: { listCatalog: async () => ({ ok: true, value: { products: [product], categories: [product.cat] } }) } }}>
-          <StoreProvider>
+          <OrdersProvider>
+            <StoreProvider>
             <Opener product={product} />
             <DetailPanel />
-          </StoreProvider>
+            </StoreProvider>
+          </OrdersProvider>
         </CatalogProvider>
       </UiProvider>
     </AuthProvider>,
@@ -45,9 +48,11 @@ describe("the reviews in the detail panel", () => {
       <AuthProvider>
         <UiProvider>
           <CatalogProvider services={{ repo: { listCatalog: async () => ({ ok: true, value: { products: [], categories: [] } }) } }}>
-            <StoreProvider>
+            <OrdersProvider>
+              <StoreProvider>
               <DetailPanel />
-            </StoreProvider>
+              </StoreProvider>
+            </OrdersProvider>
           </CatalogProvider>
         </UiProvider>
       </AuthProvider>,

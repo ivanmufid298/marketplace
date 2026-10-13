@@ -12,9 +12,10 @@ export const STATUS_STEPS: Exclude<OrderStatus, "cancelled">[] = ["pending", "sh
  * What the buyer is told. Finer than OrderStatus, which the admin shares: while the payment is not accepted, the buyer
  * hears whether the transfer proof is still missing, is being checked, or was rejected.
  */
-export type BuyerStatus = "awaiting_payment" | "verifying" | "rejected" | "shipping" | "completed" | "cancelled";
+export type BuyerStatus = "awaiting_payment" | "verifying" | "rejected" | "expired" | "shipping" | "completed" | "cancelled";
 
-export const isCancelled = (order: Order) => order.cancelNote !== undefined;
+/** Cancelled by the admin, or expired unpaid (both end the order, and the admin counts both as cancelled). */
+export const isCancelled = (order: Order) => order.cancelNote !== undefined || order.expired === true;
 
 export function deriveStatus(order: Order): OrderStatus {
   if (isCancelled(order)) return "cancelled";
@@ -24,6 +25,7 @@ export function deriveStatus(order: Order): OrderStatus {
 }
 
 export function buyerStatus(order: Order): BuyerStatus {
+  if (order.expired && order.cancelNote === undefined) return "expired";
   const status = deriveStatus(order);
   if (status !== "pending") return status;
   if (order.awaitingProof) return "awaiting_payment";

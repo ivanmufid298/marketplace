@@ -7,6 +7,7 @@ import { CatalogProvider } from "@/features/catalog";
 import type { Product } from "@/lib/mock/store";
 import { resetOrders } from "@/lib/orders-store";
 import { NO_REVIEWS, type ProductReviewsData } from "@/features/reviews";
+import { OrdersProvider } from "@/features/orders";
 import { UiProvider } from "@/shared/ui-state/ui-provider";
 import { StoreProvider, useStore } from "../../providers/store-provider";
 import { ProductPage } from "./product-page";
@@ -28,10 +29,12 @@ function show(product: Product, signedIn = true, reviews: ProductReviewsData = N
     <AuthProvider>
       <UiProvider>
         <CatalogProvider services={{ repo: { listCatalog: async () => ({ ok: true, value: { products: [product], categories: [product.cat] } }) } }}>
-          <StoreProvider>
+          <OrdersProvider>
+            <StoreProvider>
             <ProductPage product={product} reviews={reviews} />
             <CartProbe />
-          </StoreProvider>
+            </StoreProvider>
+          </OrdersProvider>
         </CatalogProvider>
       </UiProvider>
     </AuthProvider>,
