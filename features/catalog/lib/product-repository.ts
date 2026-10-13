@@ -86,6 +86,24 @@ export function createProductRepository(db: DbClientLike) {
       return insertWithUniqueSlug("categories", name, (slug) => ({ name: name.trim(), slug }), CATEGORY_COLUMNS, toCategory);
     },
 
+    /** Renames a category or switches it on or off. The address (slug) stays, like a renamed product's. */
+    async updateCategory(id: number, change: { name?: string; isActive?: boolean }): Promise<Result<Category>> {
+      const row = {
+        ...(change.name !== undefined ? { name: change.name.trim() } : {}),
+        ...(change.isActive !== undefined ? { is_active: change.isActive } : {}),
+      };
+      const { data, error } = await db.from("categories").update(row).eq("id", id).select(CATEGORY_COLUMNS).single();
+      return error ? fail(mapDbError(error)) : ok(toCategory(data as unknown as CategoryRow));
+    },
+
+    /** Refused by the database while any product still uses the category (`categoryInUse`). */
+    async deleteCategory(id: number): Promise<Result<null>> {
+      const { data, error } = await db.from("categories").delete().eq("id", id).select("id");
+      if (error) return fail(mapDbError(error));
+      // Row Level Security hides rows without an error, so "nothing was deleted" has to be checked.
+      return (data as unknown[] | null)?.length ? ok(null) : fail({ kind: "notFound" });
+    },
+
     async listProducts(): Promise<Result<AdminProduct[]>> {
       const { data, error } = await db.from("products").select(PRODUCT_SELECT).order("sort_order", { ascending: true }).order("id", { ascending: true });
       return error ? fail(mapDbError(error)) : ok(((data ?? []) as unknown as ProductRow[]).map(toAdminProduct));

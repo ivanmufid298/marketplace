@@ -413,6 +413,7 @@
       "emptyFiltered": "Tidak ada produk yang cocok dengan pencarianmu.",
       "loadError": "Produk belum bisa dimuat.",
       "retry": "Coba lagi",
+      "manageCategories": "Kelola kategori",
       "status": { "draft": "Draf", "active": "Aktif", "archived": "Arsip" },
       "card": {
         "stock": "Stok {stock}",
@@ -487,7 +488,8 @@
         "network": "Tidak bisa terhubung. Periksa koneksi lalu coba lagi.",
         "notFound": "Produk tidak ditemukan, atau akunmu tidak boleh mengubahnya.",
         "unknown": "Terjadi kesalahan. Coba lagi.",
-        "upload": "Foto gagal diunggah."
+        "upload": "Foto gagal diunggah.",
+        "categoryInUse": "Kategori masih dipakai produk. Pindahkan atau hapus produknya dulu, atau nonaktifkan kategorinya."
       },
       "warnings": {
         "remove": "Satu foto belum bisa dihapus.",
@@ -501,7 +503,36 @@
         "updated": "Produk diperbarui",
         "activated": "Produk diaktifkan",
         "deactivated": "Produk dinonaktifkan",
-        "categoryCreated": "Kategori ditambahkan"
+        "categoryCreated": "Kategori ditambahkan",
+        "categoryRenamed": "Nama kategori diperbarui",
+        "categoryActivated": "Kategori diaktifkan",
+        "categoryDeactivated": "Kategori dinonaktifkan",
+        "categoryDeleted": "Kategori dihapus"
+      },
+      "categories": {
+        "title": "Kelola kategori",
+        "text": "Kategori dipakai untuk mengelompokkan produk di toko. Kategori yang dinonaktifkan tidak muncul di pilihan form produk.",
+        "newName": "Nama kategori baru",
+        "newPlaceholder": "Nama kategori baru",
+        "add": "Tambah kategori",
+        "empty": "Belum ada kategori. Tambahkan yang pertama di atas.",
+        "active": "Aktif",
+        "inactive": "Nonaktif",
+        "productCount": "{count} produk",
+        "rename": "Ubah nama",
+        "renameLabel": "Ubah nama {name}",
+        "save": "Simpan",
+        "cancel": "Batal",
+        "activate": "Aktifkan",
+        "deactivate": "Nonaktifkan",
+        "delete": "Hapus",
+        "deleteLabel": "Hapus {name}",
+        "confirmDelete": "Hapus “{name}”?",
+        "confirmYes": "Ya, hapus",
+        "inUse": "Masih dipakai produk. Nonaktifkan saja, atau pindahkan produknya dulu.",
+        "deleteHint": "Kategori yang masih dipakai produk tidak bisa dihapus; nonaktifkan saja.",
+        "nameRequired": "Nama kategori wajib diisi.",
+        "tooLong": "Nama kategori maksimal {max} karakter."
       }
     },
     "payments": {

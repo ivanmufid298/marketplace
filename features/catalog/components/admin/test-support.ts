@@ -59,6 +59,22 @@ export function makeFakeServices(initial: { products?: AdminProduct[]; categorie
       categories = [...categories, created];
       return ok(created);
     }),
+    updateCategory: vi.fn(async (id: number, change: { name?: string; isActive?: boolean }) => {
+      const current = categories.find((c) => c.id === id);
+      if (!current) return failure("notFound");
+      const name = change.name?.trim();
+      if (name && categories.some((c) => c.id !== id && c.name.toLowerCase() === name.toLowerCase())) return failure("categoryNameTaken");
+      const updated: Category = { ...current, ...(name ? { name } : {}), ...(change.isActive !== undefined ? { isActive: change.isActive } : {}) };
+      categories = categories.map((c) => (c.id === id ? updated : c));
+      return ok(updated);
+    }),
+    deleteCategory: vi.fn(async (id: number) => {
+      if (!categories.some((c) => c.id === id)) return failure("notFound");
+      // Mirrors ON DELETE RESTRICT.
+      if (products.some((p) => p.categoryId === id)) return failure("categoryInUse");
+      categories = categories.filter((c) => c.id !== id);
+      return ok(null);
+    }),
     addPhoto: vi.fn(async (productId: number, input: { objectKey: string; alt: string; sortOrder: number; width: number | null; height: number | null }) => {
       const added: ProductPhoto = { id: nextPhoto++, ...input };
       products = products.map((p) => (p.id === productId ? { ...p, photos: [...p.photos, added] } : p));

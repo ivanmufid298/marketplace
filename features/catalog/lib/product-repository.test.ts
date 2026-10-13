@@ -207,4 +207,40 @@ describe("categories", () => {
     expect(await createProductRepository(stopped.db).createCategory("rumah")).toEqual({ ok: false, error: { kind: "categoryNameTaken" } });
     expect(stopped.calls).toHaveLength(1);
   });
+  it("renames a category without touching its address, and trims the name", async () => {
+    const { db, calls } = fakeDb([{ data: { id: 2, name: "Fashion", slug: "fashion", sort_order: 0, is_active: true } }]);
+    const result = await createProductRepository(db).updateCategory(2, { name: "  Fashion  " });
+    expect(result).toEqual({ ok: true, value: { id: 2, name: "Fashion", slug: "fashion", sortOrder: 0, isActive: true } });
+    expect(opsOf(calls[0], "update")[0][0]).toStrictEqual({ name: "Fashion" });
+    expect(opsOf(calls[0], "eq")[0]).toEqual(["id", 2]);
+  });
+  it("switches a category off and only sends the field that changed", async () => {
+    const { db, calls } = fakeDb([{ data: { id: 2, name: "Fashion", slug: "fashion", sort_order: 0, is_active: false } }]);
+    const result = await createProductRepository(db).updateCategory(2, { isActive: false });
+    expect(result.ok && result.value.isActive).toBe(false);
+    expect(opsOf(calls[0], "update")[0][0]).toStrictEqual({ is_active: false });
+  });
+  it("reports a rename to a name that is taken, and a category that is gone", async () => {
+    const taken = fakeDb([{ error: { code: "23505", message: 'duplicate key value violates unique constraint "categories_name_key"' } }]);
+    expect(await createProductRepository(taken.db).updateCategory(2, { name: "Rumah" })).toEqual({ ok: false, error: { kind: "categoryNameTaken" } });
+    const gone = fakeDb([{ error: { code: "PGRST116", message: "JSON object requested, multiple (or no) rows returned" } }]);
+    expect(await createProductRepository(gone.db).updateCategory(9, { name: "X" })).toEqual({ ok: false, error: { kind: "notFound" } });
+  });
+  it("deletes a category", async () => {
+    const { db, calls } = fakeDb([{ data: [{ id: 2 }] }]);
+    expect(await createProductRepository(db).deleteCategory(2)).toEqual({ ok: true, value: null });
+    expect(calls[0].table).toBe("categories");
+    expect(calls[0].ops.map(([name]) => name)).toContain("delete");
+    expect(opsOf(calls[0], "eq")[0]).toEqual(["id", 2]);
+  });
+  it("refuses to delete a category that products use", async () => {
+    const { db } = fakeDb([{ error: { code: "23503", message: 'update or delete on table "categories" violates foreign key constraint "products_category_id_fkey" on table "products"' } }]);
+    expect(await createProductRepository(db).deleteCategory(1)).toEqual({ ok: false, error: { kind: "categoryInUse" } });
+  });
+  it("treats a delete that removed nothing as not found, since security rules hide rows silently", async () => {
+    const empty = fakeDb([{ data: [] }]);
+    expect(await createProductRepository(empty.db).deleteCategory(1)).toEqual({ ok: false, error: { kind: "notFound" } });
+    const nothing = fakeDb([{ data: null }]);
+    expect(await createProductRepository(nothing.db).deleteCategory(1)).toEqual({ ok: false, error: { kind: "notFound" } });
+  });
 });

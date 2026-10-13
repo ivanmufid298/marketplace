@@ -231,6 +231,7 @@ Pada 12 Oktober 2026 hak akses database dan guard `/admin` sudah diuji otomatis 
 15. **Ubah dan urutkan foto**: buka produk itu lagi lewat **Ubah**, geser foto kedua ke depan, hapus satu foto, lalu simpan. Sampul berganti, dan file foto yang dihapus hilang dari Storage (3 file per foto).
 16. **Aktif dan draf**: klik **Nonaktifkan** pada produk. Statusnya menjadi Draf dan ia tidak terbaca pengunjung anonim (`select` ke `products` tanpa login tidak mengembalikannya). Klik **Aktifkan** untuk mengembalikan.
 17. **Pembeli tidak bisa**: masuk sebagai pembeli di jendela Incognito lalu buka `/admin/products`; harus ditolak dengan "Akun ini bukan admin".
+18. **Kelola kategori**: di `/admin/products` klik **Kelola kategori**. Tambah kategori, ubah namanya (kartu produk ikut berganti nama), nonaktifkan lalu cek bahwa ia hilang dari pilihan di **Tambah produk**, dan coba hapus kategori yang masih dipakai produk (tombol Hapus harus mati). Kategori tanpa produk bisa dihapus setelah konfirmasi.
 
 *Hak akses database (SQL Editor, mensimulasikan pembeli; ganti `<uuid-buyer>`)*
 

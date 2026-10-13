@@ -11,6 +11,7 @@ import { variantKey } from "../../lib/image-variants";
 import { PRODUCT_STATUSES } from "../../lib/product-form";
 import type { AdminProduct, Category } from "../../lib/product-repository";
 import { createBrowserCatalogServices, type CatalogServices } from "../../lib/services";
+import { CategoryManagerDialog } from "./category-manager-dialog";
 import { ProductCard } from "./product-card";
 import { ProductFormDialog } from "./product-form-dialog";
 import styles from "./product-admin.module.css";
@@ -37,6 +38,7 @@ export function AdminProductsView({ services: provided, notify = () => {} }: Adm
   const [category, setCategory] = useState(ALL);
   const [status, setStatus] = useState(ALL);
   const [dialog, setDialog] = useState<Dialog>(null);
+  const [managingCategories, setManagingCategories] = useState(false);
   const [busyId, setBusyId] = useState<number | null>(null);
 
   useEffect(() => {
@@ -72,6 +74,24 @@ export function AdminProductsView({ services: provided, notify = () => {} }: Adm
     setProducts((list) => (created ? [...list, product] : list.map((p) => (p.id === product.id ? product : p))));
   }
 
+  // Used to show how many products each category has, and to keep a category with products from being deleted.
+  const productCounts = useMemo(() => {
+    const counts: Record<number, number> = {};
+    for (const p of products) counts[p.categoryId] = (counts[p.categoryId] ?? 0) + 1;
+    return counts;
+  }, [products]);
+
+  function categoryChanged(changed: Category) {
+    setCategories((list) => list.map((c) => (c.id === changed.id ? changed : c)));
+    // Cards show the category's name, so a rename has to reach them too.
+    setProducts((list) => list.map((p) => (p.categoryId === changed.id ? { ...p, categoryName: changed.name } : p)));
+  }
+
+  function categoryRemoved(id: number) {
+    setCategories((list) => list.filter((c) => c.id !== id));
+    setCategory((current) => (current === String(id) ? ALL : current));
+  }
+
   async function toggle(product: AdminProduct) {
     if (!services || busyId !== null) return;
     const next = product.status === "active" ? "draft" : "active";
@@ -89,7 +109,10 @@ export function AdminProductsView({ services: provided, notify = () => {} }: Adm
   return (
     <section className="view active">
       <SectionTop title={t("admin.catalog.title")} text={t("admin.catalog.text")}>
-        <AdminButton variant="primary" disabled={load.state !== "ready"} onClick={() => setDialog({ product: null })}>{t("admin.catalog.add")}</AdminButton>
+        <div className={styles.headActions}>
+          <AdminButton disabled={load.state !== "ready"} onClick={() => setManagingCategories(true)}>{t("admin.catalog.manageCategories")}</AdminButton>
+          <AdminButton variant="primary" disabled={load.state !== "ready"} onClick={() => setDialog({ product: null })}>{t("admin.catalog.add")}</AdminButton>
+        </div>
       </SectionTop>
 
       <div className="filters">
@@ -116,6 +139,19 @@ export function AdminProductsView({ services: provided, notify = () => {} }: Adm
           </div>
         )}
       </div>
+
+      {managingCategories && services && (
+        <CategoryManagerDialog
+          services={services}
+          categories={categories}
+          productCounts={productCounts}
+          onAdded={(c) => setCategories((list) => [...list, c])}
+          onChanged={categoryChanged}
+          onRemoved={categoryRemoved}
+          onClose={() => setManagingCategories(false)}
+          notify={notify}
+        />
+      )}
 
       {dialog && services && (
         <ProductFormDialog

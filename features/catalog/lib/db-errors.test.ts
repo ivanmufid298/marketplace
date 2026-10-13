@@ -55,6 +55,9 @@ describe("mapDbError", () => {
   it("maps a missing category", () => {
     expect(mapDbError({ code: "23503", message: 'insert or update on table "products" violates foreign key constraint "products_category_id_fkey"', details: "Key (category_id)=(9) is not present in table \"categories\"." })).toEqual({ kind: "missingReference", field: "categoryId" });
   });
+  it("maps deleting a category that products still use", () => {
+    expect(mapDbError({ code: "23503", message: 'update or delete on table "categories" violates foreign key constraint "products_category_id_fkey" on table "products"', details: 'Key (id)=(1) is still referenced from table "products".' })).toEqual({ kind: "categoryInUse" });
+  });
   it("maps another foreign key problem without a field", () => {
     expect(mapDbError({ code: "23503", message: 'violates foreign key constraint "product_images_product_id_fkey"' })).toEqual({ kind: "missingReference" });
   });

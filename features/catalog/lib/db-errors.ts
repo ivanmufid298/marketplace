@@ -6,6 +6,7 @@ import type { ProductFormValues } from "./product-form";
 export type SaveErrorKind =
   | "slugTaken"
   | "categoryNameTaken"
+  | "categoryInUse"
   | "notFound"
   | "photoKeyTaken"
   | "duplicate"
@@ -78,6 +79,8 @@ export function mapDbError(error: DbErrorLike | null | undefined): SaveError {
   }
 
   if (error.code === "23503") {
+    // Deleting a category that products still use (the foreign key is ON DELETE RESTRICT).
+    if (/update or delete on table "categories"/.test(text)) return { kind: "categoryInUse" };
     return { kind: "missingReference", ...(/category_id/.test(text) ? { field: "categoryId" as const } : {}) };
   }
 

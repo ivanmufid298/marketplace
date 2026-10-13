@@ -10,6 +10,7 @@ export const LIMITS = {
   description: 5000,
   badge: 40,
   slug: 80,
+  categoryName: 60,
   weightGram: 1_000_000,
   stock: 1_000_000,
   /** Photos per product. Keeps the form usable and the storage bill small. */

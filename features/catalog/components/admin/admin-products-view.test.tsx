@@ -243,3 +243,95 @@ describe("the form", () => {
     expect(names()).toHaveLength(3);
   });
 });
+
+describe("managing categories from the list", () => {
+  const manage = async (fake: FakeServices) => {
+    show(fake);
+    await screen.findByText("Mug Blush Daily");
+    fireEvent.click(screen.getByRole("button", { name: "Kelola kategori" }));
+    return within(screen.getByRole("dialog", { name: "Kelola kategori" }));
+  };
+
+  it("disables the button until the list has loaded", async () => {
+    show(seeded());
+    expect((screen.getByRole("button", { name: "Kelola kategori" }) as HTMLButtonElement).disabled).toBe(true);
+    await screen.findByText("Mug Blush Daily");
+    expect((screen.getByRole("button", { name: "Kelola kategori" }) as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  it("counts the products in each category", async () => {
+    const dialog = await manage(seeded());
+    expect(dialog.getByText("Rumah").closest("li")!.textContent).toContain("2 produk");
+    expect(dialog.getByText("Fashion").closest("li")!.textContent).toContain("1 produk");
+  });
+
+  it("shows a new category in the list's filter and in the product form", async () => {
+    const dialog = await manage(seeded());
+    fireEvent.change(dialog.getByLabelText("Nama kategori baru"), { target: { value: "Kecantikan" } });
+    fireEvent.click(dialog.getByRole("button", { name: "Tambah kategori" }));
+    await dialog.findByText("Kecantikan");
+    fireEvent.click(screen.getByRole("button", { name: "Tutup" }));
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(screen.getAllByRole("option", { name: "Kecantikan" }).length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByRole("button", { name: "＋ Tambah produk" }));
+    expect(within(screen.getByRole("dialog")).getByRole("option", { name: "Kecantikan" })).toBeTruthy();
+  });
+
+  it("carries a rename to the product cards", async () => {
+    const dialog = await manage(seeded());
+    fireEvent.click(dialog.getByRole("button", { name: "Ubah nama Fashion" }));
+    fireEvent.change(dialog.getByRole("textbox", { name: "Ubah nama Fashion" }), { target: { value: "Busana" } });
+    fireEvent.click(dialog.getByRole("button", { name: "Simpan" }));
+    await dialog.findByText("Busana");
+    fireEvent.click(screen.getByRole("button", { name: "Tutup" }));
+    const card = screen.getByText("Tote Canvas").closest("article")!;
+    expect(within(card).getByText("Busana")).toBeTruthy();
+    expect(within(card).queryByText("Fashion")).toBeNull();
+    // The other category's cards are untouched.
+    expect(within(screen.getByText("Mug Blush Daily").closest("article")!).getByText("Rumah")).toBeTruthy();
+  });
+
+  it("offers only active categories in the product form once one is switched off", async () => {
+    const dialog = await manage(seeded());
+    fireEvent.click(within(dialog.getByText("Fashion").closest("li")!).getByRole("button", { name: "Nonaktifkan" }));
+    await dialog.findByText("Nonaktif");
+    fireEvent.click(screen.getByRole("button", { name: "Tutup" }));
+    fireEvent.click(screen.getByRole("button", { name: "＋ Tambah produk" }));
+    const form = within(screen.getByRole("dialog"));
+    expect(form.queryByRole("option", { name: "Fashion" })).toBeNull();
+    expect(form.getByRole("option", { name: "Rumah" })).toBeTruthy();
+  });
+
+  it("removes a deleted category from the list's filter, and resets the filter if it was chosen", async () => {
+    const fake = makeFakeServices({ products: [mug], categories });
+    show(fake);
+    await screen.findByText("Mug Blush Daily");
+    // Filter by the category that has no products, then delete it.
+    fireEvent.click(screen.getAllByRole("option", { name: "Fashion" })[0]);
+    expect(screen.getByText("Tidak ada produk yang cocok dengan pencarianmu.")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Kelola kategori" }));
+    const dialog = within(screen.getByRole("dialog", { name: "Kelola kategori" }));
+    fireEvent.click(dialog.getByRole("button", { name: "Hapus Fashion" }));
+    fireEvent.click(dialog.getByRole("button", { name: "Ya, hapus" }));
+    await waitFor(() => expect(dialog.queryByText("Fashion")).toBeNull());
+    fireEvent.click(screen.getByRole("button", { name: "Tutup" }));
+    expect(screen.queryByRole("option", { name: "Fashion" })).toBeNull();
+    expect(names()).toEqual(["Mug Blush Daily"]);
+  });
+
+  it("does not let a category with products be deleted", async () => {
+    const dialog = await manage(seeded());
+    expect((dialog.getByRole("button", { name: "Hapus Rumah" }) as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it("passes the manager's messages to the admin toast", async () => {
+    const fake = seeded();
+    const notify = vi.fn();
+    render(<AdminProductsView services={fake.services} notify={notify} />);
+    await screen.findByText("Mug Blush Daily");
+    fireEvent.click(screen.getByRole("button", { name: "Kelola kategori" }));
+    fireEvent.change(screen.getByLabelText("Nama kategori baru"), { target: { value: "Dapur" } });
+    fireEvent.click(screen.getByRole("button", { name: "Tambah kategori" }));
+    await waitFor(() => expect(notify).toHaveBeenCalledWith("Kategori ditambahkan"));
+  });
+});
