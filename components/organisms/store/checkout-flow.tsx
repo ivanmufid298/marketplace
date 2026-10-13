@@ -102,7 +102,7 @@ function PaymentStep({ active }: { active: boolean }) {
       <UploadField
         title={proofName ? "✓ " + proofName : t("store.checkout.payment.uploadTitle")}
         hint={t("store.checkout.payment.uploadHint")}
-        accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf"
+        accept=".jpg,.jpeg,.png,.webp,.pdf,image/jpeg,image/png,image/webp,application/pdf"
         onFile={(file, input) => {
           if (!setProof(file)) input.value = "";
         }}

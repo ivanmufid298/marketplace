@@ -352,13 +352,28 @@ describe("checkout", () => {
     expect(m.s().shippingCost).toBe(48000);
   });
 
+  it("lets a photo be up to 20 MB, since it is shrunk before it is sent, but not a PDF over 5 MB", async () => {
+    const m = mountSignedIn();
+    const typed = (type: string, bytes: number) => new File([new Uint8Array(bytes)], "x", { type });
+    let ok = false;
+    await run(() => { ok = m.s().setProof(typed("image/jpeg", 20 * 1024 * 1024)); });
+    expect(ok).toBe(true);
+    await run(() => { ok = m.s().setProof(typed("image/jpeg", 20 * 1024 * 1024 + 1)); });
+    expect(ok).toBe(false);
+    await run(() => { ok = m.s().setProof(typed("application/pdf", 5 * 1024 * 1024 + 1)); });
+    expect(ok).toBe(false);
+    await run(() => { ok = m.s().setProof(typed("application/pdf", 5 * 1024 * 1024)); });
+    expect(ok).toBe(true);
+  });
+
   it("accepts a transfer proof up to 5 MB and rejects a bigger one", async () => {
     const m = mountSignedIn();
     let ok = true;
     await run(() => { ok = m.s().setProof(proof("besar.png", 5 * 1024 * 1024 + 1)); });
     expect(ok).toBe(false);
     expect(m.s().proofName).toBe("");
-    expect(m.s().toast).toBe("Ukuran file maksimal 5 MB");
+    // Changed on purpose: a photo may now be up to 20 MB (it is shrunk before it is sent); a PDF or unknown file stays at 5 MB.
+    expect(m.s().toast).toBe("Ukuran file terlalu besar (foto maksimal 20 MB, PDF maksimal 5 MB)");
 
     await run(() => { ok = m.s().setProof(proof("bukti.png")); });
     expect(ok).toBe(true);
@@ -489,7 +504,9 @@ describe("orders and reviews", () => {
     const m = mountSignedIn();
     await run(() => m.s().completeOrder("837312"));
     expect(m.s().orders.find((o) => o.number === "837312")?.received).toBe(false);
-    expect(m.s().toast).toBe("");
+    // Changed on purpose: the buyer is now told why nothing happened (the button is only shown for a paid order, but
+    // the database may have cancelled it meanwhile).
+    expect(m.s().toast).toBe("Pesanan ini belum bisa ditandai selesai: pembayarannya belum diterima, atau sudah selesai atau dibatalkan.");
   });
 
   it("starts with the seeded review", async () => {

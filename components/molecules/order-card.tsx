@@ -74,13 +74,14 @@ export function OrderCard({ order, products, reviews, onSaveReview, onComplete, 
         <span>{t("store.orders.shipping")} {money(order.shippingFee)}</span>
         <span>{t("store.orders.total")} <b>{money(total(order))}</b></span>
       </div>
-      {label === "awaiting_payment" && onSendProof && (
+      {label === "rejected" && order.rejectionReason && <p className="order-rejection">{t("store.orders.proof.rejected", { reason: order.rejectionReason })}</p>}
+      {order.canSendProof && onSendProof && (
         <div className="order-proof">
           {order.payBefore && <p className="order-proof-deadline">{t("store.orders.proof.deadline", { time: timeOf(order.payBefore) })}</p>}
           <UploadField
             title={sendingProof ? t("store.orders.proof.sending") : t("store.orders.proof.title")}
             hint={t("store.orders.proof.hint")}
-            accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf"
+            accept=".jpg,.jpeg,.png,.webp,.pdf,image/jpeg,image/png,image/webp,application/pdf"
             onFile={(file, input) => {
               if (file && !sendingProof) onSendProof(file);
               input.value = "";

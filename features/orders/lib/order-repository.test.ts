@@ -2,7 +2,8 @@
 // and the prices, fees, and stock, are decided by the database and covered by the SQL tests.
 import { describe, expect, it, vi } from "vitest";
 import { checkProof, createOrderRepository, type OrdersDb, type ProofStorage } from "./order-repository";
-import { MAX_PROOF_BYTES, type PlaceOrderInput } from "./types";
+import { ProofPrepareError } from "./prepare-proof";
+import { MAX_PROOF_BYTES, MAX_PROOF_SOURCE_BYTES, type PlaceOrderInput } from "./types";
 
 type Answer = { data?: unknown; error?: { code?: string; message?: string; details?: string } | null };
 
@@ -24,9 +25,10 @@ function fakes(answers: { rpc?: Answer[]; select?: Answer[] } = {}) {
       return chain;
     },
   } as unknown as OrdersDb;
-  const storage = { upload: vi.fn<ProofStorage["upload"]>(async () => {}), remove: vi.fn<ProofStorage["remove"]>(async () => {}) };
-  const repo = createOrderRepository({ db, storage, photoFor: (key, alt) => ({ src: key, srcSet: key, alt, width: null, height: null }), newId: () => "uuid-1", now: () => Date.parse("2026-10-13T12:00:00Z") });
-  return { repo, rpcCalls, selects, storage };
+  const storage = { upload: vi.fn<ProofStorage["upload"]>(async () => {}), remove: vi.fn<ProofStorage["remove"]>(async () => {}), signedUrl: vi.fn<ProofStorage["signedUrl"]>(async (path) => `https://signed.test/${path}?t=1`) };
+  const prepare = vi.fn(async (f: File) => f);
+  const repo = createOrderRepository({ db, storage, photoFor: (key, alt) => ({ src: key, srcSet: key, alt, width: null, height: null }), newId: () => "uuid-1", now: () => Date.parse("2026-10-13T12:00:00Z"), prepare });
+  return { repo, rpcCalls, selects, storage, prepare };
 }
 
 const file = (type = "image/png", size = 1000, name = "bukti.png") => new File([new Uint8Array(size)], name, { type });
@@ -35,15 +37,19 @@ const input = (over: Partial<PlaceOrderInput> = {}): PlaceOrderInput => ({
 });
 
 describe("checkProof", () => {
-  it("accepts JPG, PNG, and PDF up to 5 MB", () => {
-    for (const type of ["image/jpeg", "image/png", "application/pdf"]) expect(checkProof({ type, size: 1 })).toBeNull();
-    expect(checkProof({ type: "image/png", size: MAX_PROOF_BYTES })).toBeNull();
+  it("accepts a photo (JPG, PNG, WebP) up to 20 MB and a PDF up to 5 MB", () => {
+    for (const type of ["image/jpeg", "image/png", "image/webp"]) {
+      expect(checkProof({ type, size: 1 })).toBeNull();
+      expect(checkProof({ type, size: MAX_PROOF_SOURCE_BYTES })).toBeNull();
+    }
+    expect(checkProof({ type: "application/pdf", size: MAX_PROOF_BYTES })).toBeNull();
   });
-  it("refuses another type, an empty file, and a file over 5 MB", () => {
-    expect(checkProof({ type: "image/webp", size: 10 })).toBe("proofType");
+  it("refuses another type, an empty file, a photo over 20 MB, and a PDF over 5 MB", () => {
+    expect(checkProof({ type: "image/gif", size: 10 })).toBe("proofType");
     expect(checkProof({ type: "", size: 10 })).toBe("proofType");
     expect(checkProof({ type: "image/png", size: 0 })).toBe("proofSize");
-    expect(checkProof({ type: "image/png", size: MAX_PROOF_BYTES + 1 })).toBe("proofSize");
+    expect(checkProof({ type: "image/png", size: MAX_PROOF_SOURCE_BYTES + 1 })).toBe("proofSize");
+    expect(checkProof({ type: "application/pdf", size: MAX_PROOF_BYTES + 1 })).toBe("proofSize");
   });
 });
 
@@ -86,8 +92,8 @@ describe("placeOrder", () => {
   });
   it("checks the proof before placing, so a bad file never takes stock", async () => {
     const { repo, rpcCalls } = fakes();
-    expect(await repo.placeOrder(input({ proof: file("image/webp") }))).toEqual({ ok: false, error: { kind: "proofType" } });
-    expect(await repo.placeOrder(input({ proof: file("image/png", MAX_PROOF_BYTES + 1) }))).toEqual({ ok: false, error: { kind: "proofSize" } });
+    expect(await repo.placeOrder(input({ proof: file("image/gif") }))).toEqual({ ok: false, error: { kind: "proofType" } });
+    expect(await repo.placeOrder(input({ proof: file("application/pdf", MAX_PROOF_BYTES + 1) }))).toEqual({ ok: false, error: { kind: "proofSize" } });
     expect(rpcCalls).toHaveLength(0);
   });
   it("places an order with no proof and says the proof was not sent", async () => {
@@ -161,5 +167,121 @@ describe("listMyOrders", () => {
   it("is empty for no rows and reports a failed read", async () => {
     expect(await fakes({ select: [{ data: null }] }).repo.listMyOrders("b")).toEqual({ ok: true, value: [] });
     expect(await fakes({ select: [{ error: { message: "Failed to fetch" } }] }).repo.listMyOrders("b")).toEqual({ ok: false, error: { kind: "network" } });
+  });
+});
+
+describe("order actions", () => {
+  const cases: [string, (repo: ReturnType<typeof fakes>["repo"]) => Promise<unknown>, string, Record<string, unknown>][] = [
+    ["confirm receipt", (r) => r.confirmReceived("o-1"), "confirm_received", { p_order_id: "o-1" }],
+    ["accept a payment", (r) => r.acceptPayment("o-1"), "accept_payment", { p_order_id: "o-1" }],
+    ["reject a payment", (r) => r.rejectPayment("o-1", "Nominal salah"), "reject_payment", { p_order_id: "o-1", p_reason: "Nominal salah" }],
+    ["cancel an order", (r) => r.cancelOrder("o-1", "Barang rusak"), "cancel_order", { p_order_id: "o-1", p_note: "Barang rusak" }],
+    ["mark a refund", (r) => r.markRefunded("o-1"), "mark_refunded", { p_order_id: "o-1" }],
+  ];
+  for (const [name, run, fn, args] of cases) {
+    it(`can ${name}: calls ${fn} with the order's id and reports success`, async () => {
+      const { repo, rpcCalls } = fakes({ rpc: [{}] });
+      expect(await run(repo)).toEqual({ ok: true, value: null });
+      expect(rpcCalls).toEqual([{ name: fn, args }]);
+    });
+    it(`reports why ${fn} was refused`, async () => {
+      const { repo } = fakes({ rpc: [{ error: { code: "P0001", message: "not_reviewable" } }] });
+      expect(await run(repo)).toEqual({ ok: false, error: { kind: "notReviewable" } });
+    });
+  }
+  it("reports a lost connection", async () => {
+    const { repo } = fakes({ rpc: [{ error: { message: "Failed to fetch" } }] });
+    expect(await repo.acceptPayment("o-1")).toEqual({ ok: false, error: { kind: "network" } });
+  });
+  it("tells an admin who is not one: forbidden", async () => {
+    const { repo } = fakes({ rpc: [{ error: { code: "P0001", message: "forbidden" } }] });
+    expect(await repo.cancelOrder("o-1", "x")).toEqual({ ok: false, error: { kind: "forbidden" } });
+  });
+});
+
+describe("proofLink", () => {
+  it("asks storage for a link that works for a minute", async () => {
+    const { repo, storage } = fakes();
+    expect(await repo.proofLink("orders/o-1/a.png")).toEqual({ ok: true, value: "https://signed.test/orders/o-1/a.png?t=1" });
+    expect(storage.signedUrl).toHaveBeenCalledWith("orders/o-1/a.png", 60);
+  });
+  it("reports why no link could be made", async () => {
+    const { repo, storage } = fakes();
+    storage.signedUrl.mockRejectedValueOnce(new Error("Failed to fetch"));
+    expect(await repo.proofLink("orders/o-1/a.png")).toEqual({ ok: false, error: { kind: "network" } });
+    storage.signedUrl.mockRejectedValueOnce(new Error("new row violates row-level security policy"));
+    expect(await repo.proofLink("orders/o-1/a.png")).toEqual({ ok: false, error: { kind: "forbidden" } });
+  });
+});
+
+describe("listAllOrders", () => {
+  const row = { id: "o-1", number: "100002", buyer_id: "buyer-9", recipient_name: "Ana", phone: "1", address: "x", city: "y", postcode: "1", shipping_label: "Reguler", shipping_fee: 18000, payment_status: "under_review", expires_at: "2026-10-13T13:00:00Z", received_at: null, cancel_note: null, refund_status: null, created_at: "2026-10-13T11:00:00Z", order_items: [], order_status_history: [{ event: "created", actor_name: "Ana", note: null, created_at: "2026-10-13T11:00:00Z" }], payment_proofs: [{ object_key: "orders/o-1/a.png", mime_type: "image/png", size_bytes: 10, created_at: "2026-10-13T11:05:00Z" }] };
+  it("reads every order with its history and proofs, newest first, owned by the buyer it names", async () => {
+    const { repo, selects } = fakes({ select: [{ data: [row] }] });
+    const result = await repo.listAllOrders();
+    expect(result.ok && result.value[0]).toMatchObject({ id: "o-1", buyerId: "buyer-9", history: [{ event: "created" }], proofs: [{ objectKey: "orders/o-1/a.png" }] });
+    expect(selects[0].table).toBe("orders");
+    const select = String(selects[0].ops.find(([o]) => o === "select")![1][0]);
+    expect(select).toContain("order_status_history(");
+    expect(select).toContain("payment_proofs(");
+    expect(select).toContain("buyer_id");
+    expect(selects[0].ops.filter(([o]) => o === "order").map(([, a]) => a)).toEqual([["created_at", { ascending: false }], ["number", { ascending: false }]]);
+  });
+  it("is empty for no rows and reports a failed read", async () => {
+    expect(await fakes({ select: [{ data: null }] }).repo.listAllOrders()).toEqual({ ok: true, value: [] });
+    expect(await fakes({ select: [{ error: { message: "Failed to fetch" } }] }).repo.listAllOrders()).toEqual({ ok: false, error: { kind: "network" } });
+  });
+  it("leaves the buyer id empty when the row has none (the account was deleted)", async () => {
+    const result = await fakes({ select: [{ data: [{ ...row, buyer_id: null }] }] }).repo.listAllOrders();
+    expect(result.ok && result.value[0].buyerId).toBe("");
+  });
+});
+
+describe("shrinking the proof", () => {
+  const webp = () => new File([new Uint8Array(300)], "bukti.webp", { type: "image/webp" });
+
+  it("uploads the shrunk file, with its own type and size, not the original", async () => {
+    const { repo, prepare, storage, rpcCalls } = fakes({ rpc: [{ data: { id: "o-1", number: "1" } }, {}] });
+    prepare.mockResolvedValueOnce(webp());
+    await repo.placeOrder(input({ proof: file("image/png", 5_000_000) }));
+    expect(prepare).toHaveBeenCalledTimes(1);
+    expect(storage.upload).toHaveBeenCalledWith("orders/o-1/uuid-1.webp", expect.any(File), "image/webp");
+    expect(rpcCalls[1].args).toMatchObject({ p_object_key: "orders/o-1/uuid-1.webp", p_mime_type: "image/webp", p_size_bytes: 300 });
+  });
+  it("shrinks the file before the order is placed, so a photo that cannot be read never takes stock", async () => {
+    const { repo, prepare, rpcCalls } = fakes();
+    prepare.mockRejectedValueOnce(new ProofPrepareError("proofUnreadable"));
+    expect(await repo.placeOrder(input())).toEqual({ ok: false, error: { kind: "proofUnreadable" } });
+    expect(rpcCalls).toHaveLength(0);
+  });
+  it("reports the reason the file could not be prepared", async () => {
+    for (const reason of ["proofType", "proofSize", "proofUnreadable"] as const) {
+      const { repo, prepare } = fakes();
+      prepare.mockRejectedValueOnce(new ProofPrepareError(reason));
+      expect(await repo.sendProof("o-9", file())).toEqual({ ok: false, error: { kind: reason } });
+    }
+  });
+  it("treats any other failure while preparing as an unreadable file", async () => {
+    const { repo, prepare } = fakes();
+    prepare.mockRejectedValueOnce(new Error("canvas exploded"));
+    expect(await repo.sendProof("o-9", file())).toEqual({ ok: false, error: { kind: "proofUnreadable" } });
+  });
+  it("refuses a prepared file that is still over the stored limit (a big file that could not be shrunk)", async () => {
+    const { repo, prepare, storage } = fakes();
+    prepare.mockResolvedValueOnce(file("image/png", MAX_PROOF_BYTES + 1));
+    expect(await repo.sendProof("o-9", file("image/png", MAX_PROOF_BYTES + 1))).toEqual({ ok: false, error: { kind: "proofSize" } });
+    expect(storage.upload).not.toHaveBeenCalled();
+  });
+  it("refuses a prepared file that is empty or of a type that is not allowed", async () => {
+    const { repo, prepare } = fakes();
+    prepare.mockResolvedValueOnce(new File([], "x.webp", { type: "image/webp" }));
+    expect(await repo.sendProof("o-9", file())).toEqual({ ok: false, error: { kind: "proofSize" } });
+    prepare.mockResolvedValueOnce(new File([new Uint8Array(5)], "x.gif", { type: "image/gif" }));
+    expect(await repo.sendProof("o-9", file())).toEqual({ ok: false, error: { kind: "proofType" } });
+  });
+  it("sends a PDF as it is when nothing shrinks it", async () => {
+    const { repo, storage } = fakes({ rpc: [{}] });
+    await repo.sendProof("o-9", file("application/pdf", 50, "x.pdf"));
+    expect(storage.upload).toHaveBeenCalledWith("orders/o-9/uuid-1.pdf", expect.any(File), "application/pdf");
   });
 });

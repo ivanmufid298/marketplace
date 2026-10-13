@@ -2,23 +2,29 @@
 
 import { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactNode } from "react";
 import { t } from "@/lib/i18n";
-import { toPayment } from "@/lib/order-flow";
-import * as ordersStore from "@/lib/orders-store";
+import { isCancelled, toPayment } from "@/lib/order-flow";
+import { useAdminOrders, type AdminOrderServices, type OrdersStatus } from "@/features/orders";
+import type { OrderError } from "@/features/orders";
 import {
   initialInteractions,
   initialReviews,
   type Interaction,
   type Payment,
-  type PaymentStatus,
   type Review,
 } from "@/lib/mock/admin";
 import type { Order } from "@/lib/mock/orders";
+import { ProofViewerDialog } from "../organisms/admin/proof-viewer-dialog";
 
 export type ModalType = "product" | "promo" | "voucher" | "banner" | "popup" | "shipping";
 
 type AdminContextValue = {
   payments: Payment[];
-  setPaymentStatus: (id: string, status: PaymentStatus) => void;
+  /** Accepts the proof of a payment (an order under review). */
+  acceptPayment: (id: string) => Promise<void>;
+  /** Rejects it with a reason the buyer will read. Returns false (with a toast) when it was refused. */
+  rejectPayment: (id: string, reason: string) => Promise<boolean>;
+  /** Shows the transfer proofs of a payment in a popup (database orders); the sample store only says what it would do. */
+  viewProof: (id: string) => Promise<void>;
   interactions: Interaction[];
   activeInteractionId: string | null;
   selectInteraction: (id: string | null) => void;
@@ -27,9 +33,13 @@ type AdminContextValue = {
   reviews: Review[];
   toggleReview: (id: number) => void;
   orders: Order[];
+  /** Whether the orders come from the database (otherwise the sample store). */
+  ordersDatabase: boolean;
+  ordersStatus: OrdersStatus;
+  reloadOrders: () => void;
   /** Cancels an order. Returns false (with a toast) when the reason is empty or the order can no longer be cancelled. */
-  cancelOrder: (orderNumber: string, note: string) => boolean;
-  markRefunded: (orderNumber: string) => void;
+  cancelOrder: (orderNumber: string, note: string) => Promise<boolean>;
+  markRefunded: (orderNumber: string) => Promise<void>;
   resetData: () => void;
   modal: ModalType | null;
   openModal: (type: ModalType) => void;
@@ -48,8 +58,14 @@ export function useAdmin() {
   return ctx;
 }
 
-export function AdminProvider({ children }: { children: ReactNode }) {
-  const orders = ordersStore.useOrders();
+type AdminProviderProps = {
+  children: ReactNode;
+  /** Tests pass fakes, which also switches the orders to the database path. */
+  orderServices?: AdminOrderServices;
+};
+
+export function AdminProvider({ children, orderServices }: AdminProviderProps) {
+  const { orders, status: ordersStatus, database: ordersDatabase, reload: reloadOrders, ...orderActions } = useAdminOrders(orderServices);
   const [interactions, setInteractions] = useState(initialInteractions);
   const [activeInteractionId, setActiveInteractionId] = useState<string | null>(initialInteractions[0].id);
   const [reviews, setReviews] = useState(initialReviews);
@@ -65,15 +81,47 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // Orders that were cancelled before any money arrived have no payment to verify.
-  const payments = useMemo(() => orders.filter((o) => o.cancelNote === undefined || o.payment === "success").map(toPayment), [orders]);
+  const payments = useMemo(() => orders.filter((o) => !isCancelled(o) || o.payment === "success").map(toPayment), [orders]);
 
-  const setPaymentStatus = useCallback(
-    (id: string, status: PaymentStatus) => {
-      const number = id.replace("MKP-", "");
-      const ok = status === "success" ? ordersStore.acceptPayment(number) : ordersStore.rejectPayment(number);
-      if (ok) showToast(status === "success" ? t("admin.payments.toastAccepted") : t("admin.payments.toastRejected"));
+  const orderByNumber = useCallback((number: string) => orders.find((o) => o.number === number), [orders]);
+  const orderOfPayment = useCallback((id: string) => orderByNumber(id.replace("MKP-", "")), [orderByNumber]);
+  const [viewingProof, setViewingProof] = useState<string | null>(null);
+  const viewingProofOrder = viewingProof ? orders.find((o) => o.number === viewingProof) : undefined;
+  const failure = useCallback((error: OrderError) => showToast(t(`admin.orders.errors.${error.kind}`)), [showToast]);
+
+  const acceptPayment = useCallback(
+    async (id: string) => {
+      const order = orderOfPayment(id);
+      if (!order) return;
+      const result = await orderActions.acceptPayment(order);
+      if (result.ok) showToast(t("admin.payments.toastAccepted"));
+      else failure(result.error);
     },
-    [showToast],
+    [failure, orderActions, orderOfPayment, showToast],
+  );
+
+  const rejectPayment = useCallback(
+    async (id: string, reason: string) => {
+      const order = orderOfPayment(id);
+      if (!order) return false;
+      const result = await orderActions.rejectPayment(order, reason);
+      if (result.ok) showToast(t("admin.payments.toastRejected"));
+      else failure(result.error);
+      return result.ok;
+    },
+    [failure, orderActions, orderOfPayment, showToast],
+  );
+
+  const viewProof = useCallback(
+    async (id: string) => {
+      const order = orderOfPayment(id);
+      if (!order) return;
+      // The sample store keeps no files, so it only says what would happen; the database shows the real proof.
+      if (!ordersDatabase) return showToast(t("admin.payments.toastProof"));
+      if (!order.proofs?.length) return showToast(t("admin.orders.noProof"));
+      setViewingProof(order.number);
+    },
+    [ordersDatabase, orderOfPayment, showToast],
   );
 
   const selectInteraction = useCallback((id: string | null) => {
@@ -112,38 +160,46 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   );
 
   const cancelOrder = useCallback(
-    (orderNumber: string, note: string) => {
+    async (orderNumber: string, note: string) => {
+      const order = orderByNumber(orderNumber);
+      if (!order) return false;
       if (!note.trim()) {
         showToast(t("admin.orders.toast.needNote"));
         return false;
       }
-      const ok = ordersStore.cancelOrder(orderNumber, note);
-      if (ok) showToast(t("admin.orders.toast.cancelled"));
-      return ok;
+      const result = await orderActions.cancelOrder(order, note);
+      if (result.ok) showToast(t("admin.orders.toast.cancelled"));
+      else failure(result.error);
+      return result.ok;
     },
-    [showToast],
+    [failure, orderActions, orderByNumber, showToast],
   );
 
   const markRefunded = useCallback(
-    (orderNumber: string) => {
-      if (ordersStore.markRefunded(orderNumber)) showToast(t("admin.orders.toast.refunded"));
+    async (orderNumber: string) => {
+      const order = orderByNumber(orderNumber);
+      if (!order) return;
+      const result = await orderActions.markRefunded(order);
+      if (result.ok) showToast(t("admin.orders.toast.refunded"));
+      else failure(result.error);
     },
-    [showToast],
+    [failure, orderActions, orderByNumber, showToast],
   );
 
   const resetData = useCallback(() => {
-    ordersStore.resetOrders();
+    orderActions.resetSample();
     showToast(t("admin.shell.resetDone"));
-  }, [showToast]);
+  }, [orderActions, showToast]);
 
   return (
     <AdminContext.Provider
       value={{
-        payments, setPaymentStatus, interactions, activeInteractionId, selectInteraction, toggleInteractionStatus, replyInteraction,
-        reviews, toggleReview, orders, cancelOrder, markRefunded, resetData, modal, openModal: setModal, closeModal: () => setModal(null), sidebarOpen, setSidebarOpen, toast, showToast,
+        payments, acceptPayment, rejectPayment, viewProof, interactions, activeInteractionId, selectInteraction, toggleInteractionStatus, replyInteraction,
+        reviews, toggleReview, orders, ordersDatabase, ordersStatus, reloadOrders, cancelOrder, markRefunded, resetData, modal, openModal: setModal, closeModal: () => setModal(null), sidebarOpen, setSidebarOpen, toast, showToast,
       }}
     >
       {children}
+      {viewingProofOrder && <ProofViewerDialog order={viewingProofOrder} load={orderActions.proofLink} onClose={() => setViewingProof(null)} />}
     </AdminContext.Provider>
   );
 }

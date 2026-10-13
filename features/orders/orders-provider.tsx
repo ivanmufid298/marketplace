@@ -24,8 +24,8 @@ type OrdersContextValue = {
   placeOrder: (input: PlaceOrderInput) => Promise<Outcome<PlacedOrder>>;
   /** Sends a transfer proof for an order that has none (or whose proof was rejected). */
   sendProof: (order: Order, file: File) => Promise<Outcome<null>>;
-  /** The buyer taps "Pesanan selesai". Only the local demo can do this so far. */
-  confirmReceived: (orderNumber: string) => boolean;
+  /** The buyer taps "Pesanan selesai". The database allows it only for their own paid order. */
+  confirmReceived: (order: Order) => Promise<Outcome<null>>;
   reload: () => void;
 };
 
@@ -117,7 +117,16 @@ export function OrdersProvider({ children, services: provided }: { children: Rea
     [reload, services],
   );
 
-  const confirmReceived = useCallback((orderNumber: string) => (fromDatabase ? false : localOrders.confirmReceived(orderNumber)), [fromDatabase]);
+  const confirmReceived = useCallback(
+    async (order: Order): Promise<Outcome<null>> => {
+      if (!fromDatabase) return localOrders.confirmReceived(order.number) ? { ok: true, value: null } : { ok: false, error: { kind: "notReceivable" } };
+      if (!services || !order.id) return { ok: false, error: { kind: "orderNotFound" } };
+      const result = await services.repo.confirmReceived(order.id);
+      if (result.ok) void reload();
+      return result;
+    },
+    [fromDatabase, reload, services],
+  );
 
   const orders = useMemo(() => (fromDatabase ? loaded.orders : userId ? stored.filter((o) => o.buyerId === userId) : []), [fromDatabase, loaded.orders, stored, userId]);
 

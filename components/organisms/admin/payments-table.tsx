@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { t } from "@/lib/i18n";
 import type { Payment } from "@/lib/mock/admin";
 import { PaymentRow } from "../../molecules/payment-row";
 import { useAdmin } from "../../providers/admin-provider";
+import { RejectPaymentDialog } from "./reject-payment-dialog";
 
 type PaymentsTableProps = {
   payments: Payment[];
@@ -12,7 +14,8 @@ type PaymentsTableProps = {
 };
 
 export function PaymentsTable({ payments, compact = false }: PaymentsTableProps) {
-  const { setPaymentStatus, showToast } = useAdmin();
+  const { acceptPayment, rejectPayment, viewProof, showToast } = useAdmin();
+  const [rejecting, setRejecting] = useState<string | null>(null);
   return (
     <div className="table-wrap">
       <table>
@@ -32,14 +35,15 @@ export function PaymentsTable({ payments, compact = false }: PaymentsTableProps)
               key={p.id}
               payment={p}
               compact={compact}
-              onAccept={() => setPaymentStatus(p.id, "success")}
-              onReject={() => setPaymentStatus(p.id, "failed")}
-              onViewProof={() => showToast(t("admin.payments.toastProof"))}
+              onAccept={() => void acceptPayment(p.id)}
+              onReject={() => setRejecting(p.id)}
+              onViewProof={() => void viewProof(p.id)}
               onDetail={() => showToast(t("admin.payments.toastDetail", { id: p.id }))}
             />
           ))}
         </tbody>
       </table>
+      {rejecting && <RejectPaymentDialog paymentId={rejecting} onConfirm={(reason) => rejectPayment(rejecting, reason)} onClose={() => setRejecting(null)} />}
     </div>
   );
 }

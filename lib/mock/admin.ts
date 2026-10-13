@@ -3,7 +3,15 @@
 
 export type PaymentStatus = "pending" | "success" | "failed";
 /** One row of the payments table; derived from an order. */
-export type Payment = { id: string; name: string; total: string; time: string; status: PaymentStatus };
+export type Payment = {
+  id: string;
+  name: string;
+  total: string;
+  time: string;
+  status: PaymentStatus;
+  /** False while there is no proof to check yet, so the admin has nothing to accept or reject. Defaults to true. */
+  reviewable?: boolean;
+};
 
 export type InteractionStatus = "open" | "handled";
 export type InteractionMessage = { from: "customer" | "admin"; text: string; time: string };

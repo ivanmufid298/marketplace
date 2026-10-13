@@ -21,7 +21,7 @@ type OrderDetailModalProps = {
 };
 
 export function OrderDetailModal({ order, onClose }: OrderDetailModalProps) {
-  const { cancelOrder, markRefunded } = useAdmin();
+  const { cancelOrder, markRefunded, viewProof } = useAdmin();
   const [cancelling, setCancelling] = useState(false);
   const [note, setNote] = useState("");
 
@@ -84,19 +84,41 @@ export function OrderDetailModal({ order, onClose }: OrderDetailModalProps) {
                   <div className="notice-box">
                     {t("admin.orders.modal.refundPending")}
                     <div style={{ marginTop: 10 }}>
-                      <AdminButton variant="primary" small onClick={() => markRefunded(order.number)}>{t("admin.orders.modal.markRefunded")}</AdminButton>
+                      <AdminButton variant="primary" small onClick={() => void markRefunded(order.number)}>{t("admin.orders.modal.markRefunded")}</AdminButton>
                     </div>
                   </div>
                 )}
                 {order.refund === "done" && <div className="notice-box">{t("admin.orders.modal.refundDone")}</div>}
               </div>
 
+              {order.proofs && (
+                <div className="order-block">
+                  <h3>{t("admin.orders.modal.proofs")}</h3>
+                  {order.proofs.length === 0 ? (
+                    <span className="sub">{t("admin.orders.noProof")}</span>
+                  ) : (
+                    <>
+                      <ul className="group-items">
+                        {order.proofs.map((p, i) => (
+                          <li key={p.objectKey}>
+                            <span>{t("admin.orders.modal.proofLine", { number: i + 1, time: p.at })}</span>
+                            <span>{t("admin.orders.modal.proofSize", { kb: Math.max(1, Math.round(p.size / 1024)) })}</span>
+                          </li>
+                        ))}
+                      </ul>
+                      <AdminButton small onClick={() => void viewProof(`MKP-${order.number}`)}>{t("admin.orders.modal.openProof")}</AdminButton>
+                    </>
+                  )}
+                  {order.rejectionReason && <div className="notice-box">{t("admin.orders.modal.rejectedNote", { reason: order.rejectionReason })}</div>}
+                </div>
+              )}
+
               <div className="order-block">
                 <h3>{t("admin.orders.modal.items")}</h3>
                 <ul className="group-items">
                   {order.items.map((item) => (
                     <li key={item.productId}>
-                      <span>{item.qty}× {products.find((p) => p.id === item.productId)?.name}</span>
+                      <span>{item.qty}× {item.name ?? products.find((p) => p.id === item.productId)?.name}</span>
                       <span>{money(item.qty * item.price)}</span>
                     </li>
                   ))}
@@ -123,7 +145,7 @@ export function OrderDetailModal({ order, onClose }: OrderDetailModalProps) {
                       </Field>
                       <div className="cancel-actions">
                         <AdminButton onClick={() => setCancelling(false)}>{t("admin.orders.modal.cancelBack")}</AdminButton>
-                        <AdminButton variant="primary" onClick={() => cancelOrder(order.number, note)}>{t("admin.orders.modal.cancelConfirm")}</AdminButton>
+                        <AdminButton variant="primary" onClick={() => void cancelOrder(order.number, note)}>{t("admin.orders.modal.cancelConfirm")}</AdminButton>
                       </div>
                     </>
                   ) : (

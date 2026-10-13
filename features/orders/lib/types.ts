@@ -31,9 +31,16 @@ export type OrderErrorKind =
   | "outOfStock"
   | "proofType"
   | "proofSize"
+  | "proofUnreadable"
   | "orderNotFound"
   | "notPayable"
   | "invalidProof"
+  | "notReviewable"
+  | "reasonRequired"
+  | "noteRequired"
+  | "notCancellable"
+  | "notRefundable"
+  | "notReceivable"
   | "forbidden"
   | "network"
   | "unknown";
@@ -55,6 +62,13 @@ export type PlacedOrder = {
   proofError?: OrderError;
 };
 
-/** What a transfer proof may be. The private bucket enforces the same limits. */
-export const PROOF_TYPES = ["image/jpeg", "image/png", "application/pdf"] as const;
+/** What a transfer proof may be. The private bucket enforces the same types. */
+export const PROOF_TYPES = ["image/jpeg", "image/png", "image/webp", "application/pdf"] as const;
+/** The most a proof may weigh when it is stored (the private bucket enforces it). */
 export const MAX_PROOF_BYTES = 5 * 1024 * 1024;
+/**
+ * The most a chosen photo may weigh before the browser shrinks it. A phone screenshot or camera photo is often several
+ * MB; it is shrunk to WebP (a few hundred KB) before it is sent, so only the shrunk file has to fit MAX_PROOF_BYTES.
+ * A PDF cannot be shrunk and is held to MAX_PROOF_BYTES as it is.
+ */
+export const MAX_PROOF_SOURCE_BYTES = 20 * 1024 * 1024;

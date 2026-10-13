@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { t } from "@/lib/i18n";
 import { deriveStatus, type OrderStatus } from "@/lib/order-flow";
 import { OrderRow } from "../../molecules/order-row";
+import { OrdersStatusNote } from "../../molecules/orders-status-note";
 import { SearchField } from "../../molecules/search-field";
 import { SectionTop } from "../../molecules/section-top";
 import { Select } from "../../molecules/select";
@@ -14,10 +15,17 @@ const ALL = "all";
 const STATUSES: OrderStatus[] = ["pending", "shipping", "completed", "cancelled"];
 
 export function OrdersManager() {
-  const { orders } = useAdmin();
+  const { orders, ordersStatus, reloadOrders } = useAdmin();
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState(ALL);
   const [openNumber, setOpenNumber] = useState<string | null>(null);
+
+  // Opening the screen shows the latest orders.
+  useEffect(() => {
+    reloadOrders();
+    // Only opening the screen should refresh, not every change to the list.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const statusOptions = [{ value: ALL, label: t("admin.orders.filterAll") }, ...STATUSES.map((s) => ({ value: s, label: t(`admin.orders.status.${s}`) }))];
   const q = query.trim().toLowerCase();
@@ -26,6 +34,7 @@ export function OrdersManager() {
   return (
     <section className="view active">
       <SectionTop title={t("admin.orders.title")} text={t("admin.orders.text")} />
+      <OrdersStatusNote status={ordersStatus} onRetry={reloadOrders} />
       <div className="filters">
         <SearchField variant="admin" value={query} onChange={setQuery} placeholder={t("admin.orders.searchPlaceholder")} />
         <Select options={statusOptions} value={status} onChange={setStatus} />

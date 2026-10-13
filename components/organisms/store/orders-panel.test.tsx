@@ -13,7 +13,7 @@ import { OrdersPanel } from "./orders-panel";
 const SESSION_KEY = "marketplace-demo-session-v1";
 const awaiting = (): Order => ({
   id: "o-1", number: "100002", buyerId: "nadia", buyer: "N", phone: "1", address: "x", date: "13 Okt 2026", shippingMethod: "Reguler", shippingFee: 18000, payment: "pending", received: false, history: [],
-  awaitingProof: true, payBefore: "2026-10-13T08:30:00Z", items: [{ productId: 1, qty: 1, price: 189000, name: "Longchamp", photos: [] }],
+  awaitingProof: true, canSendProof: true, payBefore: "2026-10-13T08:30:00Z", items: [{ productId: 1, qty: 1, price: 189000, name: "Longchamp", photos: [] }],
 });
 
 function Controls() {
@@ -102,7 +102,7 @@ describe("sending proof", () => {
     await waitFor(() => expect(screen.queryByText("Mengirim bukti…")).toBeNull());
   });
   it("offers no upload for an order that already has its proof", async () => {
-    setup({ listMyOrders: async () => ({ ok: true, value: [{ ...awaiting(), awaitingProof: undefined }] }) });
+    setup({ listMyOrders: async () => ({ ok: true, value: [{ ...awaiting(), awaitingProof: undefined, canSendProof: undefined }] }) });
     await screen.findByText("Order #MKP-100002");
     expect(screen.queryByText("Unggah bukti transfer")).toBeNull();
     expect(screen.getByText("Sedang diverifikasi")).toBeTruthy();

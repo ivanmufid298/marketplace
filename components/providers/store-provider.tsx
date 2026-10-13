@@ -6,7 +6,7 @@ import { INITIAL_MY_REVIEWS, type MyReview, type Order } from "@/lib/mock/orders
 import { formatDateTime } from "@/lib/format";
 import { useAuth, type LoginIntent } from "@/features/auth";
 import { useCatalog, type Product, type SortMode } from "@/features/catalog";
-import { useBuyerOrders, type OrderError, type ShippingMethod } from "@/features/orders";
+import { MAX_PROOF_BYTES, MAX_PROOF_SOURCE_BYTES, useBuyerOrders, type OrderError, type ShippingMethod } from "@/features/orders";
 import { useUi, type PanelId } from "@/shared/ui-state/ui-provider";
 
 export type CartLine = { id: number; qty: number };
@@ -16,7 +16,6 @@ export type MobileNavMode = "home" | "category" | "saved" | "orders" | "cart";
 
 const EMPTY_ADDRESS: Address = { fullName: "", phone: "", address: "", city: "", postcode: "", note: "" };
 const REQUIRED_ADDRESS_FIELDS: (keyof Address)[] = ["fullName", "phone", "address", "city", "postcode"];
-const MAX_PROOF_BYTES = 5 * 1024 * 1024;
 const CART_KEY_PREFIX = "marketplace-cart-v2:";
 const LEGACY_CART_KEY = "marketplace-cart-v1";
 
@@ -74,7 +73,7 @@ type StoreContextValue = {
   signedIn: boolean;
   orders: Order[];
   /** Buyer taps "Pesanan selesai" on a paid order. */
-  completeOrder: (orderNumber: string) => void;
+  completeOrder: (orderNumber: string) => Promise<void>;
   myReviews: Record<string, MyReview>;
   /** Saves the review of one order item. Returns false (with a toast) when rating or text is missing. */
   saveReview: (orderNumber: string, productId: number, review: MyReview) => boolean;
@@ -240,7 +239,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const setProof = useCallback(
     (file: File | null) => {
-      if (file && file.size > MAX_PROOF_BYTES) {
+      // A photo is shrunk before it is sent, so it may be big; a PDF (or a file of unknown type) has to fit as it is.
+      if (file && file.size > (file.type.startsWith("image/") ? MAX_PROOF_SOURCE_BYTES : MAX_PROOF_BYTES)) {
         showToast(t("store.toast.fileTooBig"));
         return false;
       }
@@ -326,10 +326,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   );
 
   const completeOrder = useCallback(
-    (orderNumber: string) => {
-      if (confirmReceived(orderNumber)) showToast(t("store.toast.orderCompleted"));
+    async (orderNumber: string) => {
+      const order = orders.find((o) => o.number === orderNumber);
+      if (!order) return;
+      const result = await confirmReceived(order);
+      showToast(result.ok ? t("store.toast.orderCompleted") : orderErrorText(result.error));
     },
-    [confirmReceived, showToast],
+    [confirmReceived, orderErrorText, orders, showToast],
   );
 
   const saveReview = useCallback(

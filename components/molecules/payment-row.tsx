@@ -23,7 +23,10 @@ export function PaymentRow({ payment: p, compact = false, onAccept, onReject, on
       <td><StatusBadge tone={p.status}>{t(`admin.status.${p.status}`)}</StatusBadge></td>
       <td>
         <div className="row-actions">
-          {p.status === "pending" ? (
+          {p.status === "pending" && p.reviewable === false ? (
+            // Nothing to decide yet: the buyer has not sent a proof, or the order ran out of time.
+            <span className="sub">{t("admin.payments.noProofYet")}</span>
+          ) : p.status === "pending" ? (
             <>
               <AdminButton variant="soft" small onClick={onAccept}>{t("admin.payments.accept")}</AdminButton>
               <AdminButton small onClick={onReject}>{t("admin.payments.reject")}</AdminButton>

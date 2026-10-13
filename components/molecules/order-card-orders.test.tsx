@@ -45,7 +45,7 @@ describe("the items", () => {
 });
 
 describe("sending proof for an order that awaits it", () => {
-  const awaiting = () => order({ awaitingProof: true, payBefore: "2026-10-13T08:30:00Z" });
+  const awaiting = () => order({ awaitingProof: true, canSendProof: true, payBefore: "2026-10-13T08:30:00Z" });
   it("offers the upload with the deadline in Jakarta time", () => {
     show(awaiting(), { onSendProof: vi.fn() });
     expect(screen.getByText("Unggah bukti transfer")).toBeTruthy();
@@ -67,7 +67,7 @@ describe("sending proof for an order that awaits it", () => {
     expect(onSendProof).not.toHaveBeenCalled();
   });
   it("does not offer the upload when proof was already sent, when the order expired, or when sending is not possible", () => {
-    show(order({ awaitingProof: undefined }), { onSendProof: vi.fn() });
+    show(order({ awaitingProof: undefined, canSendProof: undefined }), { onSendProof: vi.fn() });
     expect(screen.queryByText("Unggah bukti transfer")).toBeNull();
     cleanup();
     show(order({ expired: true }), { onSendProof: vi.fn() });
@@ -79,6 +79,26 @@ describe("sending proof for an order that awaits it", () => {
   });
   it("only accepts proof formats the database takes", () => {
     show(awaiting(), { onSendProof: vi.fn() });
-    expect(document.querySelector('.upload input[type="file"]')!.getAttribute("accept")).toBe(".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf");
+    expect(document.querySelector('.upload input[type="file"]')!.getAttribute("accept")).toBe(".jpg,.jpeg,.png,.webp,.pdf,image/jpeg,image/png,image/webp,application/pdf");
+  });
+});
+
+describe("a rejected proof", () => {
+  const rejected = () => order({ payment: "failed", rejectionReason: "Nominal salah", canSendProof: true, payBefore: "2026-10-13T08:30:00Z" });
+  it("tells the buyer why, says the payment was rejected, and offers a new upload with the new deadline", () => {
+    show(rejected(), { onSendProof: vi.fn() });
+    expect(screen.getByText("Pembayaran ditolak")).toBeTruthy();
+    expect(screen.getByText("Bukti ditolak: Nominal salah")).toBeTruthy();
+    expect(screen.getByText("Unggah bukti transfer")).toBeTruthy();
+    expect(screen.getByText("Bayar dan kirim bukti sebelum pukul 15.30 WIB.")).toBeTruthy();
+  });
+  it("offers no new upload once the window has closed, but still shows the reason", () => {
+    show(order({ payment: "failed", rejectionReason: "Nominal salah" }), { onSendProof: vi.fn() });
+    expect(screen.getByText("Bukti ditolak: Nominal salah")).toBeTruthy();
+    expect(screen.queryByText("Unggah bukti transfer")).toBeNull();
+  });
+  it("shows no reason line for an order that was not rejected", () => {
+    show(order(), { onSendProof: vi.fn() });
+    expect(screen.queryByText(/Bukti ditolak/)).toBeNull();
   });
 });

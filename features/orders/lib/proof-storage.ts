@@ -14,5 +14,10 @@ export function createSupabaseProofStorage(client: Pick<SupabaseClient, "storage
     async remove(path) {
       await client.storage.from(PROOF_BUCKET).remove([path]);
     },
+    async signedUrl(path, seconds) {
+      const { data, error } = await client.storage.from(PROOF_BUCKET).createSignedUrl(path, seconds);
+      if (error || !data?.signedUrl) throw new Error(error?.message ?? "No link");
+      return data.signedUrl;
+    },
   };
 }

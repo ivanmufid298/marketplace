@@ -17,7 +17,10 @@ export type OrderItem = {
   photos?: ProductPhoto[];
 };
 
-export type HistoryEvent = "created" | "payment_accepted" | "payment_rejected" | "received" | "cancelled" | "refunded";
+export type HistoryEvent = "created" | "payment_submitted" | "payment_accepted" | "payment_rejected" | "expired" | "received" | "cancelled" | "refunded";
+
+/** One transfer proof of an order (database orders). Every proof is kept; the newest is the last. */
+export type OrderProof = { objectKey: string; mime: string; size: number; at: string };
 
 export type HistoryEntry = { at: string; event: HistoryEvent; actor: string; note?: string };
 
@@ -36,8 +39,14 @@ export type Order = {
   payment: PaymentState;
   /** True while no transfer proof has been sent yet (database orders only). Orders from the local checkout always carry a proof. */
   awaitingProof?: boolean;
-  /** Until when the buyer may still pay (database orders that await proof). ISO time. */
+  /** True while the buyer may send a transfer proof: before the first one, or after a rejection and before the new deadline. */
+  canSendProof?: boolean;
+  /** Until when the buyer may still send proof (ISO time), when they may. */
   payBefore?: string;
+  /** Why the admin rejected the proof. Shown to the buyer, who can send a new one. */
+  rejectionReason?: string;
+  /** The transfer proofs sent so far, oldest first. Loaded for the admin only. */
+  proofs?: OrderProof[];
   /** The order ran out of time without payment, so its stock went back on sale. */
   expired?: boolean;
   /** Set when the buyer taps "Pesanan selesai". */

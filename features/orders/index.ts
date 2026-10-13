@@ -2,7 +2,8 @@
 // when the build has Supabase credentials, in this browser (the sample store) otherwise.
 
 export { OrdersProvider, useBuyerOrders, type OrdersStatus } from "./orders-provider";
-export type { OrderServices } from "./lib/services";
+export { useAdminOrders, type AdminOrders } from "./admin-orders";
+export type { AdminOrderServices, OrderServices } from "./lib/services";
 export { mapOrderError } from "./lib/errors";
 export { checkProof } from "./lib/order-repository";
-export { MAX_PROOF_BYTES, PROOF_TYPES, type OrderError, type OrderErrorKind, type Outcome, type PlaceOrderInput, type PlacedOrder, type ShippingMethod } from "./lib/types";
+export { MAX_PROOF_BYTES, MAX_PROOF_SOURCE_BYTES, PROOF_TYPES, type OrderError, type OrderErrorKind, type Outcome, type PlaceOrderInput, type PlacedOrder, type ShippingMethod } from "./lib/types";

@@ -46,4 +46,6 @@ export const toPayment = (order: Order): Payment => ({
   total: money(total(order)),
   time: order.date,
   status: order.payment,
+  // An order that still awaits its proof (or ran out of time) has nothing for the admin to decide.
+  reviewable: !order.awaitingProof && !order.expired,
 });

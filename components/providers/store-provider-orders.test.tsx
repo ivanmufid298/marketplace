@@ -14,12 +14,13 @@ const SESSION_KEY = "marketplace-demo-session-v1";
 const NADIA = { id: "nadia", email: "nadia@demo.test", name: "Nadia Putri" };
 const [mug] = products; // id 1, Rp89.000, stock 2
 
-function setup(placeOrder: OrderServices["repo"]["placeOrder"], methods = [{ value: "regular", label: "Reguler", note: "n", cost: 20000 }, { value: "express", label: "Express", note: "n", cost: 35000 }]) {
+function setup(placeOrder: OrderServices["repo"]["placeOrder"], methods = [{ value: "regular", label: "Reguler", note: "n", cost: 20000 }, { value: "express", label: "Express", note: "n", cost: 35000 }], orders: unknown[] = []) {
   const repo = {
     listShippingMethods: vi.fn(async () => ({ ok: true as const, value: methods })),
-    listMyOrders: vi.fn(async () => ({ ok: true as const, value: [] })),
+    listMyOrders: vi.fn(async () => ({ ok: true as const, value: orders as never[] })),
     placeOrder: vi.fn(placeOrder),
     sendProof: vi.fn(async () => ({ ok: true as const, value: null })),
+    confirmReceived: vi.fn(async () => ({ ok: true as const, value: null })),
   };
   const wrapper = ({ children }: { children: ReactNode }) => (
     <AuthProvider><UiProvider><CatalogProvider><OrdersProvider services={{ repo } as OrderServices}><StoreProvider>{children}</StoreProvider></OrdersProvider></CatalogProvider></UiProvider></AuthProvider>
@@ -180,5 +181,34 @@ describe("sending a proof later", () => {
     await run(async () => { sent = await m.s().sendOrderProof(order, proof()); });
     expect(sent).toBe(false);
     expect(m.s().toast).toContain("sudah tidak bisa dibayar");
+  });
+});
+
+describe("telling the shop the goods arrived", () => {
+  const paidOrder = { id: "o-9", number: "100009", buyerId: "nadia", buyer: "N", phone: "1", address: "x", date: "d", items: [], shippingMethod: "Reguler", shippingFee: 0, payment: "success", received: false, history: [] };
+  const withOrders = (confirm: () => Promise<{ ok: true; value: null } | { ok: false; error: { kind: string } }>) => {
+    const m = setup(async () => ok(), undefined, [paidOrder]);
+    m.repo.confirmReceived.mockImplementation(confirm as never);
+    return m;
+  };
+  it("confirms receipt in the database for that order and thanks the buyer", async () => {
+    const m = withOrders(async () => ({ ok: true, value: null }));
+    await run(() => {});
+    await run(() => m.s().completeOrder("100009"));
+    expect(m.repo.confirmReceived).toHaveBeenCalledWith("o-9");
+    expect(m.s().toast).toBe("Terima kasih, pesanan ditandai selesai");
+  });
+  it("tells the buyer why when the database refuses", async () => {
+    const m = withOrders(async () => ({ ok: false, error: { kind: "notReceivable" } }));
+    await run(() => {});
+    await run(() => m.s().completeOrder("100009"));
+    expect(m.s().toast).toBe("Pesanan ini belum bisa ditandai selesai: pembayarannya belum diterima, atau sudah selesai atau dibatalkan.");
+  });
+  it("does nothing for an order number it does not know", async () => {
+    const m = withOrders(async () => ({ ok: true, value: null }));
+    await run(() => {});
+    await run(() => m.s().completeOrder("999999"));
+    expect(m.repo.confirmReceived).not.toHaveBeenCalled();
+    expect(m.s().toast).toBe("");
   });
 });

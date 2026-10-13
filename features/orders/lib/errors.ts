@@ -16,6 +16,13 @@ const BY_MESSAGE: Record<string, OrderError["kind"]> = {
   order_not_found: "orderNotFound",
   not_payable: "notPayable",
   invalid_proof: "invalidProof",
+  not_reviewable: "notReviewable",
+  reason_required: "reasonRequired",
+  note_required: "noteRequired",
+  not_cancellable: "notCancellable",
+  not_refundable: "notRefundable",
+  not_receivable: "notReceivable",
+  forbidden: "forbidden",
 };
 
 export function mapOrderError(error: DbErrorLike | null | undefined): OrderError {

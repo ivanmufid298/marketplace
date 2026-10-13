@@ -76,9 +76,13 @@ function update(number: string, change: (order: Order) => Order | null) {
 export const acceptPayment = (number: string) =>
   update(number, (o) => (o.payment === "pending" && !isCancelled(o) ? { ...o, payment: "success", history: [...o.history, entry("payment_accepted", ADMIN)] } : null));
 
-/** Admin rejected the transfer proof: the order stays "Pending". */
-export const rejectPayment = (number: string) =>
-  update(number, (o) => (o.payment === "pending" && !isCancelled(o) ? { ...o, payment: "failed", history: [...o.history, entry("payment_rejected", ADMIN)] } : null));
+/** Admin rejected the transfer proof: the order stays "Pending", and the buyer is told why. */
+export const rejectPayment = (number: string, reason?: string) =>
+  update(number, (o) =>
+    o.payment === "pending" && !isCancelled(o)
+      ? { ...o, payment: "failed", ...(reason ? { rejectionReason: reason } : {}), history: [...o.history, entry("payment_rejected", ADMIN, reason)] }
+      : null,
+  );
 
 /** Buyer tapped "Pesanan selesai". Only possible once the order is paid. */
 export const confirmReceived = (number: string) =>

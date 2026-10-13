@@ -24,6 +24,7 @@ function fakeServices(over: Partial<OrderServices["repo"]> = {}) {
     listMyOrders: vi.fn(async (): Promise<Outcome<Order[]>> => ({ ok: true, value: [dbOrder()] })),
     placeOrder: vi.fn(async (): Promise<Outcome<PlacedOrder>> => ({ ok: true, value: { number: "100003", id: "o-3", proofSent: true } })),
     sendProof: vi.fn(async (): Promise<Outcome<null>> => ({ ok: true, value: null })),
+    confirmReceived: vi.fn(async (): Promise<Outcome<null>> => ({ ok: true, value: null })),
     ...over,
   };
   return { services: { repo } as OrderServices, repo };
@@ -147,8 +148,32 @@ describe("sending proof", () => {
     expect(result).toEqual({ ok: false, error: { kind: "unknown" } });
     expect(repo.sendProof).not.toHaveBeenCalled();
   });
-  it("cannot confirm receipt in the database yet", () => {
-    expect(mount(fakeServices().services).result.current.confirmReceived("100002")).toBe(false);
+  it("confirms receipt in the database for the order's id and reloads", async () => {
+    signIn();
+    const { services, repo } = fakeServices();
+    const view = mount(services);
+    await waitFor(() => expect(repo.listMyOrders).toHaveBeenCalledTimes(1));
+    let result: Outcome<null> | undefined;
+    await act(async () => { result = await view.result.current.confirmReceived(dbOrder({ id: "o-1" })); });
+    expect(result).toEqual({ ok: true, value: null });
+    expect(repo.confirmReceived).toHaveBeenCalledWith("o-1");
+    await waitFor(() => expect(repo.listMyOrders).toHaveBeenCalledTimes(2));
+  });
+  it("does not reload when the database refuses, and passes the reason on", async () => {
+    signIn();
+    const { services, repo } = fakeServices({ confirmReceived: async () => ({ ok: false, error: { kind: "notReceivable" } }) });
+    const view = mount(services);
+    await waitFor(() => expect(repo.listMyOrders).toHaveBeenCalledTimes(1));
+    let result: Outcome<null> | undefined;
+    await act(async () => { result = await view.result.current.confirmReceived(dbOrder()); });
+    expect(result).toEqual({ ok: false, error: { kind: "notReceivable" } });
+    expect(repo.listMyOrders).toHaveBeenCalledTimes(1);
+  });
+  it("cannot confirm an order that has no database id", async () => {
+    const view = mount(fakeServices().services);
+    let result: Outcome<null> | undefined;
+    await act(async () => { result = await view.result.current.confirmReceived(dbOrder({ id: undefined })); });
+    expect(result).toEqual({ ok: false, error: { kind: "orderNotFound" } });
   });
 });
 
@@ -182,12 +207,13 @@ describe("in this browser (no database)", () => {
   it("lets the buyer confirm receipt of a paid order", async () => {
     signIn();
     const view = mount();
-    let done = false;
-    act(() => { done = view.result.current.confirmReceived("837288"); });
-    expect(done).toBe(true);
+    const order = view.result.current.orders.find((o) => o.number === "837288")!;
+    let done: Outcome<null> | undefined;
+    await act(async () => { done = await view.result.current.confirmReceived(order); });
+    expect(done).toEqual({ ok: true, value: null });
     expect(view.result.current.orders.find((o) => o.number === "837288")?.received).toBe(true);
-    let again = true;
-    act(() => { again = view.result.current.confirmReceived("837288"); });
-    expect(again).toBe(false);
+    let again: Outcome<null> | undefined;
+    await act(async () => { again = await view.result.current.confirmReceived(order); });
+    expect(again).toEqual({ ok: false, error: { kind: "notReceivable" } });
   });
 });

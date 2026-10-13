@@ -77,3 +77,70 @@ describe("the end of an order", () => {
     expect(map()).not.toHaveProperty("refund");
   });
 });
+
+describe("a rejected payment", () => {
+  const rejected = (over: Partial<OrderRow> = {}) => map({ payment_status: "rejected", payment_rejection_reason: "Nominal salah", reupload_until: "2026-10-13T13:00:00Z", ...over });
+  it("carries the reason, is a failed payment, and lets the buyer send proof until the window closes", () => {
+    const order = rejected();
+    expect(order).toMatchObject({ payment: "failed", rejectionReason: "Nominal salah", canSendProof: true, payBefore: "2026-10-13T13:00:00Z" });
+    expect(order).not.toHaveProperty("awaitingProof");
+    expect(order.expired).toBeUndefined();
+  });
+  it("is expired once the window has closed, with no more proof allowed", () => {
+    const order = rejected({ reupload_until: "2026-10-13T12:00:00Z" });
+    expect(order.expired).toBe(true);
+    expect(order).not.toHaveProperty("canSendProof");
+  });
+  it("allows no proof when the database gave no window", () => {
+    expect(rejected({ reupload_until: null })).not.toHaveProperty("canSendProof");
+  });
+  it("shows no reason on an order that is no longer rejected, even if the row still holds one", () => {
+    expect(map({ payment_status: "paid", payment_rejection_reason: "Nominal salah" })).not.toHaveProperty("rejectionReason");
+    expect(map({ payment_status: "under_review", payment_rejection_reason: "Nominal salah" })).not.toHaveProperty("rejectionReason");
+  });
+  it("shows no reason when there is none", () => {
+    expect(rejected({ payment_rejection_reason: null })).not.toHaveProperty("rejectionReason");
+  });
+});
+
+describe("who may send proof", () => {
+  it("an unpaid order inside its time", () => {
+    expect(map()).toMatchObject({ canSendProof: true, payBefore: "2026-10-13T13:00:00Z" });
+  });
+  it("nobody, once the proof is under review, accepted, or expired", () => {
+    for (const payment_status of ["under_review", "paid", "expired"] as const) expect(map({ payment_status })).not.toHaveProperty("canSendProof");
+  });
+});
+
+describe("the admin's extra data", () => {
+  it("lists the history oldest first, with who did it and the note", () => {
+    const order = map({
+      order_status_history: [
+        { event: "payment_accepted", actor_name: "Siti", note: null, created_at: "2026-10-13T11:30:00Z" },
+        { event: "created", actor_name: "Ana", note: null, created_at: "2026-10-13T11:00:00Z" },
+        { event: "payment_rejected", actor_name: "Siti", note: "Nominal salah", created_at: "2026-10-13T11:20:00Z" },
+      ],
+    });
+    expect(order.history).toEqual([
+      { at: "13 Okt 2026, 18.00", event: "created", actor: "Ana" },
+      { at: "13 Okt 2026, 18.20", event: "payment_rejected", actor: "Siti", note: "Nominal salah" },
+      { at: "13 Okt 2026, 18.30", event: "payment_accepted", actor: "Siti" },
+    ]);
+  });
+  it("lists the proofs oldest first, so the newest is the last", () => {
+    const order = map({
+      payment_proofs: [
+        { object_key: "orders/o-1/b.png", mime_type: "image/png", size_bytes: 2048, created_at: "2026-10-13T11:40:00Z" },
+        { object_key: "orders/o-1/a.pdf", mime_type: "application/pdf", size_bytes: 100, created_at: "2026-10-13T11:10:00Z" },
+      ],
+    });
+    expect(order.proofs).toEqual([
+      { objectKey: "orders/o-1/a.pdf", mime: "application/pdf", size: 100, at: "13 Okt 2026, 18.10" },
+      { objectKey: "orders/o-1/b.png", mime: "image/png", size: 2048, at: "13 Okt 2026, 18.40" },
+    ]);
+  });
+  it("has no proofs field at all when the proofs were not loaded, and an empty list when there are none", () => {
+    expect(map()).not.toHaveProperty("proofs");
+    expect(map({ payment_proofs: [] }).proofs).toEqual([]);
+  });
+});
