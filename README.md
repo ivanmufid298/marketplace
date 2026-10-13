@@ -89,7 +89,7 @@ features/                 # modul per fitur; kode luar hanya boleh mengimpor ind
 │   └── lib/              # config.ts (pemilihan mode), adapter Supabase/demo, admin-guard.ts, safe-next.ts, tes
 └── architecture.test.mts # tes yang menjaga aturan batas impor antar modul
 supabase/
-├── migrations/           # SQL: tabel profiles, role, RLS, is_admin(), pencabutan EXECUTE rls_auto_enable()
+├── migrations/           # SQL: profiles, role, RLS, is_admin(), pencabutan EXECUTE rls_auto_enable(); katalog (kategori, produk, foto) dan bucket product-images
 └── tests/                # tes migrasi di Postgres sungguhan (PGlite)
 components/               # atomic design
 ├── atoms/                # Icon, Button, Chip, Switch, Toast, badge, dll.
@@ -180,7 +180,7 @@ Dengan mode demo, masuk dengan `nadia@demo.test` (kata sandi apa saja, min. 8 ka
 2. **Authentication → Providers → Email**: pastikan aktif. Matikan "Confirm email" jika ingin daftar langsung masuk; jika dibiarkan aktif, pembeli diminta membuka email konfirmasi dulu.
 3. **Authentication → URL Configuration**: isi **Site URL** dan tambahkan ke **Redirect URLs** alamat lokal (`http://localhost:3000`) serta domain situs. Langkah 2 dan 3 juga bisa dijalankan lewat Supabase CLI: `supabase login`, `supabase link --project-ref <ref>`, ubah nilainya di `supabase/config.toml`, lalu `supabase config diff` untuk pratinjau dan `supabase config push` untuk menerapkan. `config.toml` sengaja hanya mendeklarasikan tiga setelan Auth (`site_url`, `additional_redirect_urls`, `email.enable_confirmations`); `config push` membiarkan setelan yang tidak dideklarasikan. Nilai di berkas itu untuk project **dev**: untuk production pakai domain produksi dan aktifkan `enable_confirmations`.
 4. Salin **Project URL** dan **anon/publishable key** dari **Project Settings → API**. Lokal: salin `.env.example` menjadi `.env.local` dan isi. Vercel: **Settings → Environment Variables**, isi dua variabel itu untuk **Production dan Preview**. Jangan mengisi `NEXT_PUBLIC_DEMO_MODE` di Production.
-5. **Jalankan migrasi**: buka **SQL Editor**, tempel isi semua berkas di `supabase/migrations/` berurutan (`20261012061023_profiles_and_roles.sql`, lalu `20261012065146_revoke_rls_auto_enable_execute.sql`), lalu Run. Aman dijalankan berulang. (Atau `supabase db push` jika memakai Supabase CLI.)
+5. **Jalankan migrasi**: buka **SQL Editor**, tempel isi semua berkas di `supabase/migrations/` berurutan (`20261012061023_profiles_and_roles.sql`, `20261012065146_revoke_rls_auto_enable_execute.sql`, `20261013030000_catalog_products.sql`, lalu `20261013030100_product_images_bucket.sql`), lalu Run. Migrasi katalog memakai `is_admin()` dan `set_updated_at()` dari migrasi `profiles`, jadi urutannya penting. Aman dijalankan berulang. (Atau `supabase db push` jika memakai Supabase CLI.)
 6. **Buat user admin**: **Authentication → Users → Add user** (centang *Auto Confirm User*), atau daftar lewat storefront.
 7. **Jadikan user itu admin** di SQL Editor (ganti emailnya):
 
@@ -202,7 +202,7 @@ Otomatis (tanpa Supabase sungguhan):
 
 ```bash
 npm test          # logika keamanan, batas modul (82 tes, node:test) lalu tes state storefront (44 tes, vitest)
-npm run test:sql  # menjalankan migrasi di Postgres sungguhan (PGlite): hak akses, RLS, trigger (44 pengecekan)
+npm run test:sql  # menjalankan migrasi di Postgres sungguhan (PGlite): hak akses, RLS, trigger, constraint (44 pengecekan profiles + 64 katalog)
 ```
 
 `test:sql` meniru Supabase dengan schema `auth` buatan sendiri. Ia membuktikan SQL dan hak aksesnya benar, **bukan** bahwa project Supabase-mu terkonfigurasi benar. Lakukan checklist di bawah pada project sungguhan.
