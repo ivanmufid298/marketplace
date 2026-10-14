@@ -14,7 +14,7 @@ import { NotificationsPanel } from "./notifications-panel";
 
 const SESSION_KEY = "marketplace-demo-session-v1";
 const note = (id: number, over: Partial<AppNotification> = {}): AppNotification => ({
-  id, kind: "payment_needed", orderId: "o", payload: { number: String(100000 + id), expires_at: "2026-10-13T08:30:00Z" }, createdAt: new Date(Date.now() - 2 * 3_600_000).toISOString(), read: false, ...over,
+  id, kind: "payment_needed", orderId: "o", payload: { number: String(100000 + id), expires_at: "2026-10-13T08:30:00Z" }, createdAt: new Date(Date.now() - 2 * 3_600_000).toISOString(), read: false, resolved: false, ...over,
 });
 
 function Probe() {
@@ -144,7 +144,18 @@ describe("the panel", () => {
     expect(await within(panel()).findByText("Selesaikan pembayaran pesanan #100001")).toBeTruthy();
     cleanup();
     show([]);
-    expect(await within(panel()).findByText(/Belum ada notifikasi/)).toBeTruthy();
+    expect(await within(panel()).findByText(/Tidak ada notifikasi/)).toBeTruthy();
+  });
+  it("shows 'no notifications' when everything has been done, instead of the instructions that no longer apply", async () => {
+    show([note(1, { read: true, resolved: true })]);
+    expect(await within(panel()).findByText(/Tidak ada notifikasi/)).toBeTruthy();
+    expect(within(panel()).queryByText(/Selesaikan pembayaran/)).toBeNull();
+    expect(bell()!.querySelector(".count")).toBeNull();
+  });
+  it("still lists the news that is not an instruction, once read", async () => {
+    show([note(1, { kind: "payment_accepted", payload: { number: "9" }, read: true }), note(2, { read: true, resolved: true })]);
+    expect(await within(panel()).findByText("Pembayaran #9 diterima")).toBeTruthy();
+    expect(within(panel()).queryByText(/Selesaikan pembayaran/)).toBeNull();
   });
   it("asks a signed-out visitor to sign in", () => {
     show([], { signedIn: false });
@@ -251,7 +262,7 @@ describe("a checkout left half done", () => {
     show([]);
     await leaveCheckoutAt(3);
     await waitFor(() => expect(panel().querySelector("[data-kind='checkout_unfinished']")).not.toBeNull());
-    expect(within(panel()).queryByText(/Belum ada notifikasi/)).toBeNull();
+    expect(within(panel()).queryByText(/Tidak ada notifikasi/)).toBeNull();
   });
   it("reopens the checkout at the same step, and the reminder goes away, when chosen", async () => {
     show([]);

@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { describeNotification } from "./describe";
 import type { AppNotification, NotificationKind } from "./types";
 
-const n = (kind: NotificationKind, payload: Record<string, unknown> = {}, read = false): AppNotification => ({ id: 1, kind, orderId: "o", payload, createdAt: "2026-10-13T11:00:00Z", read });
+const n = (kind: NotificationKind, payload: Record<string, unknown> = {}, read = false): AppNotification => ({ id: 1, kind, orderId: "o", payload, createdAt: "2026-10-13T11:00:00Z", read, resolved: false });
 
 describe("describeNotification", () => {
   it("asks for payment with the deadline in Jakarta time, and offers the upload", () => {

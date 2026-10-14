@@ -23,12 +23,22 @@ function fake(answer: Answer) {
   return { db: db as unknown as NotificationsDb, queries };
 }
 const opsOf = (q: { ops: [string, unknown[]][] }, name: string) => q.ops.filter(([o]) => o === name).map(([, a]) => a);
-const row = (over: Record<string, unknown> = {}) => ({ id: 1, kind: "payment_needed", order_id: "o-1", payload: { number: "100002" }, created_at: "2026-10-13T11:00:00Z", read_at: null, ...over });
+const row = (over: Record<string, unknown> = {}) => ({ id: 1, kind: "payment_needed", order_id: "o-1", payload: { number: "100002" }, created_at: "2026-10-13T11:00:00Z", read_at: null, resolved_at: null, ...over });
 
 describe("toNotification", () => {
   it("maps a row, with read as a yes or no", () => {
-    expect(toNotification(row())).toEqual({ id: 1, kind: "payment_needed", orderId: "o-1", payload: { number: "100002" }, createdAt: "2026-10-13T11:00:00Z", read: false });
+    expect(toNotification(row())).toEqual({ id: 1, kind: "payment_needed", orderId: "o-1", payload: { number: "100002" }, createdAt: "2026-10-13T11:00:00Z", read: false, resolved: false });
     expect(toNotification(row({ read_at: "2026-10-13T12:00:00Z" }))?.read).toBe(true);
+  });
+  it("says whether it is resolved, apart from whether it was read", () => {
+    expect(toNotification(row({ read_at: "2026-10-13T12:00:00Z", resolved_at: null }))).toMatchObject({ read: true, resolved: false });
+    expect(toNotification(row({ read_at: "2026-10-13T12:00:00Z", resolved_at: "2026-10-13T12:00:00Z" }))).toMatchObject({ read: true, resolved: true });
+    expect(toNotification({ ...row(), resolved_at: undefined } as never)?.resolved).toBe(false);
+  });
+  it("asks for the resolved time too", async () => {
+    const { db, queries } = fake({ data: [] });
+    await createNotificationRepository(db).list();
+    expect(String(opsOf(queries[0], "select")[0][0])).toContain("resolved_at");
   });
   it("leaves out a kind this version does not know, instead of showing it wrongly", () => {
     expect(toNotification(row({ kind: "something_new" }))).toBeNull();

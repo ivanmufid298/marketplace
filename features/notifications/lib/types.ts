@@ -14,6 +14,8 @@ export type AppNotification = {
   /** ISO time. */
   createdAt: string;
   read: boolean;
+  /** There is nothing left to do about it (the proof was sent, the order ended). The bell does not list it any more. */
+  resolved: boolean;
 };
 
 export type NotificationsError = "network" | "forbidden" | "unknown";

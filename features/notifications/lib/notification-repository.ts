@@ -9,7 +9,7 @@ export type NotificationsDb = Pick<SupabaseClient, "from">;
 /** How many the bell loads. Older ones are not lost, just not listed. */
 export const NOTIFICATION_LIMIT = 50;
 
-type Row = { id: number; kind: string; order_id: string | null; payload: unknown; created_at: string; read_at: string | null };
+type Row = { id: number; kind: string; order_id: string | null; payload: unknown; created_at: string; read_at: string | null; resolved_at?: string | null };
 
 const mapError = (error: { code?: string | null; message?: string | null }): NotificationsError => {
   if (!error.code && /failed to fetch|network|load failed|fetch failed/i.test(error.message ?? "")) return "network";
@@ -21,7 +21,7 @@ export function toNotification(row: Row): AppNotification | null {
   // A kind this version of the shop does not know (a newer one) is left out instead of shown wrongly.
   if (!(NOTIFICATION_KINDS as readonly string[]).includes(row.kind)) return null;
   const payload = row.payload && typeof row.payload === "object" && !Array.isArray(row.payload) ? (row.payload as Record<string, unknown>) : {};
-  return { id: row.id, kind: row.kind as NotificationKind, orderId: row.order_id, payload, createdAt: row.created_at, read: row.read_at !== null };
+  return { id: row.id, kind: row.kind as NotificationKind, orderId: row.order_id, payload, createdAt: row.created_at, read: row.read_at !== null, resolved: (row.resolved_at ?? null) !== null };
 }
 
 export function createNotificationRepository(db: NotificationsDb) {
@@ -30,7 +30,7 @@ export function createNotificationRepository(db: NotificationsDb) {
     async list(): Promise<NotificationsResult<AppNotification[]>> {
       const { data, error } = await db
         .from("notifications")
-        .select("id, kind, order_id, payload, created_at, read_at")
+        .select("id, kind, order_id, payload, created_at, read_at, resolved_at")
         .order("created_at", { ascending: false })
         .order("id", { ascending: false })
         .limit(NOTIFICATION_LIMIT);

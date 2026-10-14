@@ -83,7 +83,7 @@
       "title": "Notifikasi",
       "bell": "Notifikasi",
       "bellUnread": "Notifikasi, {count} belum dibaca",
-      "empty": "Belum ada notifikasi. Kabar tentang pesananmu akan muncul di sini.",
+      "empty": "Tidak ada notifikasi. Kabar tentang pesananmu akan muncul di sini.",
       "markAll": "Tandai semua dibaca",
       "loading": "Memuat notifikasi…",
       "loadError": "Notifikasi belum bisa dimuat.",

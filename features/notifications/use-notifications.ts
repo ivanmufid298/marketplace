@@ -36,7 +36,8 @@ export function useNotifications(userId: string | null, provided?: NotificationS
   const load = useCallback(async () => {
     if (!services || !userId) return;
     const result = await services.repo.list();
-    setState((current) => (result.ok ? { status: "ready", error: null, list: result.value } : { status: "error", error: result.error, list: current.list }));
+    // A request that is done (the proof was sent, the order ended) is not shown any more: it would only say something that is no longer true.
+    setState((current) => (result.ok ? { status: "ready", error: null, list: result.value.filter((n) => !n.resolved) } : { status: "error", error: result.error, list: current.list }));
   }, [services, userId]);
 
   useEffect(() => {

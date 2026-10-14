@@ -6,7 +6,7 @@ import type { NotificationServices } from "./lib/services";
 import type { AppNotification, NotificationsResult } from "./lib/types";
 import { POLL_MS, useNotifications } from "./use-notifications";
 
-const note = (id: number, read = false): AppNotification => ({ id, kind: "payment_needed", orderId: "o", payload: { number: "1" }, createdAt: "2026-10-13T11:00:00Z", read });
+const note = (id: number, read = false): AppNotification => ({ id, kind: "payment_needed", orderId: "o", payload: { number: "1" }, createdAt: "2026-10-13T11:00:00Z", read, resolved: false });
 const ok = <T,>(value: T): NotificationsResult<T> => ({ ok: true, value });
 
 function fake(over: Partial<NotificationServices["repo"]> = {}) {
@@ -34,6 +34,20 @@ describe("loading", () => {
     await waitFor(() => expect(view.result.current.notifications).toHaveLength(2));
     expect(view.result.current).toMatchObject({ database: true, status: "ready", unreadCount: 1, error: null });
     expect(repo.list).toHaveBeenCalledTimes(1);
+  });
+  it("does not list a notification that is resolved, or count it", async () => {
+    const { services } = fake({ list: async () => ok([note(3), { ...note(2, true), resolved: true }, { ...note(1), resolved: true }]) });
+    const view = renderHook(() => useNotifications("u-1", services));
+    await waitFor(() => expect(view.result.current.notifications.map((n) => n.id)).toEqual([3]));
+    expect(view.result.current.unreadCount).toBe(1);
+  });
+  it("drops a notification once a later read says it is resolved", async () => {
+    const list = vi.fn<NotificationServices["repo"]["list"]>().mockResolvedValueOnce(ok([note(1)])).mockResolvedValueOnce(ok([{ ...note(1, true), resolved: true }]));
+    const view = renderHook(() => useNotifications("u-1", fake({ list }).services));
+    await waitFor(() => expect(view.result.current.notifications).toHaveLength(1));
+    await act(async () => view.result.current.reload());
+    await waitFor(() => expect(view.result.current.notifications).toEqual([]));
+    expect(view.result.current.unreadCount).toBe(0);
   });
   it("starts out loading", () => {
     const { services } = fake({ list: () => new Promise(() => {}) });
