@@ -16,9 +16,9 @@ import { CartProvider } from "@/features/cart";
 import { CatalogProvider } from "@/features/catalog";
 import { CheckoutProvider } from "@/features/checkout";
 import { ChatProvider } from "@/features/chat";
+import { NotificationsProvider } from "@/features/notifications";
 import { OrdersProvider } from "@/features/orders";
 import { UiProvider } from "@/shared/ui-state/ui-provider";
-import { StoreProvider } from "../providers/store-provider";
 
 /** Page frame shared by every storefront route: header, footer, and all overlay panels. */
 export function StoreTemplate({ children }: { children: ReactNode }) {
@@ -31,7 +31,7 @@ export function StoreTemplate({ children }: { children: ReactNode }) {
             <ChatProvider>
             <CartProvider>
             <CheckoutProvider>
-            <StoreProvider>
+            <NotificationsProvider>
               <Header />
               {children}
               <Footer />
@@ -45,7 +45,7 @@ export function StoreTemplate({ children }: { children: ReactNode }) {
               <ChatWidget />
               <StoreLoginDialog />
               <StoreToast />
-            </StoreProvider>
+            </NotificationsProvider>
             </CheckoutProvider>
             </CartProvider>
             </ChatProvider>

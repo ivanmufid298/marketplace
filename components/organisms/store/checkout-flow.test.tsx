@@ -1,6 +1,6 @@
 // Run with `npm run test:ui`. The checkout's steps: where the shopper is, and going back from payment.
-import { CheckoutProvider } from "@/features/checkout";
-import { CartProvider } from "@/features/cart";
+import { CheckoutProvider, useCheckout } from "@/features/checkout";
+import { CartProvider, useCart } from "@/features/cart";
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AuthProvider } from "@/features/auth";
@@ -8,13 +8,13 @@ import { CatalogProvider } from "@/features/catalog";
 import { OrdersProvider } from "@/features/orders";
 import { products } from "@/lib/mock/store";
 import { UiProvider } from "@/shared/ui-state/ui-provider";
-import { StoreProvider, useStore } from "../../providers/store-provider";
 import { CheckoutFlow } from "./checkout-flow";
 
 const SESSION_KEY = "marketplace-demo-session-v1";
 
 function Controls() {
-  const { addToCart, startCheckout, setAddressField, goCheckoutStep, checkoutStep } = useStore();
+  const { addToCart } = useCart();
+  const { startCheckout, setAddressField, goCheckoutStep, checkoutStep } = useCheckout();
   return (
     <>
       <button onClick={() => addToCart(products[0])}>add</button>
@@ -34,7 +34,7 @@ const steps = () => [...document.querySelectorAll(".steps .step")].map((el) => (
 async function atPayment() {
   window.localStorage.setItem(SESSION_KEY, JSON.stringify({ id: "nadia", email: "n@demo.test", name: "Nadia" }));
   render(
-    <AuthProvider><UiProvider><CatalogProvider><OrdersProvider><CartProvider><CheckoutProvider><StoreProvider><Controls /><CheckoutFlow /></StoreProvider></CheckoutProvider></CartProvider></OrdersProvider></CatalogProvider></UiProvider></AuthProvider>,
+    <AuthProvider><UiProvider><CatalogProvider><OrdersProvider><CartProvider><CheckoutProvider><Controls /><CheckoutFlow /></CheckoutProvider></CartProvider></OrdersProvider></CatalogProvider></UiProvider></AuthProvider>,
   );
   await flush();
   fireEvent.click(screen.getByText("add")); await flush();
@@ -50,7 +50,7 @@ afterEach(cleanup);
 describe("the checkout's steps", () => {
   it("starts on the address step, with the others waiting", async () => {
     window.localStorage.setItem(SESSION_KEY, JSON.stringify({ id: "nadia", email: "n@demo.test", name: "Nadia" }));
-    render(<AuthProvider><UiProvider><CatalogProvider><OrdersProvider><CartProvider><CheckoutProvider><StoreProvider><Controls /><CheckoutFlow /></StoreProvider></CheckoutProvider></CartProvider></OrdersProvider></CatalogProvider></UiProvider></AuthProvider>);
+    render(<AuthProvider><UiProvider><CatalogProvider><OrdersProvider><CartProvider><CheckoutProvider><Controls /><CheckoutFlow /></CheckoutProvider></CartProvider></OrdersProvider></CatalogProvider></UiProvider></AuthProvider>);
     await flush();
     expect(steps()).toEqual(["active", "todo", "todo"]);
   });

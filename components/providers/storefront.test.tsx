@@ -1,39 +1,22 @@
-// Characterization tests for the storefront state. They pin down what StoreProvider does today so that splitting it
-// into per-feature modules can be shown not to change behavior. Run with `npm run test:ui`.
-//
-// The tests only use the public hooks (useStore, useAuth) and the demo sign in, so they keep working while the state
-// moves between modules. Where today's behavior looks odd it is still asserted, with a comment saying so.
-import { CheckoutProvider } from "@/features/checkout";
+// Characterization tests for the storefront as a whole: the catalog, panels, and the buyer's orders and reviews as the
+// modules offer them together (see storefront-test-support.tsx). Run with `npm run test:ui`. Where today's behavior looks
+// odd it is still asserted, with a comment saying so.
 import { act, cleanup, renderHook } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { AuthProvider, useAuth } from "@/features/auth";
-import { CartProvider } from "@/features/cart";
-import { CatalogProvider } from "@/features/catalog";
-import { ChatProvider } from "@/features/chat";
 import { products } from "@/lib/mock/store";
-import { OrdersProvider } from "@/features/orders";
-import { UiProvider } from "@/shared/ui-state/ui-provider";
 import { resetOrders } from "@/lib/orders-store";
-import { StoreProvider, useStore } from "./store-provider";
+import { Storefront, useStorefront } from "./storefront-test-support";
 
 const SESSION_KEY = "marketplace-demo-session-v1";
 const NADIA = { id: "nadia", email: "nadia@demo.test", name: "Nadia Putri" };
 const [, , headphone] = products;
 
-const wrapper = ({ children }: { children: ReactNode }) => (
-  <AuthProvider>
-    <UiProvider>
-      <CatalogProvider>
-        <OrdersProvider><ChatProvider><CartProvider><CheckoutProvider><StoreProvider>{children}</StoreProvider></CheckoutProvider></CartProvider></ChatProvider></OrdersProvider>
-      </CatalogProvider>
-    </UiProvider>
-  </AuthProvider>
-);
+const wrapper = ({ children }: { children: ReactNode }) => <Storefront>{children}</Storefront>;
 
 function mount() {
-  const view = renderHook(() => ({ store: useStore(), auth: useAuth() }), { wrapper });
-  return { ...view, s: () => view.result.current.store, a: () => view.result.current.auth };
+  const view = renderHook(() => useStorefront(), { wrapper });
+  return { ...view, s: () => view.result.current, a: () => view.result.current.auth };
 }
 
 /** Mounts with Nadia already signed in (the demo adapter keeps its session in localStorage). */
@@ -100,9 +83,9 @@ describe("catalog: filter, search, sort, wishlist", () => {
     expect(m.s().toast).toBe("Dihapus dari wishlist");
   });
 
-  it("mobile nav: saved shows only wishlist items, home resets every filter", async () => {
+  it("showing saved items lists only the wishlist, showing all resets every filter", async () => {
     const m = mount();
-    await run(() => m.s().mobileNav("saved"));
+    await run(() => m.s().showSaved());
     expect(m.s().savedOnly).toBe(true);
     expect(m.s().toast).toBe("Wishlist kamu masih kosong");
     expect(m.s().visibleProducts).toEqual([]);
@@ -110,7 +93,7 @@ describe("catalog: filter, search, sort, wishlist", () => {
     expect(m.s().visibleProducts.map((p) => p.id)).toEqual([4]);
     await run(() => {
       m.s().setQuery("zzz");
-      m.s().mobileNav("home");
+      m.s().showAll();
     });
     expect(m.s().savedOnly).toBe(false);
     expect(m.s().query).toBe("");
@@ -119,7 +102,7 @@ describe("catalog: filter, search, sort, wishlist", () => {
 
   it("choosing a category leaves the wishlist view", async () => {
     const m = mount();
-    await run(() => m.s().mobileNav("saved"));
+    await run(() => m.s().showSaved());
     await run(() => m.s().setCategory("Fashion"));
     expect(m.s().savedOnly).toBe(false);
   });
@@ -142,14 +125,6 @@ describe("panels, toast, and global key handling", () => {
     await run(() => m.s().openPanel("orders"));
     await run(() => m.s().closePanel("orders"));
     expect(m.s().panels.orders).toBe(false);
-  });
-
-  it("mobile nav opens the category sheet, the cart drawer, and the orders panel", async () => {
-    const m = mount();
-    await run(() => m.s().mobileNav("category"));
-    await run(() => m.s().mobileNav("cart"));
-    await run(() => m.s().mobileNav("orders"));
-    expect(m.s().panels).toMatchObject({ categorySheet: true, drawer: true, orders: true });
   });
 
   it("Escape closes every panel", async () => {
@@ -183,31 +158,6 @@ describe("panels, toast, and global key handling", () => {
     expect(m.s().toast).toBe("Halo");
     await act(async () => { vi.advanceTimersByTime(2); });
     expect(m.s().toast).toBe("");
-  });
-});
-
-describe("login: where the buyer lands after signing in", () => {
-  it("opens the orders panel", async () => {
-    const m = mount();
-    await run(() => m.a().openLogin("orders"));
-    await run(async () => { await m.a().signIn("nadia@demo.test", "password123"); });
-    expect(m.a().loginOpen).toBe(false);
-    expect(m.s().panels.orders).toBe(true);
-  });
-
-  it("opens the chat panel", async () => {
-    const m = mount();
-    await run(() => m.a().openLogin("chat"));
-    await run(async () => { await m.a().signIn("nadia@demo.test", "password123"); });
-    expect(m.s().panels.chat).toBe(true);
-  });
-
-  it("does not open anything for a plain sign in", async () => {
-    const m = mount();
-    await run(() => m.a().openLogin());
-    await run(async () => { await m.a().signIn("nadia@demo.test", "password123"); });
-    expect(m.a().loginOpen).toBe(false);
-    expect(Object.values(m.s().panels).every((open) => !open)).toBe(true);
   });
 });
 

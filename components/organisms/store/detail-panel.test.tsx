@@ -9,7 +9,6 @@ import { CatalogProvider, useCatalog } from "@/features/catalog";
 import type { Product } from "@/lib/mock/store";
 import { OrdersProvider } from "@/features/orders";
 import { UiProvider } from "@/shared/ui-state/ui-provider";
-import { StoreProvider } from "../../providers/store-provider";
 import { DetailPanel } from "./detail-panel";
 
 vi.mock("next/link", () => ({ default: ({ href, children, ...rest }: { href: string; children: React.ReactNode }) => <a href={href} {...rest}>{children}</a> }));
@@ -31,10 +30,10 @@ function show(product: Product) {
       <UiProvider>
         <CatalogProvider services={{ repo: { listCatalog: async () => ({ ok: true, value: { products: [product], categories: [product.cat] } }) } }}>
           <OrdersProvider>
-            <CartProvider><CheckoutProvider><StoreProvider>
+            <CartProvider><CheckoutProvider>
             <Opener product={product} />
             <DetailPanel />
-            </StoreProvider></CheckoutProvider></CartProvider>
+            </CheckoutProvider></CartProvider>
           </OrdersProvider>
         </CatalogProvider>
       </UiProvider>
@@ -51,9 +50,9 @@ describe("the reviews in the detail panel", () => {
         <UiProvider>
           <CatalogProvider services={{ repo: { listCatalog: async () => ({ ok: true, value: { products: [], categories: [] } }) } }}>
             <OrdersProvider>
-              <CartProvider><CheckoutProvider><StoreProvider>
+              <CartProvider><CheckoutProvider>
               <DetailPanel />
-              </StoreProvider></CheckoutProvider></CartProvider>
+              </CheckoutProvider></CartProvider>
             </OrdersProvider>
           </CatalogProvider>
         </UiProvider>

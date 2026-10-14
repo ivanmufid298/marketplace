@@ -1,6 +1,6 @@
 // Run with `npm run test:ui`. The full product page: details, photos, and the cart and wishlist actions.
 import { CheckoutProvider } from "@/features/checkout";
-import { CartProvider } from "@/features/cart";
+import { CartProvider, useCart } from "@/features/cart";
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -11,7 +11,6 @@ import { resetOrders } from "@/lib/orders-store";
 import { NO_REVIEWS, type ProductReviewsData } from "@/features/reviews";
 import { OrdersProvider } from "@/features/orders";
 import { UiProvider } from "@/shared/ui-state/ui-provider";
-import { StoreProvider, useStore } from "../../providers/store-provider";
 import { ProductPage } from "./product-page";
 
 vi.mock("next/link", () => ({ default: ({ href, children, ...rest }: { href: string; children: ReactNode }) => <a href={href} {...rest}>{children}</a> }));
@@ -21,7 +20,7 @@ const photo = (n: number, alt = "") => ({ src: `https://cdn.test/${n}-800.webp`,
 const mug: Product = { id: 11, slug: "mug", name: "Mug Blush", cat: "Rumah", price: 89000, oldPrice: 119000, promo: "25% OFF", stock: 5, desc: "Mug keramik.", photos: [photo(1, "Mug dari depan"), photo(2)] };
 
 function CartProbe() {
-  const { cartCount } = useStore();
+  const { cartCount } = useCart();
   return <p data-testid="cart">{cartCount}</p>;
 }
 
@@ -32,10 +31,10 @@ function show(product: Product, signedIn = true, reviews: ProductReviewsData = N
       <UiProvider>
         <CatalogProvider services={{ repo: { listCatalog: async () => ({ ok: true, value: { products: [product], categories: [product.cat] } }) } }}>
           <OrdersProvider>
-            <CartProvider><CheckoutProvider><StoreProvider>
+            <CartProvider><CheckoutProvider>
             <ProductPage product={product} reviews={reviews} />
             <CartProbe />
-            </StoreProvider></CheckoutProvider></CartProvider>
+            </CheckoutProvider></CartProvider>
           </OrdersProvider>
         </CatalogProvider>
       </UiProvider>

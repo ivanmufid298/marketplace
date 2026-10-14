@@ -1,5 +1,9 @@
 "use client";
 
+import { useOrderActions } from "./use-order-actions";
+import { useUi } from "@/shared/ui-state/ui-provider";
+import type { BuyerReviewServices } from "@/features/reviews";
+import { useCatalog } from "@/features/catalog";
 import { useEffect, useState } from "react";
 import { t } from "@/lib/i18n";
 import { Button } from "../../atoms/button";
@@ -7,12 +11,14 @@ import { CloseButton } from "../../atoms/close-button";
 import { OrderCard } from "../../molecules/order-card";
 import { useAuth } from "@/features/auth";
 import { useBuyerOrders } from "@/features/orders";
-import { useStore } from "../../providers/store-provider";
 
-export function OrdersPanel() {
-  const { panels, closePanel, products, orders, completeOrder, myReviews, saveReview, signedIn, sendOrderProof } = useStore();
-  const { ordersStatus, reload } = useBuyerOrders();
-  const { openLogin } = useAuth();
+export function OrdersPanel({ reviewServices }: { reviewServices?: BuyerReviewServices } = {}) {
+  const { panels, closePanel } = useUi();
+  const { products } = useCatalog();
+  const { orders, ordersStatus, reload } = useBuyerOrders();
+  const { completeOrder, myReviews, saveReview, sendOrderProof } = useOrderActions(reviewServices);
+  const { user, openLogin } = useAuth();
+  const signedIn = Boolean(user);
   const [sendingFor, setSendingFor] = useState<string | null>(null);
 
   // Opening the panel shows fresh orders: the admin may have decided on a proof, or an order may have run out of time.

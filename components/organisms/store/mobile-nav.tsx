@@ -1,16 +1,25 @@
 "use client";
 
+import { useCart } from "@/features/cart";
 import { t } from "@/lib/i18n";
 import { Icon } from "../../atoms/icon";
 import { MobileTab } from "../../molecules/mobile-tab";
 import { useCatalog } from "@/features/catalog";
 import { useUi } from "@/shared/ui-state/ui-provider";
-import { useStore } from "../../providers/store-provider";
+
+type MobileNavMode = "home" | "category" | "saved" | "orders" | "cart";
 
 export function MobileNav() {
-  const { panels } = useUi();
-  const { savedOnly } = useCatalog();
-  const { mobileNav, cartCount } = useStore();
+  const { panels, setPanel } = useUi();
+  const { savedOnly, showSaved, showAll } = useCatalog();
+  const { cartCount } = useCart();
+  const mobileNav = (mode: MobileNavMode) => {
+    if (mode === "category") return setPanel("categorySheet", true);
+    if (mode === "cart") return setPanel("drawer", true);
+    if (mode === "orders") return setPanel("orders", true);
+    if (mode === "saved") return showSaved();
+    showAll();
+  };
   const overlayOpen = panels.drawer || panels.orders || panels.categorySheet || panels.notifications;
 
   return (

@@ -1,5 +1,9 @@
 "use client";
 
+import { useUi } from "@/shared/ui-state/ui-provider";
+import { useCheckout } from "@/features/checkout";
+import { useCatalog } from "@/features/catalog";
+import { useCart } from "@/features/cart";
 import { money } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import { Button } from "../../atoms/button";
@@ -7,11 +11,14 @@ import { CloseButton } from "../../atoms/close-button";
 import { CartRow } from "../../molecules/cart-row";
 import { SummaryLine } from "../../molecules/summary-box";
 import { useAuth } from "@/features/auth";
-import { useStore } from "../../providers/store-provider";
 
 export function CartDrawer() {
-  const { panels, closePanel, cart, products, subtotal, cartCount, changeQty, removeFromCart, startCheckout, signedIn } = useStore();
-  const { openLogin } = useAuth();
+  const { panels, closePanel } = useUi();
+  const { products } = useCatalog();
+  const { cart, subtotal, cartCount, changeQty, removeFromCart } = useCart();
+  const { startCheckout } = useCheckout();
+  const { user, openLogin } = useAuth();
+  const signedIn = Boolean(user);
   return (
     <aside className={`drawer${panels.drawer ? " open" : ""}`} id="drawer" aria-hidden={!panels.drawer}>
       <div className="overlay" onClick={() => closePanel("drawer")} />

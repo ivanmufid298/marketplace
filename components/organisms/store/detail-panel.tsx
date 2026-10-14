@@ -1,5 +1,6 @@
 "use client";
 
+import { useCart } from "@/features/cart";
 import Link from "next/link";
 import { money } from "@/lib/format";
 import { t } from "@/lib/i18n";
@@ -12,12 +13,11 @@ import { RatingSummary, ReviewItem } from "../../molecules/review-summary";
 import { useCatalog } from "@/features/catalog";
 import { ProductReviewsLoader } from "@/features/reviews";
 import { useUi } from "@/shared/ui-state/ui-provider";
-import { useStore } from "../../providers/store-provider";
 
 export function DetailPanel() {
   const { panels, closePanel } = useUi();
   const { selected: p, liked, toggleLike } = useCatalog();
-  const { addToCart } = useStore();
+  const { addToCart } = useCart();
   const isLiked = p ? liked.has(p.id) : false;
 
   return (

@@ -1,17 +1,12 @@
 // Run with `npm run test:ui`. The buyer's reviews against a database-backed reviews module (a fake): they are matched to
 // the order items they are about, written through the database, and explained when refused.
-import { CheckoutProvider } from "@/features/checkout";
-import { CartProvider } from "@/features/cart";
 import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { AuthProvider } from "@/features/auth";
-import { CatalogProvider } from "@/features/catalog";
-import { OrdersProvider, type OrderServices } from "@/features/orders";
+import type { OrderServices } from "@/features/orders";
 import type { BuyerReviewServices } from "@/features/reviews";
 import type { Order } from "@/lib/mock/orders";
-import { UiProvider } from "@/shared/ui-state/ui-provider";
-import { StoreProvider, useStore } from "./store-provider";
+import { Storefront, useStorefront } from "./storefront-test-support";
 
 const SESSION_KEY = "marketplace-demo-session-v1";
 const completed: Order = {
@@ -31,9 +26,9 @@ function setup(reviewOver: Partial<BuyerReviewServices["repo"]> = {}, orders: Or
     ...reviewOver,
   };
   const wrapper = ({ children }: { children: ReactNode }) => (
-    <AuthProvider><UiProvider><CatalogProvider><OrdersProvider services={{ repo: orderRepo } as unknown as OrderServices}><CartProvider><CheckoutProvider><StoreProvider reviewServices={{ repo: reviewRepo } as BuyerReviewServices}>{children}</StoreProvider></CheckoutProvider></CartProvider></OrdersProvider></CatalogProvider></UiProvider></AuthProvider>
+    <Storefront orderServices={{ repo: orderRepo } as unknown as OrderServices}>{children}</Storefront>
   );
-  const view = renderHook(() => useStore(), { wrapper });
+  const view = renderHook(() => useStorefront({ repo: reviewRepo } as BuyerReviewServices), { wrapper });
   return { s: () => view.result.current, reviewRepo };
 }
 async function save(m: ReturnType<typeof setup>, order: string, productId: number, rating: number, text: string) {

@@ -1,5 +1,5 @@
-// Direct tests for the shared UI state. The same behavior is also pinned through useStore in
-// components/providers/store-provider.test.tsx while StoreProvider still forwards it.
+// Direct tests for the shared UI state. The storefront as a whole is also looked at in
+// components/providers/storefront.test.tsx.
 import { act, cleanup, renderHook } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";

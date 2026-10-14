@@ -1,16 +1,15 @@
 // Run with `npm run test:ui`. The bell and the notifications panel against fake notifications: what is shown, how the buyer
 // reaches the thing to do, and what happens when something goes wrong.
-import { CheckoutProvider } from "@/features/checkout";
-import { CartProvider } from "@/features/cart";
+import { CheckoutProvider, useCheckout } from "@/features/checkout";
+import { CartProvider, useCart } from "@/features/cart";
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AuthProvider } from "@/features/auth";
 import { CatalogProvider } from "@/features/catalog";
-import type { AppNotification, NotificationServices } from "@/features/notifications";
+import { NotificationsProvider, type AppNotification, type NotificationServices } from "@/features/notifications";
 import { OrdersProvider } from "@/features/orders";
 import { UiProvider, useUi } from "@/shared/ui-state/ui-provider";
 import { products } from "@/lib/mock/store";
-import { StoreProvider, useStore } from "../../providers/store-provider";
 import { NotificationBell } from "./notification-bell";
 import { NotificationsPanel } from "./notifications-panel";
 
@@ -26,7 +25,9 @@ function Probe() {
 
 /** Drives a checkout from outside, the way the shopper does. */
 function Checkout() {
-  const { addToCart, startCheckout, setAddressField, goCheckoutStep, closePanel, checkoutStep } = useStore();
+  const { addToCart } = useCart();
+  const { startCheckout, setAddressField, goCheckoutStep, checkoutStep } = useCheckout();
+  const { closePanel } = useUi();
   return (
     <>
       <button onClick={() => addToCart(products[0])}>add</button>
@@ -61,12 +62,12 @@ function show(list: AppNotification[] | (() => Promise<unknown>), { signedIn = t
       <UiProvider>
         <CatalogProvider>
           <OrdersProvider>
-            <CartProvider><CheckoutProvider><StoreProvider notificationServices={database ? ({ repo } as unknown as NotificationServices) : undefined}>
+            <CartProvider><CheckoutProvider><NotificationsProvider services={database ? ({ repo } as unknown as NotificationServices) : undefined}>
               <NotificationBell />
               <NotificationsPanel />
               <Probe />
               <Checkout />
-            </StoreProvider></CheckoutProvider></CartProvider>
+            </NotificationsProvider></CheckoutProvider></CartProvider>
           </OrdersProvider>
         </CatalogProvider>
       </UiProvider>

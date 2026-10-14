@@ -98,7 +98,7 @@ components/               # atomic design
 │   ├── store/            # Header, Hero, ProductSection, CartDrawer, CheckoutFlow, dll.
 │   └── admin/            # Sidebar, Topbar, SalesChart, AdminModal, InteractionInbox, dll.
 ├── templates/            # StoreTemplate, AdminTemplate (kerangka halaman)
-└── providers/            # StoreProvider, AdminProvider (state contoh)
+└── providers/            # AdminProvider (state contoh), dan pembungkus tes storefront
 content/
 └── id.json               # seluruh teks UI (Bahasa Indonesia)
 lib/
@@ -118,7 +118,7 @@ prototype/                # prototype HTML statis asli (referensi visual)
 |---|---|---|
 | atoms | elemen terkecil: tombol, ikon, badge, switch | Tidak mengimpor teks. Semua teks datang lewat props atau children. |
 | molecules | gabungan atom dengan satu fungsi: kartu produk, baris keranjang, field form | Boleh memakai `t()` untuk teks bawaannya. Tidak membaca state global, aksi datang lewat props. |
-| organisms | bagian halaman yang utuh: header, keranjang, tabel pembayaran | Boleh membaca context (`useStore`, `useAdmin`) dan memakai `t()`. |
+| organisms | bagian halaman yang utuh: header, keranjang, tabel pembayaran | Boleh membaca context modul (`useCart`, `useCheckout`, `useCatalog`, `useAdmin`, dan sebagainya) dan memakai `t()`. |
 | templates | kerangka halaman dan provider | Menyusun organisms, tanpa logika bisnis. |
 | `app/` | route | Tipis: hanya menyusun organisms dan template. |
 

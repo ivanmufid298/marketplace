@@ -11,7 +11,7 @@ export const ALLOWED: Record<string, string[]> = {
   catalog: [],
   reviews: [],
   orders: ["auth", "catalog"],
-  notifications: [],
+  notifications: ["auth"],
   chat: ["auth"],
   cart: ["auth", "catalog"],
   checkout: ["auth", "catalog", "cart", "orders"],

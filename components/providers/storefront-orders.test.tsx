@@ -1,16 +1,11 @@
 // Run with `npm run test:ui`. Checkout against a database-backed orders module (a fake): what is sent, what the buyer
 // is told when it works or fails, and that a second tap cannot place a second order.
-import { CheckoutProvider } from "@/features/checkout";
-import { CartProvider } from "@/features/cart";
 import { act, cleanup, renderHook } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { AuthProvider } from "@/features/auth";
-import { CatalogProvider } from "@/features/catalog";
-import { OrdersProvider, type OrderServices, type Outcome, type PlacedOrder } from "@/features/orders";
+import type { OrderServices, Outcome, PlacedOrder } from "@/features/orders";
 import { products } from "@/lib/mock/store";
-import { UiProvider } from "@/shared/ui-state/ui-provider";
-import { StoreProvider, useStore } from "./store-provider";
+import { Storefront, useStorefront } from "./storefront-test-support";
 
 const SESSION_KEY = "marketplace-demo-session-v1";
 const NADIA = { id: "nadia", email: "nadia@demo.test", name: "Nadia Putri" };
@@ -25,9 +20,9 @@ function setup(placeOrder: OrderServices["repo"]["placeOrder"], methods = [{ val
     confirmReceived: vi.fn(async () => ({ ok: true as const, value: null })),
   };
   const wrapper = ({ children }: { children: ReactNode }) => (
-    <AuthProvider><UiProvider><CatalogProvider><OrdersProvider services={{ repo } as OrderServices}><CartProvider><CheckoutProvider><StoreProvider>{children}</StoreProvider></CheckoutProvider></CartProvider></OrdersProvider></CatalogProvider></UiProvider></AuthProvider>
+    <Storefront orderServices={{ repo } as OrderServices}>{children}</Storefront>
   );
-  const view = renderHook(() => useStore(), { wrapper });
+  const view = renderHook(() => useStorefront(), { wrapper });
   return { view, repo, s: () => view.result.current };
 }
 type Setup = ReturnType<typeof setup>;

@@ -1,19 +1,19 @@
 "use client";
 
+import { useCart } from "@/features/cart";
 import { t } from "@/lib/i18n";
 import { Icon } from "../../atoms/icon";
 import { IconButton } from "../../atoms/icon-button";
 import { SearchField } from "../../molecules/search-field";
 import { useCatalog } from "@/features/catalog";
 import { useUi } from "@/shared/ui-state/ui-provider";
-import { useStore } from "../../providers/store-provider";
 import { AccountMenu } from "./account-menu";
 import { NotificationBell } from "./notification-bell";
 
 export function Header() {
   const { query, setQuery } = useCatalog();
   const { openPanel } = useUi();
-  const { cartCount } = useStore();
+  const { cartCount } = useCart();
   return (
     <>
       <div className="notice">{t("store.header.notice")}</div>

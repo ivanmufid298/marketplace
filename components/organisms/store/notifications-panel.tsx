@@ -1,13 +1,14 @@
 "use client";
 
+import { useCheckout } from "@/features/checkout";
+import { useAuth } from "@/features/auth";
 import { useEffect } from "react";
-import { describeNotification } from "@/features/notifications";
+import { describeNotification, useBuyerNotifications, type AppNotification } from "@/features/notifications";
 import { t } from "@/lib/i18n";
 import { timeAgo } from "@/lib/time-ago";
 import { useUi } from "@/shared/ui-state/ui-provider";
 import { Button } from "../../atoms/button";
 import { CloseButton } from "../../atoms/close-button";
-import { useStore } from "../../providers/store-provider";
 
 const agoText = (iso: string) => {
   const { unit, n } = timeAgo(iso);
@@ -16,8 +17,18 @@ const agoText = (iso: string) => {
 
 /** What happened to the buyer's orders, newest first, with the things still to do marked. Choosing one opens "Pesanan saya". */
 export function NotificationsPanel() {
-  const { panels, closePanel } = useUi();
-  const { notifications, openNotification, signedIn, pendingCheckout, resumeCheckout } = useStore();
+  const { panels, openPanel, closePanel } = useUi();
+  const { user } = useAuth();
+  const signedIn = Boolean(user);
+  const notifications = useBuyerNotifications();
+  const { pendingCheckout, resumeCheckout } = useCheckout();
+  const { markRead } = notifications;
+  /** The buyer chose a notification: it is marked read and "Pesanan saya" opens, where the thing to do is. */
+  const openNotification = (notification: AppNotification) => {
+    void markRead(notification.id);
+    closePanel("notifications");
+    openPanel("orders");
+  };
   const { status, notifications: list, unreadCount, reload, markAllRead } = notifications;
 
   // Opening the panel shows the latest, without waiting for the next scheduled read.

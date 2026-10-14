@@ -9,7 +9,6 @@ import { CatalogProvider } from "@/features/catalog";
 import { OrdersProvider, type OrderServices } from "@/features/orders";
 import type { Order } from "@/lib/mock/orders";
 import { UiProvider, useUi } from "@/shared/ui-state/ui-provider";
-import { StoreProvider } from "../../providers/store-provider";
 import { OrdersPanel } from "./orders-panel";
 
 const SESSION_KEY = "marketplace-demo-session-v1";
@@ -33,7 +32,7 @@ function setup(repoOver: Partial<OrderServices["repo"]> = {}, signedIn = true) {
     ...repoOver,
   };
   render(
-    <AuthProvider><UiProvider><CatalogProvider><OrdersProvider services={{ repo } as unknown as OrderServices}><CartProvider><CheckoutProvider><StoreProvider><Controls /><OrdersPanel /></StoreProvider></CheckoutProvider></CartProvider></OrdersProvider></CatalogProvider></UiProvider></AuthProvider>,
+    <AuthProvider><UiProvider><CatalogProvider><OrdersProvider services={{ repo } as unknown as OrderServices}><CartProvider><CheckoutProvider><Controls /><OrdersPanel /></CheckoutProvider></CartProvider></OrdersProvider></CatalogProvider></UiProvider></AuthProvider>,
   );
   return repo;
 }

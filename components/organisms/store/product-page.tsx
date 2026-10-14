@@ -1,5 +1,6 @@
 "use client";
 
+import { useCart } from "@/features/cart";
 import Link from "next/link";
 import { useState } from "react";
 import { money } from "@/lib/format";
@@ -9,12 +10,11 @@ import { useCatalog } from "@/features/catalog";
 import { ProductReviews, type ProductReviewsData } from "@/features/reviews";
 import { StockBadge } from "../../atoms/badges";
 import { Button } from "../../atoms/button";
-import { useStore } from "../../providers/store-provider";
 
 /** The full page of one product: all its photos, the details, and the same cart and wishlist actions as the detail panel. */
 export function ProductPage({ product: p, reviews }: { product: Product; reviews: ProductReviewsData }) {
   const { liked, toggleLike } = useCatalog();
-  const { addToCart } = useStore();
+  const { addToCart } = useCart();
   const photos = p.photos ?? [];
   const [current, setCurrent] = useState(0);
   const shown = photos[current] ?? photos[0];

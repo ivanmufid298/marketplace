@@ -67,7 +67,7 @@ export function LoginDialog({ onSignedIn }: LoginDialogProps) {
 
     if (!result.ok) return setError(result.error);
     if (result.needsConfirmation) return setConfirmEmail(true);
-    // Closing and resuming what the buyer was doing happens in StoreProvider once the user state arrives.
+    // Closing and resuming what the buyer was doing happens in StoreLoginDialog (and in the cart and checkout) once the user state arrives.
     onSignedIn?.(result.user?.name ?? email);
   }
 

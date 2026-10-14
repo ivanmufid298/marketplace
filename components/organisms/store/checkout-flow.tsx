@@ -11,13 +11,15 @@ import { ShippingOption } from "../../molecules/shipping-option";
 import { StepIndicator } from "../../molecules/step-indicator";
 import { SummaryBox, SummaryLine } from "../../molecules/summary-box";
 import { UploadField } from "../../molecules/upload-field";
-import { useStore } from "../../providers/store-provider";
-import type { Address } from "@/features/checkout";
+import { useCart } from "@/features/cart";
+import { useCheckout, type Address } from "@/features/checkout";
+import { useUi } from "@/shared/ui-state/ui-provider";
 
 const STEPS = ["address", "shipping", "payment"] as const;
 
 function OrderSummary() {
-  const { subtotal, shippingCost } = useStore();
+  const { subtotal } = useCart();
+  const { shippingCost } = useCheckout();
   return (
     <SummaryBox>
       <SummaryLine label={t("store.checkout.summary.subtotal")} value={money(subtotal)} />
@@ -28,7 +30,7 @@ function OrderSummary() {
 }
 
 function AddressStep({ active }: { active: boolean }) {
-  const { address, setAddressField, goCheckoutStep } = useStore();
+  const { address, setAddressField, goCheckoutStep } = useCheckout();
   const input = (id: keyof Address, label: string, placeholder: string, props: { autoComplete?: string; inputMode?: "tel" | "numeric" } = {}) => (
     <Field label={label} htmlFor={id}>
       <input id={id} value={address[id]} placeholder={placeholder} onChange={(e) => setAddressField(id, e.target.value)} {...props} />
@@ -64,7 +66,7 @@ function AddressStep({ active }: { active: boolean }) {
 }
 
 function ShippingStep({ active }: { active: boolean }) {
-  const { shipping, setShipping, shippingMethods, goCheckoutStep } = useStore();
+  const { shipping, setShipping, shippingMethods, goCheckoutStep } = useCheckout();
   return (
     <section className={`co-page${active ? " active" : ""}`}>
       <h3>{t("store.checkout.shipping.title")}</h3>
@@ -84,7 +86,8 @@ function ShippingStep({ active }: { active: boolean }) {
 }
 
 function PaymentStep({ active }: { active: boolean }) {
-  const { goCheckoutStep, placeOrder, placing, proofName, setProof, showToast } = useStore();
+  const { goCheckoutStep, placeOrder, placing, proofName, setProof } = useCheckout();
+  const { showToast } = useUi();
   return (
     <section className={`co-page${active ? " active" : ""}`}>
       <h3>{t("store.checkout.payment.title")}</h3>
@@ -117,7 +120,7 @@ function PaymentStep({ active }: { active: boolean }) {
 }
 
 function SuccessStep({ active }: { active: boolean }) {
-  const { orderNumber, finishOrder } = useStore();
+  const { orderNumber, finishOrder } = useCheckout();
   return (
     <section className={`co-page${active ? " active" : ""}`}>
       <div className="success">
@@ -136,7 +139,8 @@ function SuccessStep({ active }: { active: boolean }) {
 }
 
 export function CheckoutFlow() {
-  const { panels, closePanel, checkoutStep: step, goCheckoutStep } = useStore();
+  const { panels, closePanel } = useUi();
+  const { checkoutStep: step, goCheckoutStep } = useCheckout();
   return (
     <aside className={`checkout-flow${panels.checkout ? " open" : ""}`} id="checkoutFlow" aria-hidden={!panels.checkout}>
       <div className="overlay" onClick={() => closePanel("checkout")} />
