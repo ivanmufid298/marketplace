@@ -16,17 +16,23 @@ type ProofViewerDialogProps = {
 
 type Link = { status: "loading" } | { status: "error"; error: OrderError } | { status: "ready"; url: string };
 
+/** The file itself could not be drawn (the link works, but what it points to is not a picture the browser can show). */
+const DISPLAY_FAILED: OrderError = { kind: "proofUnreadable" };
+
 /** Shows a transfer proof right in the admin, so checking it does not mean leaving the screen. */
 export function ProofViewerDialog({ order, load, onClose }: ProofViewerDialogProps) {
   const proofs = order.proofs ?? [];
   const [index, setIndex] = useState(Math.max(0, proofs.length - 1));
   const [link, setLink] = useState<Link>({ status: "loading" });
   const [attempt, setAttempt] = useState(0);
+  // The frame keeps one size the whole time; this says whether the picture has been drawn yet, so a skeleton fills it until then.
+  const [drawn, setDrawn] = useState(false);
   const proof = proofs[index];
 
   useEffect(() => {
     let current = true;
     setLink({ status: "loading" });
+    setDrawn(false);
     void load(order, index).then((result) => {
       // A slower answer for a proof the admin has already moved away from must not replace the newer one.
       if (!current) return;
@@ -47,7 +53,7 @@ export function ProofViewerDialog({ order, load, onClose }: ProofViewerDialogPro
   const title = t("admin.orders.proofViewer.title", { number: order.number });
   return (
     <div className="modal-backdrop open" style={{ zIndex: 140 }} onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="modal wide" role="dialog" aria-modal="true" aria-label={title}>
+      <div className="modal proof-modal" role="dialog" aria-modal="true" aria-label={title}>
         <div className="modal-head">
           <div>
             <h2>{title}</h2>
@@ -65,17 +71,22 @@ export function ProofViewerDialog({ order, load, onClose }: ProofViewerDialogPro
               ))}
             </div>
           )}
-          <div className="proof-frame">
-            {link.status === "loading" && <p className="sub" role="status">{t("admin.orders.proofViewer.loading")}</p>}
-            {link.status === "error" && (
-              <p className="sub" role="alert">
-                {t(`admin.orders.errors.${link.error.kind}`)} <AdminButton small onClick={() => setAttempt((n) => n + 1)}>{t("admin.orders.retry")}</AdminButton>
-              </p>
+          <div className="proof-frame" data-drawn={drawn}>
+            {(link.status === "loading" || (link.status === "ready" && !drawn)) && (
+              <div className="proof-skeleton" role="status">
+                <span className="sr-only">{t("admin.orders.proofViewer.loading")}</span>
+              </div>
             )}
-            {link.status === "ready" && proof?.mime === "application/pdf" && <iframe src={link.url} title={title} />}
+            {link.status === "error" && (
+              <div className="proof-message" role="alert">
+                <p>{t(`admin.orders.errors.${link.error.kind}`)}</p>
+                <AdminButton small onClick={() => setAttempt((n) => n + 1)}>{t("admin.orders.retry")}</AdminButton>
+              </div>
+            )}
+            {link.status === "ready" && proof?.mime === "application/pdf" && <iframe src={link.url} title={title} onLoad={() => setDrawn(true)} />}
             {link.status === "ready" && proof?.mime !== "application/pdf" && (
               // eslint-disable-next-line @next/next/no-img-element -- a private, short-lived link: next/image cannot cache or optimize it
-              <img src={link.url} alt={title} />
+              <img src={link.url} alt={title} onLoad={() => setDrawn(true)} onError={() => setLink({ status: "error", error: DISPLAY_FAILED })} />
             )}
           </div>
           {link.status === "ready" && (

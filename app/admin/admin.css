@@ -62,7 +62,16 @@
 .admin .demo-banner{background:#fff2dc;color:#8a5212;border-bottom:1px solid #f0d9ae;padding:9px 20px;font-size:13px;font-weight:700;text-align:center}
 .admin .signout-link{width:100%;border:0;background:transparent;cursor:pointer;text-align:left;font:inherit;font-size:13px}
 .admin .signout-link:hover{color:#fff}
+.admin .sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.admin .modal.proof-modal{width:min(560px,100%)}
 .admin .proof-tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
-.admin .proof-frame{min-height:220px;display:grid;place-items:center;background:var(--cream);border:1px solid var(--line);border-radius:16px;padding:12px;overflow:auto}
-.admin .proof-frame img{max-width:100%;max-height:70vh;object-fit:contain;border-radius:10px;display:block}
-.admin .proof-frame iframe{width:100%;height:70vh;border:0;border-radius:10px;background:#fff}
+/* One fixed size for every proof, so the popup never changes height while a proof loads. */
+.admin .proof-frame{position:relative;height:clamp(280px,56vh,460px);background:var(--cream);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.admin .proof-frame img,.admin .proof-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#fff;opacity:0;transition:opacity .25s}
+.admin .proof-frame img{object-fit:contain}
+.admin .proof-frame[data-drawn="true"] img,.admin .proof-frame[data-drawn="true"] iframe{opacity:1}
+.admin .proof-skeleton{position:absolute;inset:0;background:linear-gradient(100deg,var(--cream) 30%,#fff6ec 50%,var(--cream) 70%);background-size:200% 100%;animation:proof-shimmer 1.3s ease-in-out infinite}
+.admin .proof-message{position:absolute;inset:0;display:grid;place-content:center;justify-items:center;gap:10px;padding:20px;text-align:center;color:var(--muted)}
+.admin .proof-message p{margin:0}
+@keyframes proof-shimmer{from{background-position:200% 0}to{background-position:-200% 0}}
+@media (prefers-reduced-motion:reduce){.admin .proof-skeleton{animation:none}.admin .proof-frame img,.admin .proof-frame iframe{transition:none}}

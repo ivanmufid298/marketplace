@@ -192,6 +192,61 @@ describe("viewing a proof", () => {
     finish({ ok: true, value: "https://signed.test/late" });
     await waitFor(() => expect(dialog.querySelector("img")).not.toBeNull());
   });
+  it("keeps one frame, with a skeleton in it, from the moment it opens until the picture is drawn", async () => {
+    let finish: (v: { ok: true; value: string }) => void = () => {};
+    const { services } = fake([reviewable], { proofLink: () => new Promise((resolve) => { finish = resolve as never; }) as never });
+    const dialog = await openViewer(services);
+    const frame = dialog.querySelector(".proof-frame")!;
+    // Link not here yet: the skeleton fills the frame, there is no picture, and nothing is announced as an error.
+    expect(frame.querySelector(".proof-skeleton")).not.toBeNull();
+    expect(frame.querySelector("img")).toBeNull();
+    expect(within(dialog).queryByRole("alert")).toBeNull();
+    finish({ ok: true, value: "https://signed.test/p" });
+    // Link here, picture still being fetched: the picture is in the frame but hidden, and the skeleton is still shown.
+    await waitFor(() => expect(frame.querySelector("img")).not.toBeNull());
+    expect(frame.getAttribute("data-drawn")).toBe("false");
+    expect(frame.querySelector(".proof-skeleton")).not.toBeNull();
+    fireEvent.load(frame.querySelector("img")!);
+    expect(frame.getAttribute("data-drawn")).toBe("true");
+    expect(frame.querySelector(".proof-skeleton")).toBeNull();
+    // It is the same element all along: the popup never changes size.
+    expect(dialog.querySelector(".proof-frame")).toBe(frame);
+  });
+  it("shows the skeleton again when another proof is chosen, in the same frame", async () => {
+    const dialog = await openViewer(fake([reviewable]).services);
+    const frame = dialog.querySelector(".proof-frame")!;
+    await waitFor(() => expect(frame.querySelector("img")).not.toBeNull());
+    fireEvent.load(frame.querySelector("img")!);
+    expect(frame.querySelector(".proof-skeleton")).toBeNull();
+    fireEvent.click(within(dialog).getAllByRole("button", { name: /^Bukti \d$/ })[0]);
+    expect(frame.querySelector(".proof-skeleton")).not.toBeNull();
+    expect(frame.getAttribute("data-drawn")).toBe("false");
+    expect(dialog.querySelector(".proof-frame")).toBe(frame);
+  });
+  it("waits for a PDF to be drawn too", async () => {
+    const pdf = { ...paid, proofs: [{ objectKey: "orders/o-c/1.pdf", mime: "application/pdf", size: 10, at: "x" }] };
+    const dialog = await openViewer(fake([pdf]).services, "MKP-100003", "Cici");
+    const frame = dialog.querySelector(".proof-frame")!;
+    await waitFor(() => expect(frame.querySelector("iframe")).not.toBeNull());
+    expect(frame.querySelector(".proof-skeleton")).not.toBeNull();
+    fireEvent.load(frame.querySelector("iframe")!);
+    expect(frame.querySelector(".proof-skeleton")).toBeNull();
+  });
+  it("keeps the error inside the same frame, and says the proof could not be shown when the picture itself fails", async () => {
+    const dialog = await openViewer(fake([reviewable]).services);
+    const frame = dialog.querySelector(".proof-frame")!;
+    await waitFor(() => expect(frame.querySelector("img")).not.toBeNull());
+    fireEvent.error(frame.querySelector("img")!);
+    expect((await within(dialog).findByRole("alert")).textContent).toContain("Bukti tidak bisa dibaca.");
+    expect(frame.querySelector(".proof-skeleton")).toBeNull();
+    expect(frame.querySelector("img")).toBeNull();
+    expect(dialog.querySelector(".proof-frame")).toBe(frame);
+  });
+  it("is a compact popup, not the wide one", async () => {
+    const dialog = await openViewer(fake([reviewable]).services);
+    expect(dialog.className).toContain("proof-modal");
+    expect(dialog.className).not.toContain("wide");
+  });
   it("lets the admin move between the proofs of an order, loading each when chosen", async () => {
     const { services, repo } = fake([reviewable], { proofLink: vi.fn(async (key: string) => ({ ok: true as const, value: `https://signed.test/${key}` })) as never });
     const dialog = await openViewer(services);
