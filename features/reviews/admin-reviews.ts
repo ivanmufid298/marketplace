@@ -15,6 +15,8 @@ export type AdminReviews = {
   reload: () => void;
   /** Hides a review from the shop, or shows it again, then reads the list again. */
   setHidden: (id: number, hidden: boolean) => Promise<Write<null>>;
+  /** Deletes a review for good, then reads the list again. */
+  remove: (id: number) => Promise<Write<null>>;
 };
 
 export function useAdminReviews(provided?: AdminReviewServices): AdminReviews {
@@ -48,5 +50,15 @@ export function useAdminReviews(provided?: AdminReviewServices): AdminReviews {
     [reload, services],
   );
 
-  return { database, reviews: database ? loaded.reviews : [], status: database ? loaded.status : "ready", reload: () => void reload(), setHidden };
+  const remove = useCallback(
+    async (id: number): Promise<Write<null>> => {
+      if (!services) return { ok: false, error: "unknown" };
+      const result = await services.repo.remove(id);
+      if (result.ok) void reload();
+      return result;
+    },
+    [reload, services],
+  );
+
+  return { database, reviews: database ? loaded.reviews : [], status: database ? loaded.status : "ready", reload: () => void reload(), setHidden, remove };
 }

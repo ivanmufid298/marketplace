@@ -87,6 +87,24 @@ describe("the admin's list", () => {
   });
 });
 
+describe("deleting", () => {
+  it("deletes the review with that id and says it is done", async () => {
+    const q = fake({ data: [{ id: 3 }] });
+    expect(await createAdminReviewRepository(q.db).remove(3)).toEqual({ ok: true, value: null });
+    expect(opsOf(q.queries[0], "delete")).toHaveLength(1);
+    expect(opsOf(q.queries[0], "eq")).toEqual([["id", 3]]);
+    expect(opsOf(q.queries[0], "update")).toEqual([]);
+  });
+  it("says it was refused when nothing was deleted, since security rules hide rows without an error", async () => {
+    expect(await createAdminReviewRepository(fake({ data: [] }).db).remove(3)).toEqual({ ok: false, error: "forbidden" });
+    expect(await createAdminReviewRepository(fake({ data: null }).db).remove(3)).toEqual({ ok: false, error: "forbidden" });
+  });
+  it("reports a database error and a lost connection", async () => {
+    expect(await createAdminReviewRepository(fake({ error: { code: "42501", message: "permission denied" } }).db).remove(3)).toEqual({ ok: false, error: "forbidden" });
+    expect(await createAdminReviewRepository(fake({ error: { message: "Failed to fetch" } }).db).remove(3)).toEqual({ ok: false, error: "network" });
+  });
+});
+
 describe("hiding and showing", () => {
   it("hides a review by setting its status to hidden, and shows it by setting it to published", async () => {
     const hide = fake({ data: [{ id: 3 }] });

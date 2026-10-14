@@ -12,6 +12,7 @@ function fake(reviews: AdminReview[], over: Partial<AdminReviewServices["repo"]>
   const repo = {
     listAll: vi.fn<AdminReviewServices["repo"]["listAll"]>(async () => ({ ok: true as const, value: reviews })),
     setHidden: vi.fn<AdminReviewServices["repo"]["setHidden"]>(async () => ({ ok: true as const, value: null })),
+    remove: vi.fn<AdminReviewServices["repo"]["remove"]>(async () => ({ ok: true as const, value: null })),
     ...over,
   };
   return { services: { repo } as AdminReviewServices, repo };
@@ -124,6 +125,54 @@ describe("hiding and showing", () => {
   });
 });
 
+describe("deleting", () => {
+  it("asks first, on the row, and deletes nothing until the admin says yes", async () => {
+    const { services, repo } = fake([review(1), review(2)]);
+    show(services);
+    await screen.findByText("Pembeli 1");
+    fireEvent.click(within(rowOf("Isi 1")).getByRole("button", { name: "Hapus" }));
+    expect(within(rowOf("Isi 1")).getByText("Hapus permanen? Ulasan ini tidak bisa dikembalikan.")).toBeTruthy();
+    expect(within(rowOf("Isi 1")).queryByRole("button", { name: "Sembunyikan" })).toBeNull();
+    expect(within(rowOf("Isi 2")).getByRole("button", { name: "Hapus" })).toBeTruthy();
+    expect(repo.remove).not.toHaveBeenCalled();
+  });
+  it("backs out with Batal, which brings the normal buttons back", async () => {
+    const { services, repo } = fake([review(1)]);
+    show(services);
+    await screen.findByText("Pembeli 1");
+    fireEvent.click(within(rowOf("Isi 1")).getByRole("button", { name: "Hapus" }));
+    fireEvent.click(within(rowOf("Isi 1")).getByRole("button", { name: "Batal" }));
+    expect(within(rowOf("Isi 1")).getByRole("button", { name: "Sembunyikan" })).toBeTruthy();
+    expect(within(rowOf("Isi 1")).queryByText(/Hapus permanen/)).toBeNull();
+    expect(repo.remove).not.toHaveBeenCalled();
+  });
+  it("deletes the review in the database, says so, and the list no longer has it", async () => {
+    const reviews = [review(1), review(2)];
+    const { services, repo } = fake(reviews, {
+      listAll: async () => ({ ok: true as const, value: [...reviews] }),
+      remove: vi.fn(async (id: number) => { reviews.splice(reviews.findIndex((r) => r.id === id), 1); return { ok: true as const, value: null }; }),
+    });
+    show(services);
+    await screen.findByText("Pembeli 1");
+    fireEvent.click(within(rowOf("Isi 1")).getByRole("button", { name: "Hapus" }));
+    fireEvent.click(within(rowOf("Isi 1")).getByRole("button", { name: "Ya, hapus" }));
+    await waitFor(() => expect(toast()).toBe("Ulasan dihapus"));
+    expect(repo.remove).toHaveBeenCalledWith(1);
+    await waitFor(() => expect(screen.queryByText("Pembeli 1")).toBeNull());
+    expect(screen.getByText("Pembeli 2")).toBeTruthy();
+  });
+  it("tells the admin when the database refuses, and the review stays", async () => {
+    const { services } = fake([review(1)], { remove: async () => ({ ok: false, error: "forbidden" }) });
+    show(services);
+    await screen.findByText("Pembeli 1");
+    fireEvent.click(within(rowOf("Isi 1")).getByRole("button", { name: "Hapus" }));
+    fireEvent.click(within(rowOf("Isi 1")).getByRole("button", { name: "Ya, hapus" }));
+    await waitFor(() => expect(toast()).toBe("Akun ini bukan admin, atau ulasannya sudah tidak ada. Muat ulang daftar."));
+    expect(screen.getByText("Pembeli 1")).toBeTruthy();
+    expect(within(rowOf("Isi 1")).getByRole("button", { name: "Hapus" })).toBeTruthy();
+  });
+});
+
 describe("the sample screen (no database)", () => {
   it("keeps the sample reviews, the sample numbers, and hiding in this browser", async () => {
     show();
@@ -132,5 +181,13 @@ describe("the sample screen (no database)", () => {
     expect(screen.queryByRole("status")).toBeNull();
     fireEvent.click(within(screen.getByText("Produknya sesuai foto, packing rapi dan warnanya cantik banget.").closest("tr")!).getByRole("button", { name: "Sembunyikan" }));
     await waitFor(() => expect(toast()).toBe("Ulasan disembunyikan"));
+  });
+  it("deletes a sample review in this browser too", async () => {
+    show();
+    const text = "Produknya sesuai foto, packing rapi dan warnanya cantik banget.";
+    fireEvent.click(within(screen.getByText(text).closest("tr")!).getByRole("button", { name: "Hapus" }));
+    fireEvent.click(screen.getByRole("button", { name: "Ya, hapus" }));
+    await waitFor(() => expect(toast()).toBe("Ulasan dihapus"));
+    expect(screen.queryByText(text)).toBeNull();
   });
 });

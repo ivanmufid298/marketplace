@@ -38,6 +38,8 @@ type AdminContextValue = {
   reloadReviews: () => void;
   /** Hides a review from the shop, or shows it again. */
   toggleReview: (id: number) => Promise<void>;
+  /** Deletes a review for good. */
+  deleteReview: (id: number) => Promise<void>;
   orders: Order[];
   /** Whether the orders come from the database (otherwise the sample store). */
   ordersDatabase: boolean;
@@ -178,6 +180,19 @@ export function AdminProvider({ children, orderServices, reviewServices }: Admin
     [dbReviews, reviews, showToast],
   );
 
+  const deleteReview = useCallback(
+    async (id: number) => {
+      if (dbReviews.database) {
+        const result = await dbReviews.remove(id);
+        showToast(result.ok ? t("admin.reviews.toastDeleted") : t(`admin.reviews.errors.${(result as { error: ReviewsError }).error}`));
+        return;
+      }
+      setSampleReviews((prev) => prev.filter((r) => r.id !== id));
+      showToast(t("admin.reviews.toastDeleted"));
+    },
+    [dbReviews, showToast],
+  );
+
   const cancelOrder = useCallback(
     async (orderNumber: string, note: string) => {
       const order = orderByNumber(orderNumber);
@@ -214,7 +229,7 @@ export function AdminProvider({ children, orderServices, reviewServices }: Admin
     <AdminContext.Provider
       value={{
         payments, acceptPayment, rejectPayment, viewProof, interactions, activeInteractionId, selectInteraction, toggleInteractionStatus, replyInteraction,
-        reviews, reviewsDatabase: dbReviews.database, reviewsStatus: dbReviews.status, reloadReviews: dbReviews.reload, toggleReview, orders, ordersDatabase, ordersStatus, reloadOrders, cancelOrder, markRefunded, resetData, modal, openModal: setModal, closeModal: () => setModal(null), sidebarOpen, setSidebarOpen, toast, showToast,
+        reviews, reviewsDatabase: dbReviews.database, reviewsStatus: dbReviews.status, reloadReviews: dbReviews.reload, toggleReview, deleteReview, orders, ordersDatabase, ordersStatus, reloadOrders, cancelOrder, markRefunded, resetData, modal, openModal: setModal, closeModal: () => setModal(null), sidebarOpen, setSidebarOpen, toast, showToast,
       }}
     >
       {children}

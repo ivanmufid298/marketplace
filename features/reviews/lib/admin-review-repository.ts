@@ -3,7 +3,7 @@ import type { Write } from "./buyer-review-repository";
 import { mapReviewWriteError } from "./write-errors";
 
 // The reviews of every product, for the admin's moderation screen. Hiding one takes it off the product page and out of
-// the product's score without deleting it. (An admin's session can read and change every review; nobody else can.)
+// the product's score without deleting it; deleting removes it for good. (An admin's session can read and change every review; nobody else can.)
 
 export type AdminReviewsDb = Pick<SupabaseClient, "from">;
 
@@ -61,6 +61,14 @@ export function createAdminReviewRepository(db: AdminReviewsDb) {
       const { data, error } = await db.from("product_reviews").update({ status: hidden ? "hidden" : "published" }).eq("id", id).select("id");
       if (error) return { ok: false, error: mapReviewWriteError(error) };
       // Row Level Security hides rows without an error, so "nothing was changed" has to be checked.
+      return (data as unknown[] | null)?.length ? { ok: true, value: null } : { ok: false, error: "forbidden" };
+    },
+
+    /** Deletes a review for good. (The buyer can then write a new one for the same item.) */
+    async remove(id: number): Promise<Write<null>> {
+      const { data, error } = await db.from("product_reviews").delete().eq("id", id).select("id");
+      if (error) return { ok: false, error: mapReviewWriteError(error) };
+      // The same as above: Row Level Security hides rows without an error, so "nothing was deleted" has to be checked.
       return (data as unknown[] | null)?.length ? { ok: true, value: null } : { ok: false, error: "forbidden" };
     },
   };

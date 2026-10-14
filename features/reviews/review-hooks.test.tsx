@@ -83,6 +83,7 @@ describe("useAdminReviews", () => {
     const repo = {
       listAll: vi.fn(async (): Promise<Write<AdminReview[]>> => ({ ok: true, value: [review(1), review(2, true)] })),
       setHidden: vi.fn(async (): Promise<Write<null>> => ({ ok: true, value: null })),
+      remove: vi.fn(async (): Promise<Write<null>> => ({ ok: true, value: null })),
       ...over,
     };
     return { s: { repo } as AdminReviewServices, repo };
@@ -118,6 +119,25 @@ describe("useAdminReviews", () => {
     expect(result).toEqual({ ok: true, value: null });
     expect(repo.setHidden).toHaveBeenCalledWith(1, true);
     await waitFor(() => expect(repo.listAll).toHaveBeenCalledTimes(2));
+  });
+  it("deletes a review and then reads the list again", async () => {
+    const { s, repo } = services();
+    const view = renderHook(() => useAdminReviews(s));
+    await waitFor(() => expect(repo.listAll).toHaveBeenCalledTimes(1));
+    let result: Write<null> | undefined;
+    await act(async () => { result = await view.result.current.remove(2); });
+    expect(result).toEqual({ ok: true, value: null });
+    expect(repo.remove).toHaveBeenCalledWith(2);
+    await waitFor(() => expect(repo.listAll).toHaveBeenCalledTimes(2));
+  });
+  it("does not read again when the database refuses to delete", async () => {
+    const { s, repo } = services({ remove: async () => ({ ok: false, error: "forbidden" }) });
+    const view = renderHook(() => useAdminReviews(s));
+    await waitFor(() => expect(repo.listAll).toHaveBeenCalledTimes(1));
+    let result: Write<null> | undefined;
+    await act(async () => { result = await view.result.current.remove(2); });
+    expect(result).toEqual({ ok: false, error: "forbidden" });
+    expect(repo.listAll).toHaveBeenCalledTimes(1);
   });
   it("does not read again when the database refuses", async () => {
     const { s, repo } = services({ setHidden: async () => ({ ok: false, error: "forbidden" }) });

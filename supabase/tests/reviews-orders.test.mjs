@@ -179,6 +179,16 @@ check("a buyer cannot delete a review directly (0 rows)", (await count(`delete f
 await as("authenticated", ADMIN);
 check("an admin still reads every review, hidden ones too", (await count(`select 1 from public.product_reviews`)) >= 3);
 
+// ---- an admin deleting a review for good
+await as("authenticated", ADMIN);
+check("an admin can delete a buyer's review", (await count(`delete from public.product_reviews where id = ${id} returning id`)) === 1);
+await as("authenticated", ANA);
+check("the author no longer sees it", (await count(`select 1 from public.product_reviews where order_item_id = ${mugItem}`)) === 0);
+await db.exec(review(mugItem, 4, "Ulasan baru setelah dihapus"));
+await as("postgres");
+const rewritten = await one(`select id, rating, status, is_verified from public.product_reviews where order_item_id = ${mugItem}`);
+check("the buyer can write a new one for the same item, published and verified", rewritten && rewritten.id !== id && rewritten.rating === 4 && rewritten.status === "published" && rewritten.is_verified === true);
+
 // ---- one review per item, and a deleted item keeps its review
 await as("postgres");
 await expectError("two reviews for one item are refused by the table itself", `insert into public.product_reviews (product_id, order_item_id, author_name, rating, body) values (1, ${mugItem}, 'x', 5, 'dobel')`, /unique|duplicate/i);

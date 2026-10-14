@@ -5,7 +5,7 @@ import { createBuyerReviewRepository, type BuyerReviewRepository } from "./buyer
 /** What the buyer's "Pesanan saya" needs to write and read their own reviews. */
 export type BuyerReviewServices = { repo: Pick<BuyerReviewRepository, "submitReview" | "listMyReviews"> };
 /** What the admin's moderation screen needs. */
-export type AdminReviewServices = { repo: Pick<AdminReviewRepository, "listAll" | "setHidden"> };
+export type AdminReviewServices = { repo: Pick<AdminReviewRepository, "listAll" | "setHidden" | "remove"> };
 
 /** True when the build has Supabase credentials, i.e. reviews live in the database. */
 export const reviewsInDatabase = () => Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim());

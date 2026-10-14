@@ -13,9 +13,11 @@ import { Select } from "../../molecules/select";
 import { useAdmin } from "../../providers/admin-provider";
 
 export function ReviewTable() {
-  const { reviews, toggleReview, reviewsDatabase, reviewsStatus, reloadReviews } = useAdmin();
+  const { reviews, toggleReview, deleteReview, reviewsDatabase, reviewsStatus, reloadReviews } = useAdmin();
   const [rating, setRating] = useState("all");
   const [status, setStatus] = useState("all");
+  // Deleting is for good, so it asks once, on the row itself.
+  const [confirming, setConfirming] = useState<number | null>(null);
 
   const ratingOptions = [{ value: "all", label: t("admin.reviews.ratingAll") }, ...[5, 4, 3, 2, 1].map((n) => ({ value: String(n), label: t("admin.reviews.ratingOption", { n }) }))];
   const statusOptions = [
@@ -84,9 +86,22 @@ export function ReviewTable() {
                     </StatusBadge>
                   </td>
                   <td>
-                    <AdminButton small onClick={() => void toggleReview(r.id)}>
-                      {r.status === "visible" ? t("admin.reviews.hide") : t("admin.reviews.show")}
-                    </AdminButton>
+                    {confirming === r.id ? (
+                      <div role="group" aria-label={t("admin.reviews.deleteAsk")}>
+                        <span className="sub" style={{ display: "block", marginBottom: 6 }}>{t("admin.reviews.deleteAsk")}</span>
+                        <div className="row-actions">
+                          <AdminButton small onClick={() => { setConfirming(null); void deleteReview(r.id); }}>{t("admin.reviews.deleteYes")}</AdminButton>
+                          <AdminButton small onClick={() => setConfirming(null)}>{t("admin.reviews.deleteNo")}</AdminButton>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="row-actions">
+                        <AdminButton small onClick={() => void toggleReview(r.id)}>
+                          {r.status === "visible" ? t("admin.reviews.hide") : t("admin.reviews.show")}
+                        </AdminButton>
+                        <AdminButton small onClick={() => setConfirming(r.id)}>{t("admin.reviews.delete")}</AdminButton>
+                      </div>
+                    )}
                   </td>
                 </tr>
               ))}
