@@ -1,5 +1,6 @@
 // Run with `npm run test:ui`. "Pesanan saya" against a database-backed orders module (a fake): refreshing when opened,
 // loading, failing, an empty list, and sending proof for an order that awaits it.
+import { CheckoutProvider } from "@/features/checkout";
 import { CartProvider } from "@/features/cart";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -32,7 +33,7 @@ function setup(repoOver: Partial<OrderServices["repo"]> = {}, signedIn = true) {
     ...repoOver,
   };
   render(
-    <AuthProvider><UiProvider><CatalogProvider><OrdersProvider services={{ repo } as unknown as OrderServices}><CartProvider><StoreProvider><Controls /><OrdersPanel /></StoreProvider></CartProvider></OrdersProvider></CatalogProvider></UiProvider></AuthProvider>,
+    <AuthProvider><UiProvider><CatalogProvider><OrdersProvider services={{ repo } as unknown as OrderServices}><CartProvider><CheckoutProvider><StoreProvider><Controls /><OrdersPanel /></StoreProvider></CheckoutProvider></CartProvider></OrdersProvider></CatalogProvider></UiProvider></AuthProvider>,
   );
   return repo;
 }

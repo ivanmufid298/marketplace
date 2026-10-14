@@ -11,7 +11,8 @@ import { ShippingOption } from "../../molecules/shipping-option";
 import { StepIndicator } from "../../molecules/step-indicator";
 import { SummaryBox, SummaryLine } from "../../molecules/summary-box";
 import { UploadField } from "../../molecules/upload-field";
-import { useStore, type Address } from "../../providers/store-provider";
+import { useStore } from "../../providers/store-provider";
+import type { Address } from "@/features/checkout";
 
 const STEPS = ["address", "shipping", "payment"] as const;
 

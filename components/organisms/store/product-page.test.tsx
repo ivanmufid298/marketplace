@@ -1,4 +1,5 @@
 // Run with `npm run test:ui`. The full product page: details, photos, and the cart and wishlist actions.
+import { CheckoutProvider } from "@/features/checkout";
 import { CartProvider } from "@/features/cart";
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import type { ReactNode } from "react";
@@ -31,10 +32,10 @@ function show(product: Product, signedIn = true, reviews: ProductReviewsData = N
       <UiProvider>
         <CatalogProvider services={{ repo: { listCatalog: async () => ({ ok: true, value: { products: [product], categories: [product.cat] } }) } }}>
           <OrdersProvider>
-            <CartProvider><StoreProvider>
+            <CartProvider><CheckoutProvider><StoreProvider>
             <ProductPage product={product} reviews={reviews} />
             <CartProbe />
-            </StoreProvider></CartProvider>
+            </StoreProvider></CheckoutProvider></CartProvider>
           </OrdersProvider>
         </CatalogProvider>
       </UiProvider>

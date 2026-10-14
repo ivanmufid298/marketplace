@@ -1,5 +1,6 @@
 // Run with `npm run test:ui`. The bell and the notifications panel against fake notifications: what is shown, how the buyer
 // reaches the thing to do, and what happens when something goes wrong.
+import { CheckoutProvider } from "@/features/checkout";
 import { CartProvider } from "@/features/cart";
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -60,12 +61,12 @@ function show(list: AppNotification[] | (() => Promise<unknown>), { signedIn = t
       <UiProvider>
         <CatalogProvider>
           <OrdersProvider>
-            <CartProvider><StoreProvider notificationServices={database ? ({ repo } as unknown as NotificationServices) : undefined}>
+            <CartProvider><CheckoutProvider><StoreProvider notificationServices={database ? ({ repo } as unknown as NotificationServices) : undefined}>
               <NotificationBell />
               <NotificationsPanel />
               <Probe />
               <Checkout />
-            </StoreProvider></CartProvider>
+            </StoreProvider></CheckoutProvider></CartProvider>
           </OrdersProvider>
         </CatalogProvider>
       </UiProvider>

@@ -14,6 +14,7 @@ import { StoreToast } from "../organisms/store/store-toast";
 import { AuthProvider } from "@/features/auth";
 import { CartProvider } from "@/features/cart";
 import { CatalogProvider } from "@/features/catalog";
+import { CheckoutProvider } from "@/features/checkout";
 import { ChatProvider } from "@/features/chat";
 import { OrdersProvider } from "@/features/orders";
 import { UiProvider } from "@/shared/ui-state/ui-provider";
@@ -29,6 +30,7 @@ export function StoreTemplate({ children }: { children: ReactNode }) {
             <OrdersProvider>
             <ChatProvider>
             <CartProvider>
+            <CheckoutProvider>
             <StoreProvider>
               <Header />
               {children}
@@ -44,6 +46,7 @@ export function StoreTemplate({ children }: { children: ReactNode }) {
               <StoreLoginDialog />
               <StoreToast />
             </StoreProvider>
+            </CheckoutProvider>
             </CartProvider>
             </ChatProvider>
             </OrdersProvider>

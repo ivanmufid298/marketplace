@@ -1,5 +1,6 @@
 // Run with `npm run test:ui`. The buyer's reviews against a database-backed reviews module (a fake): they are matched to
 // the order items they are about, written through the database, and explained when refused.
+import { CheckoutProvider } from "@/features/checkout";
 import { CartProvider } from "@/features/cart";
 import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
@@ -30,7 +31,7 @@ function setup(reviewOver: Partial<BuyerReviewServices["repo"]> = {}, orders: Or
     ...reviewOver,
   };
   const wrapper = ({ children }: { children: ReactNode }) => (
-    <AuthProvider><UiProvider><CatalogProvider><OrdersProvider services={{ repo: orderRepo } as unknown as OrderServices}><CartProvider><StoreProvider reviewServices={{ repo: reviewRepo } as BuyerReviewServices}>{children}</StoreProvider></CartProvider></OrdersProvider></CatalogProvider></UiProvider></AuthProvider>
+    <AuthProvider><UiProvider><CatalogProvider><OrdersProvider services={{ repo: orderRepo } as unknown as OrderServices}><CartProvider><CheckoutProvider><StoreProvider reviewServices={{ repo: reviewRepo } as BuyerReviewServices}>{children}</StoreProvider></CheckoutProvider></CartProvider></OrdersProvider></CatalogProvider></UiProvider></AuthProvider>
   );
   const view = renderHook(() => useStore(), { wrapper });
   return { s: () => view.result.current, reviewRepo };

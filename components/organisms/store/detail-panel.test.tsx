@@ -1,5 +1,6 @@
 // Run with `npm run test:ui`. Which reviews the detail panel shows: the product's own (loaded) for a database
 // product, and the sample reviews for the sample products of the local demo.
+import { CheckoutProvider } from "@/features/checkout";
 import { CartProvider } from "@/features/cart";
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -30,10 +31,10 @@ function show(product: Product) {
       <UiProvider>
         <CatalogProvider services={{ repo: { listCatalog: async () => ({ ok: true, value: { products: [product], categories: [product.cat] } }) } }}>
           <OrdersProvider>
-            <CartProvider><StoreProvider>
+            <CartProvider><CheckoutProvider><StoreProvider>
             <Opener product={product} />
             <DetailPanel />
-            </StoreProvider></CartProvider>
+            </StoreProvider></CheckoutProvider></CartProvider>
           </OrdersProvider>
         </CatalogProvider>
       </UiProvider>
@@ -50,9 +51,9 @@ describe("the reviews in the detail panel", () => {
         <UiProvider>
           <CatalogProvider services={{ repo: { listCatalog: async () => ({ ok: true, value: { products: [], categories: [] } }) } }}>
             <OrdersProvider>
-              <CartProvider><StoreProvider>
+              <CartProvider><CheckoutProvider><StoreProvider>
               <DetailPanel />
-              </StoreProvider></CartProvider>
+              </StoreProvider></CheckoutProvider></CartProvider>
             </OrdersProvider>
           </CatalogProvider>
         </UiProvider>

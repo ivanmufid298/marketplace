@@ -1,25 +1,30 @@
 // Run with `npm run test:ui`. Leaving the checkout half done: the step is kept, reopening resumes it, a reminder is raised
 // while it is unfinished, and it survives a reload.
-import { CartProvider } from "@/features/cart";
+import { CartProvider, useCart } from "@/features/cart";
 import { act, cleanup, renderHook } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AuthProvider } from "@/features/auth";
-import { CatalogProvider } from "@/features/catalog";
+import { CatalogProvider, useCatalog } from "@/features/catalog";
 import { OrdersProvider } from "@/features/orders";
 import { products } from "@/lib/mock/store";
-import { UiProvider } from "@/shared/ui-state/ui-provider";
-import { StoreProvider, useStore } from "./store-provider";
+import { UiProvider, useUi } from "@/shared/ui-state/ui-provider";
+import { CheckoutProvider, useCheckout } from "./checkout-provider";
 
 const SESSION_KEY = "marketplace-demo-session-v1";
 const DRAFT_KEY = "marketplace-checkout-v1:nadia";
 const [mug] = products;
 
+/** What the checkout reads from its neighbours, in one object. */
+function useAll() {
+  return { ...useCatalog(), ...useCart(), ...useUi(), ...useCheckout() };
+}
+
 const wrapper = ({ children }: { children: ReactNode }) => (
-  <AuthProvider><UiProvider><CatalogProvider><OrdersProvider><CartProvider><StoreProvider>{children}</StoreProvider></CartProvider></OrdersProvider></CatalogProvider></UiProvider></AuthProvider>
+  <AuthProvider><UiProvider><CatalogProvider><OrdersProvider><CartProvider><CheckoutProvider>{children}</CheckoutProvider></CartProvider></OrdersProvider></CatalogProvider></UiProvider></AuthProvider>
 );
 const mount = () => {
-  const view = renderHook(() => useStore(), { wrapper });
+  const view = renderHook(() => useAll(), { wrapper });
   return { view, s: () => view.result.current };
 };
 type M = ReturnType<typeof mount>;

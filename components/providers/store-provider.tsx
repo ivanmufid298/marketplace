@@ -1,24 +1,18 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { t } from "@/lib/i18n";
 import { INITIAL_MY_REVIEWS, type MyReview, type Order } from "@/lib/mock/orders";
-import { formatDateTime } from "@/lib/format";
-import { useAuth, type LoginIntent } from "@/features/auth";
+import { useAuth } from "@/features/auth";
 import { useCart, type CartLine } from "@/features/cart";
+import { useCheckout, type Address } from "@/features/checkout";
 import { useCatalog, type Product, type SortMode } from "@/features/catalog";
 import { useNotifications, type AppNotification, type NotificationServices, type Notifications } from "@/features/notifications";
 import { useMyReviews, type BuyerReviewServices } from "@/features/reviews";
-import { MAX_PROOF_BYTES, MAX_PROOF_SOURCE_BYTES, useBuyerOrders, type OrderError, type ShippingMethod } from "@/features/orders";
+import { useBuyerOrders, useOrderErrorText, type ShippingMethod } from "@/features/orders";
 import { useUi, type PanelId } from "@/shared/ui-state/ui-provider";
 
-export type Address = { fullName: string; phone: string; address: string; city: string; postcode: string; note: string };
 export type MobileNavMode = "home" | "category" | "saved" | "orders" | "cart";
-
-const EMPTY_ADDRESS: Address = { fullName: "", phone: "", address: "", city: "", postcode: "", note: "" };
-const REQUIRED_ADDRESS_FIELDS: (keyof Address)[] = ["fullName", "phone", "address", "city", "postcode"];
-/** A checkout the buyer left half done (step, address, shipping), kept per account so it survives closing the panel and a reload. */
-const CHECKOUT_DRAFT_PREFIX = "marketplace-checkout-v1:";
 
 type StoreContextValue = {
   products: Product[];
@@ -104,132 +98,25 @@ type StoreProviderProps = {
 
 export function StoreProvider({ children, reviewServices, notificationServices }: StoreProviderProps) {
   const { products, getProduct, visibleProducts, category, setCategory, query, setQuery, sort, setSort, savedOnly, liked, toggleLike, selected, openDetail, showSaved, showAll, scrollToProducts } = useCatalog();
-  const { orders, shippingMethods, placeOrder: submitOrder, sendProof, confirmReceived } = useBuyerOrders();
-  const { cart, cartCount, subtotal, loaded: cartLoaded, addToCart, changeQty, removeFromCart, clearCart } = useCart();
+  const { orders, sendProof, confirmReceived } = useBuyerOrders();
+  const { cart, cartCount, subtotal, loaded: cartLoaded, addToCart, changeQty, removeFromCart } = useCart();
+  const { checkoutStep, goCheckoutStep, startCheckout, pendingCheckout, resumeCheckout, address, setAddressField, shipping, setShipping, shippingMethods, shippingCost, proofName, setProof, placeOrder, placing, orderNumber, finishOrder } = useCheckout();
   const { panels, setPanel, openPanel, closePanel, togglePanel, toast, showToast } = useUi();
-  const [checkoutStep, setCheckoutStep] = useState(1);
-  const [address, setAddress] = useState<Address>(EMPTY_ADDRESS);
-  const [shipping, setShipping] = useState("regular");
-  const [placing, setPlacing] = useState(false);
-  const [proofName, setProofName] = useState("");
-  const [orderNumber, setOrderNumber] = useState("000000");
-  const proofFile = useRef<File | null>(null);
   const [localReviews, setLocalReviews] = useState(INITIAL_MY_REVIEWS);
-  const { user, loginOpen, intent, openLogin, closeLogin } = useAuth();
+  const { user, loginOpen, intent, closeLogin } = useAuth();
   const reviews = useMyReviews(user?.id ?? null, reviewServices);
   const notifications = useNotifications(user?.id ?? null, notificationServices);
-  const userId = user?.id ?? null;
 
-  const chosenShipping = shippingMethods.find((m) => m.value === shipping) ?? shippingMethods[0];
-  const shippingCost = chosenShipping?.cost ?? 0;
-
-  /** Returns true when signed in. Otherwise opens the login dialog for `why` and returns false. */
-  const requireLogin = useCallback(
-    (why: LoginIntent) => {
-      if (user) return true;
-      openLogin(why);
-      return false;
-    },
-    [openLogin, user],
-  );
-
-  const startCheckout = useCallback(() => {
-    if (!cart.length) return;
-    if (!requireLogin("checkout")) return;
-    setPanel("drawer", false);
-    // A checkout left half done picks up where it stopped (payment, say); anything else starts at the address.
-    setCheckoutStep((step) => (step === 2 || step === 3 ? step : 1));
-    setPanel("checkout", true);
-  }, [cart.length, requireLogin, setPanel]);
+  const orderErrorText = useOrderErrorText();
 
   // A user appearing while the login dialog is open means sign-in worked: close it and pick up where the buyer left off.
+  // The cart and the checkout carry on their own part (adding the picked product, opening the checkout) when it is theirs.
   useEffect(() => {
     if (!user || !loginOpen) return;
-    // The cart adds what the buyer picked itself, once this account's saved cart has loaded.
     if (intent === "cart" && !cartLoaded) return;
     closeLogin();
-    if (intent === "checkout" && cart.length) {
-      setPanel("drawer", false);
-      setCheckoutStep((step) => (step === 2 || step === 3 ? step : 1));
-      setPanel("checkout", true);
-    }
     if (intent === "orders") setPanel("orders", true);
-  }, [user, loginOpen, intent, cartLoaded, cart.length, closeLogin, setPanel]);
-
-  // Pre-fill the receiver name from the account the first time.
-  useEffect(() => {
-    if (user) setAddress((a) => (a.fullName ? a : { ...a, fullName: user.name }));
-  }, [user]);
-
-  const goCheckoutStep = useCallback(
-    (step: number) => {
-      if (step === 2) {
-        const missing = REQUIRED_ADDRESS_FIELDS.find((k) => !address[k].trim());
-        if (missing) {
-          document.getElementById(missing)?.focus();
-          showToast(t("store.toast.fillAddress"));
-          return;
-        }
-      }
-      setCheckoutStep(step);
-      document.querySelector("#checkoutFlow .panel")?.scrollTo({ top: 0, behavior: "smooth" });
-    },
-    [address, showToast],
-  );
-
-  const setProof = useCallback(
-    (file: File | null) => {
-      // A photo is shrunk before it is sent, so it may be big; a PDF (or a file of unknown type) has to fit as it is.
-      if (file && file.size > (file.type.startsWith("image/") ? MAX_PROOF_SOURCE_BYTES : MAX_PROOF_BYTES)) {
-        showToast(t("store.toast.fileTooBig"));
-        return false;
-      }
-      proofFile.current = file;
-      setProofName(file ? file.name : "");
-      return true;
-    },
-    [showToast],
-  );
-
-  /** The words for a failed order action; products are named so the buyer knows which line to fix. */
-  const orderErrorText = useCallback(
-    (error: OrderError) => t(`store.orderErrors.${error.kind}`, { name: (error.productId ? getProduct(error.productId)?.name : undefined) ?? t("store.orderErrors.thisProduct") }),
-    [getProduct],
-  );
-
-  const placeOrder = useCallback(async () => {
-    if (placing) return;
-    if (!proofFile.current) {
-      showToast(t("store.toast.needProof"));
-      return;
-    }
-    if (!user) {
-      openLogin("checkout");
-      return;
-    }
-    setPlacing(true);
-    const result = await submitOrder({
-      items: cart.flatMap((line) => {
-        const product = getProduct(line.id);
-        return product ? [{ productId: product.id, qty: line.qty, price: product.price }] : [];
-      }),
-      shippingCode: chosenShipping?.value ?? shipping,
-      recipient: address.fullName.trim() || user.name,
-      phone: address.phone.trim(),
-      address: address.address.trim(),
-      city: address.city.trim(),
-      postcode: address.postcode.trim(),
-      proof: proofFile.current,
-    });
-    setPlacing(false);
-    if (!result.ok) {
-      showToast(orderErrorText(result.error));
-      return;
-    }
-    if (!result.value.proofSent) showToast(t("store.toast.proofPending"));
-    setOrderNumber(result.value.number);
-    setCheckoutStep(4);
-  }, [address, cart, chosenShipping, getProduct, openLogin, orderErrorText, placing, shipping, showToast, submitOrder, user]);
+  }, [user, loginOpen, intent, cartLoaded, closeLogin, setPanel]);
 
   const sendOrderProof = useCallback(
     async (order: Order, file: File) => {
@@ -239,66 +126,6 @@ export function StoreProvider({ children, reviewServices, notificationServices }
     },
     [orderErrorText, sendProof, showToast],
   );
-
-  const finishOrder = useCallback(() => {
-    clearCart();
-    proofFile.current = null;
-    setProofName("");
-    setAddress(EMPTY_ADDRESS);
-    setPanel("checkout", false);
-    showToast(t("store.toast.thanks"));
-  }, [clearCart, setPanel, showToast]);
-
-  // Closing the checkout from its last screen (the cross, or a click beside it) finishes the order too, so the cart is not
-  // left full of what was just bought. The "back to the shop" button does that itself and has emptied the cart by then.
-  const checkoutWasOpen = useRef(false);
-  useEffect(() => {
-    const wasOpen = checkoutWasOpen.current;
-    checkoutWasOpen.current = panels.checkout;
-    if (wasOpen && !panels.checkout && checkoutStep === 4 && cart.length > 0) finishOrder();
-  }, [panels.checkout, checkoutStep, cart.length, finishOrder]);
-
-  // A checkout left half done survives closing the panel and reloading the page: step, address, and shipping are kept per
-  // account. (The proof file cannot be kept, so a reload during payment asks for it again.)
-  const draftKey = userId ? CHECKOUT_DRAFT_PREFIX + userId : null;
-  const midCheckout = checkoutStep === 2 || checkoutStep === 3;
-  const restoredDraftFor = useRef<string | null>(null);
-  useEffect(() => {
-    if (!draftKey || !cartLoaded || restoredDraftFor.current === draftKey) return;
-    restoredDraftFor.current = draftKey;
-    if (!cart.length) return;
-    try {
-      const raw: unknown = JSON.parse(window.localStorage.getItem(draftKey) ?? "null");
-      const draft = raw as { step?: unknown; address?: Partial<Address>; shipping?: unknown } | null;
-      if (!draft || (draft.step !== 2 && draft.step !== 3)) return;
-      setCheckoutStep(draft.step);
-      if (draft.address && typeof draft.address === "object") setAddress((a) => ({ ...a, ...Object.fromEntries(Object.entries(draft.address as object).filter(([k, v]) => k in EMPTY_ADDRESS && typeof v === "string")) }));
-      if (typeof draft.shipping === "string") setShipping(draft.shipping);
-    } catch {
-      // Unreadable draft: start the checkout from the beginning.
-    }
-  }, [draftKey, cartLoaded, userId, cart.length]);
-
-  useEffect(() => {
-    if (!draftKey || !cartLoaded || restoredDraftFor.current !== draftKey) return;
-    try {
-      if (midCheckout && cart.length > 0) window.localStorage.setItem(draftKey, JSON.stringify({ step: checkoutStep, address, shipping }));
-      else window.localStorage.removeItem(draftKey);
-    } catch {
-      // Storage blocked: the checkout still works for this tab.
-    }
-  }, [draftKey, cartLoaded, userId, midCheckout, checkoutStep, address, shipping, cart.length]);
-
-  // An emptied cart ends a half-done checkout: there is nothing left to pay for.
-  useEffect(() => {
-    if (cartLoaded && cart.length === 0 && midCheckout) setCheckoutStep(1);
-  }, [cartLoaded, cart.length, midCheckout]);
-
-  const pendingCheckout = useMemo(() => (user && cart.length > 0 && midCheckout && !panels.checkout ? { step: checkoutStep } : null), [user, cart.length, midCheckout, panels.checkout, checkoutStep]);
-  const resumeCheckout = useCallback(() => {
-    closePanel("notifications");
-    startCheckout();
-  }, [closePanel, startCheckout]);
 
   const completeOrder = useCallback(
     async (orderNumber: string) => {
@@ -380,7 +207,7 @@ export function StoreProvider({ children, reviewServices, notificationServices }
     cart, cartCount, subtotal, addToCart, changeQty, removeFromCart, selected, openDetail,
     panels, openPanel, closePanel, togglePanel, mobileNav,
     checkoutStep, goCheckoutStep, startCheckout, pendingCheckout, resumeCheckout,
-    address, setAddressField: (k, v) => setAddress((a) => ({ ...a, [k]: v })),
+    address, setAddressField,
     shipping, setShipping, shippingMethods, shippingCost, proofName, setProof, placeOrder, placing, sendOrderProof, orderNumber, finishOrder,
     toast, showToast, scrollToProducts, signedIn: Boolean(user), orders, completeOrder, myReviews, saveReview, notifications, openNotification,
   };
