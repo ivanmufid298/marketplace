@@ -22,6 +22,15 @@ describe("describeNotification", () => {
       urgent: true,
     });
   });
+  it("warns that an order is about to expire, with the deadline in Jakarta time, and offers the upload", () => {
+    expect(describeNotification(n("payment_expiring", { number: "100002", deadline: "2026-10-13T08:30:00Z" }))).toEqual({
+      title: "Pesanan #100002 segera kedaluwarsa",
+      body: "Kirim bukti transfer sebelum pukul 15.30 WIB, atau pesanan dibatalkan dan stoknya dikembalikan.",
+      actionLabel: "Unggah bukti",
+      urgent: true,
+    });
+    expect(describeNotification(n("payment_expiring", { number: "100002", deadline: "2026-10-13T08:30:00Z" }, true)).urgent).toBe(false);
+  });
   it("tells that a payment was accepted, with nothing to do", () => {
     expect(describeNotification(n("payment_accepted", { number: "100002" }))).toEqual({ title: "Pembayaran #100002 diterima", body: "Pesananmu sedang diproses dan dikirim.", actionLabel: null, urgent: false });
   });
@@ -44,7 +53,7 @@ describe("describeNotification", () => {
     expect(describeNotification(n("payment_accepted", { number: "1" }, false)).urgent).toBe(false);
   });
   it("copes with missing facts without writing 'undefined'", () => {
-    for (const kind of ["payment_needed", "payment_rejected", "payment_accepted", "order_cancelled", "refund_done", "order_expired", "review_invite"] as const) {
+    for (const kind of ["payment_needed", "payment_rejected", "payment_accepted", "order_cancelled", "refund_done", "order_expired", "review_invite", "payment_expiring"] as const) {
       const view = describeNotification(n(kind, {}));
       expect(`${view.title} ${view.body}`).not.toContain("undefined");
       expect(`${view.title} ${view.body}`).not.toContain("null");

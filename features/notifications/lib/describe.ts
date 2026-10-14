@@ -20,6 +20,8 @@ export function describeNotification(n: AppNotification): NotificationView {
       return { title: t("store.notifications.kinds.payment_needed.title", base), body: t("store.notifications.kinds.payment_needed.body", { time: timeOf(n.payload.expires_at) }), actionLabel: t("store.notifications.kinds.payment_needed.action"), urgent };
     case "payment_rejected":
       return { title: t("store.notifications.kinds.payment_rejected.title", base), body: t("store.notifications.kinds.payment_rejected.body", { reason: text(n.payload.reason), time: timeOf(n.payload.reupload_until) }), actionLabel: t("store.notifications.kinds.payment_rejected.action"), urgent };
+    case "payment_expiring":
+      return { title: t("store.notifications.kinds.payment_expiring.title", base), body: t("store.notifications.kinds.payment_expiring.body", { time: timeOf(n.payload.deadline) }), actionLabel: t("store.notifications.kinds.payment_expiring.action"), urgent };
     case "payment_accepted":
       return { title: t("store.notifications.kinds.payment_accepted.title", base), body: t("store.notifications.kinds.payment_accepted.body"), actionLabel: null, urgent };
     case "order_cancelled":

@@ -1,9 +1,9 @@
 /** Every kind of notification a buyer can get. The database allows exactly these. */
-export const NOTIFICATION_KINDS = ["payment_needed", "payment_rejected", "payment_accepted", "order_cancelled", "refund_done", "order_expired", "review_invite"] as const;
+export const NOTIFICATION_KINDS = ["payment_needed", "payment_rejected", "payment_accepted", "order_cancelled", "refund_done", "order_expired", "review_invite", "payment_expiring"] as const;
 export type NotificationKind = (typeof NOTIFICATION_KINDS)[number];
 
 /** Kinds that ask the buyer to do something. The rest only tell them something. */
-export const ACTIONABLE_KINDS: readonly NotificationKind[] = ["payment_needed", "payment_rejected", "review_invite"];
+export const ACTIONABLE_KINDS: readonly NotificationKind[] = ["payment_needed", "payment_rejected", "payment_expiring", "review_invite"];
 
 export type AppNotification = {
   id: number;

@@ -107,6 +107,11 @@
           "body": "{reason} Kirim bukti baru sebelum pukul {time} WIB.",
           "action": "Unggah ulang"
         },
+        "payment_expiring": {
+          "title": "Pesanan #{number} segera kedaluwarsa",
+          "body": "Kirim bukti transfer sebelum pukul {time} WIB, atau pesanan dibatalkan dan stoknya dikembalikan.",
+          "action": "Unggah bukti"
+        },
         "payment_accepted": {
           "title": "Pembayaran #{number} diterima",
           "body": "Pesananmu sedang diproses dan dikirim."
