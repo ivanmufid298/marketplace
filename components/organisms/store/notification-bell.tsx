@@ -1,6 +1,6 @@
 "use client";
 
-import { useBuyerNotifications } from "@/features/notifications";
+import { useMyNotifications } from "@/features/notifications";
 import { useCheckout } from "@/features/checkout";
 import { useAuth } from "@/features/auth";
 import { t } from "@/lib/i18n";
@@ -13,7 +13,7 @@ export function NotificationBell({ className = "" }: { className?: string }) {
   const { openPanel } = useUi();
   const { user } = useAuth();
   const signedIn = Boolean(user);
-  const notifications = useBuyerNotifications();
+  const notifications = useMyNotifications();
   const { pendingCheckout } = useCheckout();
   // A checkout left half done counts as one more thing to do, even where the shop keeps no notifications (the demo).
   if (!signedIn || (!notifications.database && !pendingCheckout)) return null;

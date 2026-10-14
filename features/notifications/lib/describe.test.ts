@@ -31,6 +31,16 @@ describe("describeNotification", () => {
     });
     expect(describeNotification(n("payment_expiring", { number: "100002", deadline: "2026-10-13T08:30:00Z" }, true)).urgent).toBe(false);
   });
+  it("tells an admin a proof is waiting, with who sent it and the total, and offers to check it", () => {
+    expect(describeNotification(n("payment_submitted", { number: "100002", recipient: "Ana Putri", total: 178000 }))).toEqual({
+      title: "Bukti pembayaran baru #100002",
+      body: "Ana Putri mengirim bukti transfer Rp178.000. Periksa lalu terima atau tolak.",
+      actionLabel: "Periksa",
+      urgent: true,
+    });
+    expect(describeNotification(n("payment_submitted", { number: "100002", recipient: "Ana", total: 1 }, true)).urgent).toBe(false);
+    expect(describeNotification(n("payment_submitted", { number: "100002", recipient: "Ana" })).body).toBe("Ana mengirim bukti transfer . Periksa lalu terima atau tolak.");
+  });
   it("tells that a payment was accepted, with nothing to do", () => {
     expect(describeNotification(n("payment_accepted", { number: "100002" }))).toEqual({ title: "Pembayaran #100002 diterima", body: "Pesananmu sedang diproses dan dikirim.", actionLabel: null, urgent: false });
   });
@@ -53,7 +63,7 @@ describe("describeNotification", () => {
     expect(describeNotification(n("payment_accepted", { number: "1" }, false)).urgent).toBe(false);
   });
   it("copes with missing facts without writing 'undefined'", () => {
-    for (const kind of ["payment_needed", "payment_rejected", "payment_accepted", "order_cancelled", "refund_done", "order_expired", "review_invite", "payment_expiring"] as const) {
+    for (const kind of ["payment_needed", "payment_rejected", "payment_accepted", "order_cancelled", "refund_done", "order_expired", "review_invite", "payment_expiring", "payment_submitted"] as const) {
       const view = describeNotification(n(kind, {}));
       expect(`${view.title} ${view.body}`).not.toContain("undefined");
       expect(`${view.title} ${view.body}`).not.toContain("null");

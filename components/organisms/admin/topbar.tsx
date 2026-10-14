@@ -5,6 +5,7 @@ import { ADMIN_NAV } from "@/lib/admin-nav";
 import { t } from "@/lib/i18n";
 import { Icon } from "../../atoms/icon";
 import { IconButton } from "../../atoms/icon-button";
+import { AdminNotificationBell } from "./notification-bell";
 import { useAdmin } from "../../providers/admin-provider";
 
 export function Topbar() {
@@ -24,10 +25,7 @@ export function Topbar() {
         </div>
       </div>
       <div className="top-actions">
-        <IconButton label={t("admin.shell.notifications")}>
-          <span className="dot" />
-          <Icon name="bell" />
-        </IconButton>
+        <AdminNotificationBell />
         <div className="profile">
           <span className="avatar">FA</span>
           <div><b>{t("admin.shell.profileName")}</b><span>{t("admin.shell.profileRole")}</span></div>

@@ -6,7 +6,7 @@ import { CartProvider, useCart } from "@/features/cart";
 import { CatalogProvider, useCatalog } from "@/features/catalog";
 import { ChatProvider, useChat } from "@/features/chat";
 import { CheckoutProvider, useCheckout } from "@/features/checkout";
-import { NotificationsProvider, useBuyerNotifications, type NotificationServices } from "@/features/notifications";
+import { NotificationsProvider, useMyNotifications, type NotificationServices } from "@/features/notifications";
 import { OrdersProvider, useBuyerOrders, type OrderServices } from "@/features/orders";
 import type { BuyerReviewServices } from "@/features/reviews";
 import { UiProvider, useUi } from "@/shared/ui-state/ui-provider";
@@ -52,6 +52,6 @@ export function useStorefront(reviewServices?: BuyerReviewServices) {
     ...useOrderActions(reviewServices),
     auth,
     signedIn: Boolean(auth.user),
-    notifications: useBuyerNotifications(),
+    notifications: useMyNotifications(),
   };
 }

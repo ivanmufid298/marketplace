@@ -43,6 +43,9 @@ describe("toNotification", () => {
   it("knows the warning that an order is about to expire", () => {
     expect(toNotification(row({ kind: "payment_expiring", payload: { number: "100002", deadline: "2026-10-13T11:30:00Z" } }))).toMatchObject({ kind: "payment_expiring", payload: { deadline: "2026-10-13T11:30:00Z" } });
   });
+  it("knows the notice that a payment is waiting for an admin", () => {
+    expect(toNotification(row({ kind: "payment_submitted", payload: { number: "100002", recipient: "Ana", total: 1 } }))).toMatchObject({ kind: "payment_submitted" });
+  });
   it("leaves out a kind this version does not know, instead of showing it wrongly", () => {
     expect(toNotification(row({ kind: "something_new" }))).toBeNull();
   });

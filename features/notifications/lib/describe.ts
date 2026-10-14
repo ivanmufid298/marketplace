@@ -1,4 +1,4 @@
-import { formatDateTime } from "@/lib/format";
+import { formatDateTime, money } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import { ACTIONABLE_KINDS, type AppNotification } from "./types";
 
@@ -22,6 +22,9 @@ export function describeNotification(n: AppNotification): NotificationView {
       return { title: t("store.notifications.kinds.payment_rejected.title", base), body: t("store.notifications.kinds.payment_rejected.body", { reason: text(n.payload.reason), time: timeOf(n.payload.reupload_until) }), actionLabel: t("store.notifications.kinds.payment_rejected.action"), urgent };
     case "payment_expiring":
       return { title: t("store.notifications.kinds.payment_expiring.title", base), body: t("store.notifications.kinds.payment_expiring.body", { time: timeOf(n.payload.deadline) }), actionLabel: t("store.notifications.kinds.payment_expiring.action"), urgent };
+    case "payment_submitted":
+      // For an admin: a proof is waiting to be checked.
+      return { title: t("store.notifications.kinds.payment_submitted.title", base), body: t("store.notifications.kinds.payment_submitted.body", { recipient: text(n.payload.recipient), total: typeof n.payload.total === "number" ? money(n.payload.total) : "" }), actionLabel: t("store.notifications.kinds.payment_submitted.action"), urgent };
     case "payment_accepted":
       return { title: t("store.notifications.kinds.payment_accepted.title", base), body: t("store.notifications.kinds.payment_accepted.body"), actionLabel: null, urgent };
     case "order_cancelled":

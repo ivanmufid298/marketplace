@@ -107,6 +107,11 @@
           "body": "{reason} Kirim bukti baru sebelum pukul {time} WIB.",
           "action": "Unggah ulang"
         },
+        "payment_submitted": {
+          "title": "Bukti pembayaran baru #{number}",
+          "body": "{recipient} mengirim bukti transfer {total}. Periksa lalu terima atau tolak.",
+          "action": "Periksa"
+        },
         "payment_expiring": {
           "title": "Pesanan #{number} segera kedaluwarsa",
           "body": "Kirim bukti transfer sebelum pukul {time} WIB, atau pesanan dibatalkan dan stoknya dikembalikan.",
@@ -435,6 +440,13 @@
       "viewStore": "Lihat marketplace",
       "subtitle": "Ringkasan performa marketplace hari ini",
       "notifications": "Notifikasi",
+      "notificationsUnread": "Notifikasi, {count} belum dibaca",
+      "notificationsTitle": "Pembayaran yang perlu diperiksa",
+      "notificationsEmpty": "Tidak ada pembayaran yang menunggu. Bukti transfer baru akan muncul di sini.",
+      "notificationsLoading": "Memuat notifikasi…",
+      "notificationsError": "Notifikasi belum bisa dimuat.",
+      "notificationsRetry": "Coba lagi",
+      "notificationsMarkAll": "Tandai semua dibaca",
       "profileName": "Admin",
       "profileRole": "Super admin",
       "openMenu": "Buka menu",

@@ -8,9 +8,9 @@ import type { NotificationServices } from "./lib/services";
 const NotificationsContext = createContext<Notifications | null>(null);
 
 /** What the bell and the panel both read: the signed-in buyer's notifications, loaded once. */
-export function useBuyerNotifications() {
+export function useMyNotifications() {
   const ctx = useContext(NotificationsContext);
-  if (!ctx) throw new Error("useBuyerNotifications must be used inside <NotificationsProvider>");
+  if (!ctx) throw new Error("useMyNotifications must be used inside <NotificationsProvider>");
   return ctx;
 }
 

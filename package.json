@@ -9,7 +9,7 @@
     "lint": "tsc --noEmit",
     "test": "node --test \"lib/**/*.test.mts\" \"features/**/*.test.mts\" && vitest run",
     "test:ui": "vitest run",
-    "test:sql": "node supabase/tests/profiles.test.mjs && node supabase/tests/catalog.test.mjs && node supabase/tests/reviews.test.mjs && node supabase/tests/orders.test.mjs && node supabase/tests/orders-admin.test.mjs && node supabase/tests/reviews-orders.test.mjs && node supabase/tests/notifications.test.mjs && node supabase/tests/expiry-reminders.test.mjs"
+    "test:sql": "node supabase/tests/profiles.test.mjs && node supabase/tests/catalog.test.mjs && node supabase/tests/reviews.test.mjs && node supabase/tests/orders.test.mjs && node supabase/tests/orders-admin.test.mjs && node supabase/tests/reviews-orders.test.mjs && node supabase/tests/notifications.test.mjs && node supabase/tests/expiry-reminders.test.mjs && node supabase/tests/admin-notifications.test.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

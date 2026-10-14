@@ -3,7 +3,7 @@
 import { useCheckout } from "@/features/checkout";
 import { useAuth } from "@/features/auth";
 import { useEffect } from "react";
-import { describeNotification, useBuyerNotifications, type AppNotification } from "@/features/notifications";
+import { describeNotification, useMyNotifications, type AppNotification } from "@/features/notifications";
 import { t } from "@/lib/i18n";
 import { timeAgo } from "@/lib/time-ago";
 import { useUi } from "@/shared/ui-state/ui-provider";
@@ -20,7 +20,7 @@ export function NotificationsPanel() {
   const { panels, openPanel, closePanel } = useUi();
   const { user } = useAuth();
   const signedIn = Boolean(user);
-  const notifications = useBuyerNotifications();
+  const notifications = useMyNotifications();
   const { pendingCheckout, resumeCheckout } = useCheckout();
   const { markRead } = notifications;
   /** The buyer chose a notification: it is marked read and "Pesanan saya" opens, where the thing to do is. */
