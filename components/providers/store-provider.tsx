@@ -13,7 +13,6 @@ import { useUi, type PanelId } from "@/shared/ui-state/ui-provider";
 
 export type CartLine = { id: number; qty: number };
 export type Address = { fullName: string; phone: string; address: string; city: string; postcode: string; note: string };
-export type ChatMessage = { from: "user" | "admin"; text: string; meta: string };
 export type MobileNavMode = "home" | "category" | "saved" | "orders" | "cart";
 
 const EMPTY_ADDRESS: Address = { fullName: "", phone: "", address: "", city: "", postcode: "", note: "" };
@@ -71,8 +70,6 @@ type StoreContextValue = {
   sendOrderProof: (order: Order, file: File) => Promise<boolean>;
   orderNumber: string;
   finishOrder: () => void;
-  chatMessages: ChatMessage[];
-  sendChat: (text: string) => void;
   toast: string;
   showToast: (msg: string) => void;
   scrollToProducts: () => void;
@@ -118,8 +115,6 @@ export function StoreProvider({ children, reviewServices, notificationServices }
   const [placing, setPlacing] = useState(false);
   const [proofName, setProofName] = useState("");
   const [orderNumber, setOrderNumber] = useState("000000");
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([{ from: "admin", text: t("store.chat.welcome"), meta: t("store.chat.metaAdmin") }]);
-  const interactionId = useRef<string | null>(null);
   const proofFile = useRef<File | null>(null);
   const [localReviews, setLocalReviews] = useState(INITIAL_MY_REVIEWS);
   const { user, ready, loginOpen, intent, openLogin, closeLogin } = useAuth();
@@ -236,7 +231,6 @@ export function StoreProvider({ children, reviewServices, notificationServices }
       setPanel("checkout", true);
     }
     if (intent === "orders") setPanel("orders", true);
-    if (intent === "chat") setPanel("chat", true);
   }, [user, userId, loginOpen, intent, cartOwner, pendingAdd, cart.length, addToCart, closeLogin, setPanel]);
 
   // Pre-fill the receiver name from the account the first time.
@@ -383,22 +377,6 @@ export function StoreProvider({ children, reviewServices, notificationServices }
     startCheckout();
   }, [closePanel, startCheckout]);
 
-  const sendChat = useCallback(
-    (text: string) => {
-    const message = text.trim();
-    if (!message) return;
-    if (!requireLogin("chat")) return;
-    if (!interactionId.current) interactionId.current = "INT-" + String(Date.now()).slice(-6);
-    const id = interactionId.current;
-    setChatMessages((m) => [...m, { from: "user", text: message, meta: t("store.chat.metaUser") }]);
-    setTimeout(
-      () => setChatMessages((m) => [...m, { from: "admin", text: t("store.chat.autoReply", { id }), meta: t("store.chat.metaSystem") }]),
-      550,
-    );
-    },
-    [requireLogin],
-  );
-
   const completeOrder = useCallback(
     async (orderNumber: string) => {
       const order = orders.find((o) => o.number === orderNumber);
@@ -481,7 +459,7 @@ export function StoreProvider({ children, reviewServices, notificationServices }
     checkoutStep, goCheckoutStep, startCheckout, pendingCheckout, resumeCheckout,
     address, setAddressField: (k, v) => setAddress((a) => ({ ...a, [k]: v })),
     shipping, setShipping, shippingMethods, shippingCost, proofName, setProof, placeOrder, placing, sendOrderProof, orderNumber, finishOrder,
-    chatMessages, sendChat, toast, showToast, scrollToProducts, signedIn: Boolean(user), orders, completeOrder, myReviews, saveReview, notifications, openNotification,
+    toast, showToast, scrollToProducts, signedIn: Boolean(user), orders, completeOrder, myReviews, saveReview, notifications, openNotification,
   };
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;

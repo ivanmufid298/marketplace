@@ -8,6 +8,7 @@ import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AuthProvider, useAuth } from "@/features/auth";
 import { CatalogProvider } from "@/features/catalog";
+import { ChatProvider } from "@/features/chat";
 import { products } from "@/lib/mock/store";
 import { OrdersProvider } from "@/features/orders";
 import { UiProvider } from "@/shared/ui-state/ui-provider";
@@ -22,7 +23,7 @@ const wrapper = ({ children }: { children: ReactNode }) => (
   <AuthProvider>
     <UiProvider>
       <CatalogProvider>
-        <OrdersProvider><StoreProvider>{children}</StoreProvider></OrdersProvider>
+        <OrdersProvider><ChatProvider><StoreProvider>{children}</StoreProvider></ChatProvider></OrdersProvider>
       </CatalogProvider>
     </UiProvider>
   </AuthProvider>
@@ -446,45 +447,6 @@ describe("checkout", () => {
     await run(() => m.s().startCheckout());
     expect(m.s().checkoutStep).toBe(2);
     expect(m.s().address.city).toBe("Jakarta");
-  });
-});
-
-describe("chat", () => {
-  it("starts with the admin's welcome message", async () => {
-    const m = mount();
-    expect(m.s().chatMessages).toHaveLength(1);
-    expect(m.s().chatMessages[0].from).toBe("admin");
-  });
-
-  it("asks a guest to sign in instead of sending", async () => {
-    const m = mount();
-    await run(() => m.s().sendChat("halo"));
-    expect(m.s().chatMessages).toHaveLength(1);
-    expect(m.a().loginOpen).toBe(true);
-    expect(m.a().intent).toBe("chat");
-  });
-
-  it("ignores empty messages", async () => {
-    const m = mountSignedIn();
-    await run(() => m.s().sendChat("   "));
-    expect(m.s().chatMessages).toHaveLength(1);
-    expect(m.a().loginOpen).toBe(false);
-  });
-
-  it("sends a trimmed message and gets an automatic reply that keeps the same ticket id", async () => {
-    vi.useFakeTimers();
-    const m = mountSignedIn();
-    await run(() => m.s().sendChat("  halo  "));
-    expect(m.s().chatMessages.map((c) => [c.from, c.text])).toEqual([["admin", m.s().chatMessages[0].text], ["user", "halo"]]);
-
-    await act(async () => { vi.advanceTimersByTime(550); });
-    expect(m.s().chatMessages).toHaveLength(3);
-    const firstId = /INT-\d{6}/.exec(m.s().chatMessages[2].text)?.[0];
-    expect(firstId).toBeDefined();
-
-    await run(() => m.s().sendChat("lagi"));
-    await act(async () => { vi.advanceTimersByTime(550); });
-    expect(/INT-\d{6}/.exec(m.s().chatMessages[4].text)?.[0]).toBe(firstId);
   });
 });
 

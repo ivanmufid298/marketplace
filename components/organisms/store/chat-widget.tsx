@@ -7,17 +7,20 @@ import { Icon } from "../../atoms/icon";
 import { Button } from "../../atoms/button";
 import { ChatBubble } from "../../molecules/chat-bubble";
 import { useAuth } from "@/features/auth";
-import { useStore } from "../../providers/store-provider";
+import { useChat } from "@/features/chat";
+import { useUi } from "@/shared/ui-state/ui-provider";
 
 export function ChatWidget() {
-  const { panels, togglePanel, closePanel, chatMessages, sendChat, signedIn } = useStore();
-  const { openLogin } = useAuth();
+  const { panels, togglePanel, closePanel } = useUi();
+  const { messages, send } = useChat();
+  const { user, openLogin } = useAuth();
+  const signedIn = Boolean(user);
   const box = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     box.current?.scrollTo({ top: box.current.scrollHeight });
-  }, [chatMessages]);
+  }, [messages]);
 
   return (
     <>
@@ -32,7 +35,7 @@ export function ChatWidget() {
           <CloseButton label={t("store.chat.close")} onClick={() => closePanel("chat")} />
         </div>
         <div className="chat-messages" ref={box}>
-          {chatMessages.map((m, i) => <ChatBubble key={i} from={m.from} text={m.text} meta={m.meta} />)}
+          {messages.map((m, i) => <ChatBubble key={i} from={m.from} text={m.text} meta={m.meta} />)}
         </div>
         {signedIn ? (
           <form
@@ -40,7 +43,7 @@ export function ChatWidget() {
             onSubmit={(e) => {
               e.preventDefault();
               if (input.current) {
-                sendChat(input.current.value);
+                send(input.current.value);
                 input.current.value = "";
               }
             }}
