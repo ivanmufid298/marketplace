@@ -25,7 +25,7 @@ type OrderCardProps = {
   order: Order;
   products: Product[];
   reviews: Record<string, MyReview>;
-  onSaveReview: (productId: number, review: MyReview) => boolean;
+  onSaveReview: (productId: number, review: MyReview) => boolean | Promise<boolean>;
   onComplete: () => void;
   /** Sends a transfer proof for an order that has none yet. Only database orders can use it. */
   onSendProof?: (file: File) => void;

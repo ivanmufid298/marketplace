@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useMemo, useRef, useState, type
 import { t } from "@/lib/i18n";
 import { isCancelled, toPayment } from "@/lib/order-flow";
 import { useAdminOrders, type AdminOrderServices, type OrdersStatus } from "@/features/orders";
+import { useAdminReviews, type AdminReviewServices, type ReviewsError } from "@/features/reviews";
 import type { OrderError } from "@/features/orders";
 import {
   initialInteractions,
@@ -31,7 +32,12 @@ type AdminContextValue = {
   toggleInteractionStatus: (id: string) => void;
   replyInteraction: (id: string, text: string) => void;
   reviews: Review[];
-  toggleReview: (id: number) => void;
+  /** Whether the reviews come from the database (otherwise the sample reviews). */
+  reviewsDatabase: boolean;
+  reviewsStatus: OrdersStatus;
+  reloadReviews: () => void;
+  /** Hides a review from the shop, or shows it again. */
+  toggleReview: (id: number) => Promise<void>;
   orders: Order[];
   /** Whether the orders come from the database (otherwise the sample store). */
   ordersDatabase: boolean;
@@ -62,13 +68,16 @@ type AdminProviderProps = {
   children: ReactNode;
   /** Tests pass fakes, which also switches the orders to the database path. */
   orderServices?: AdminOrderServices;
+  /** The same for the reviews. */
+  reviewServices?: AdminReviewServices;
 };
 
-export function AdminProvider({ children, orderServices }: AdminProviderProps) {
+export function AdminProvider({ children, orderServices, reviewServices }: AdminProviderProps) {
   const { orders, status: ordersStatus, database: ordersDatabase, reload: reloadOrders, ...orderActions } = useAdminOrders(orderServices);
   const [interactions, setInteractions] = useState(initialInteractions);
   const [activeInteractionId, setActiveInteractionId] = useState<string | null>(initialInteractions[0].id);
-  const [reviews, setReviews] = useState(initialReviews);
+  const [sampleReviews, setSampleReviews] = useState(initialReviews);
+  const dbReviews = useAdminReviews(reviewServices);
   const [modal, setModal] = useState<ModalType | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [toast, setToast] = useState("");
@@ -148,15 +157,25 @@ export function AdminProvider({ children, orderServices }: AdminProviderProps) {
     );
   }, []);
 
+  const reviews: Review[] = useMemo(
+    () => (dbReviews.database ? dbReviews.reviews.map((r) => ({ id: r.id, buyer: r.buyer, product: r.product, rating: r.rating, text: r.text, status: r.hidden ? ("hidden" as const) : ("visible" as const), verified: r.verified })) : sampleReviews),
+    [dbReviews.database, dbReviews.reviews, sampleReviews],
+  );
+
   const toggleReview = useCallback(
-    (id: number) => {
+    async (id: number) => {
       const current = reviews.find((r) => r.id === id);
       if (!current) return;
       const next = current.status === "visible" ? "hidden" : "visible";
-      setReviews((prev) => prev.map((r) => (r.id === id ? { ...r, status: next } : r)));
+      if (dbReviews.database) {
+        const result = await dbReviews.setHidden(id, next === "hidden");
+        showToast(result.ok ? (next === "visible" ? t("admin.reviews.toastShown") : t("admin.reviews.toastHidden")) : t(`admin.reviews.errors.${(result as { error: ReviewsError }).error}`));
+        return;
+      }
+      setSampleReviews((prev) => prev.map((r) => (r.id === id ? { ...r, status: next } : r)));
       showToast(next === "visible" ? t("admin.reviews.toastShown") : t("admin.reviews.toastHidden"));
     },
-    [reviews, showToast],
+    [dbReviews, reviews, showToast],
   );
 
   const cancelOrder = useCallback(
@@ -195,7 +214,7 @@ export function AdminProvider({ children, orderServices }: AdminProviderProps) {
     <AdminContext.Provider
       value={{
         payments, acceptPayment, rejectPayment, viewProof, interactions, activeInteractionId, selectInteraction, toggleInteractionStatus, replyInteraction,
-        reviews, toggleReview, orders, ordersDatabase, ordersStatus, reloadOrders, cancelOrder, markRefunded, resetData, modal, openModal: setModal, closeModal: () => setModal(null), sidebarOpen, setSidebarOpen, toast, showToast,
+        reviews, reviewsDatabase: dbReviews.database, reviewsStatus: dbReviews.status, reloadReviews: dbReviews.reload, toggleReview, orders, ordersDatabase, ordersStatus, reloadOrders, cancelOrder, markRefunded, resetData, modal, openModal: setModal, closeModal: () => setModal(null), sidebarOpen, setSidebarOpen, toast, showToast,
       }}
     >
       {children}

@@ -135,7 +135,7 @@ function SuccessStep({ active }: { active: boolean }) {
 }
 
 export function CheckoutFlow() {
-  const { panels, closePanel, checkoutStep: step } = useStore();
+  const { panels, closePanel, checkoutStep: step, goCheckoutStep } = useStore();
   return (
     <aside className={`checkout-flow${panels.checkout ? " open" : ""}`} id="checkoutFlow" aria-hidden={!panels.checkout}>
       <div className="overlay" onClick={() => closePanel("checkout")} />
@@ -145,7 +145,7 @@ export function CheckoutFlow() {
             <h2>{t("store.checkout.title")}</h2>
             <CloseButton label={t("common.close")} onClick={() => closePanel("checkout")} />
           </div>
-          <StepIndicator labels={STEPS.map((s) => t(`store.checkout.steps.${s}`))} current={step} />
+          <StepIndicator labels={STEPS.map((s) => t(`store.checkout.steps.${s}`))} current={step} onSelect={goCheckoutStep} />
         </div>
         <div className="co-body">
           <AddressStep active={step === 1} />

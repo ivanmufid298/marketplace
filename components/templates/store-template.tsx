@@ -8,6 +8,7 @@ import { Footer } from "../organisms/store/footer";
 import { Header } from "../organisms/store/header";
 import { StoreLoginDialog } from "../organisms/store/store-login-dialog";
 import { MobileNav } from "../organisms/store/mobile-nav";
+import { NotificationsPanel } from "../organisms/store/notifications-panel";
 import { OrdersPanel } from "../organisms/store/orders-panel";
 import { StoreToast } from "../organisms/store/store-toast";
 import { AuthProvider } from "@/features/auth";
@@ -30,6 +31,7 @@ export function StoreTemplate({ children }: { children: ReactNode }) {
               <Footer />
               <CartDrawer />
               <OrdersPanel />
+              <NotificationsPanel />
               <DetailPanel />
               <CheckoutFlow />
               <CategorySheet />

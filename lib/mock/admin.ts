@@ -33,7 +33,16 @@ export const initialInteractions: Interaction[] = [
 ];
 
 export type ReviewStatus = "visible" | "hidden";
-export type Review = { id: number; buyer: string; product: string; rating: number; text: string; status: ReviewStatus };
+export type Review = {
+  id: number;
+  buyer: string;
+  product: string;
+  rating: number;
+  text: string;
+  status: ReviewStatus;
+  /** False for a review that does not come from a completed order (an admin entered it). Defaults to true. */
+  verified?: boolean;
+};
 
 export const initialReviews: Review[] = [
   { id: 1, buyer: "Nadia Putri", product: "Tote Canvas Everyday", rating: 5, text: "Produknya sesuai foto, packing rapi dan warnanya cantik banget.", status: "visible" },

@@ -25,5 +25,6 @@ export type ProductReviews = { stats: ReviewStats; reviews: ProductReview[] };
 
 export const NO_REVIEWS: ProductReviews = { stats: { count: 0, average: 0, stars: [0, 0, 0, 0, 0] }, reviews: [] };
 
-export type ReviewsError = "network" | "unknown";
+/** Why a read or a write of reviews failed. The shop words each reason itself (store.reviewErrors, admin.reviews.errors). */
+export type ReviewsError = "network" | "unknown" | "notSignedIn" | "itemNotFound" | "notReviewable" | "invalidRating" | "invalidReview" | "forbidden";
 export type ReviewsResult = { ok: true; value: ProductReviews } | { ok: false; error: ReviewsError };

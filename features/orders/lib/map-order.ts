@@ -4,7 +4,7 @@ import type { ProductPhoto } from "@/lib/mock/store";
 
 // Turns a row of the orders table (with its items) into the shape the shop screens already use.
 
-export type OrderItemRow = { product_id: number | null; product_name: string; product_slug: string | null; image_key: string | null; unit_price: number; quantity: number };
+export type OrderItemRow = { id?: number; product_id: number | null; product_name: string; product_slug: string | null; image_key: string | null; unit_price: number; quantity: number };
 export type OrderRow = {
   id: string;
   number: string;
@@ -52,6 +52,7 @@ export function toOrder(row: OrderRow, buyerId: string, photoFor: (imageKey: str
   const canSendProof = (row.payment_status === "awaiting_payment" || row.payment_status === "rejected") && !timedOut && deadline !== null;
 
   const items: OrderItem[] = (row.order_items ?? []).map((item) => ({
+    ...(item.id !== undefined ? { itemId: item.id } : {}),
     productId: item.product_id ?? 0,
     qty: item.quantity,
     price: item.unit_price,

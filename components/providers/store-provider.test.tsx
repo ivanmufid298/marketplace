@@ -434,7 +434,9 @@ describe("checkout", () => {
     expect(JSON.parse(window.localStorage.getItem("marketplace-cart-v2:nadia") ?? "null")).toEqual([]);
   });
 
-  it("opening checkout again starts back at step 1", async () => {
+  it("opening checkout again picks up where it was closed", async () => {
+    // Changed on purpose: closing the checkout half way used to throw the progress away; now it is kept (and a
+    // notification reminds the buyer), so reopening it resumes at the same step.
     const m = mountSignedIn();
     await addTo(m, mug);
     await run(() => m.s().startCheckout());
@@ -442,7 +444,8 @@ describe("checkout", () => {
     await run(() => m.s().goCheckoutStep(2));
     await run(() => m.s().closePanel("checkout"));
     await run(() => m.s().startCheckout());
-    expect(m.s().checkoutStep).toBe(1);
+    expect(m.s().checkoutStep).toBe(2);
+    expect(m.s().address.city).toBe("Jakarta");
   });
 });
 
@@ -516,16 +519,16 @@ describe("orders and reviews", () => {
   it("validates a review, saves it, and reports an update the second time", async () => {
     const m = mountSignedIn();
     let ok = true;
-    await run(() => { ok = m.s().saveReview("837288", 4, { rating: 0, text: "bagus" }); });
+    await run(async () => { ok = await m.s().saveReview("837288", 4, { rating: 0, text: "bagus" }); });
     expect(ok).toBe(false);
     expect(m.s().toast).toBe("Pilih rating dulu");
 
-    await run(() => { ok = m.s().saveReview("837288", 4, { rating: 5, text: "" }); });
+    await run(async () => { ok = await m.s().saveReview("837288", 4, { rating: 5, text: "" }); });
     expect(ok).toBe(false);
     expect(m.s().toast).toBe("Tulis ulasanmu dulu");
     expect(m.s().myReviews["837288:4"]).toBeUndefined();
 
-    await run(() => { ok = m.s().saveReview("837288", 4, { rating: 5, text: "Lampunya bagus" }); });
+    await run(async () => { ok = await m.s().saveReview("837288", 4, { rating: 5, text: "Lampunya bagus" }); });
     expect(ok).toBe(true);
     expect(m.s().toast).toBe("Terima kasih, ulasanmu terkirim");
     expect(m.s().myReviews["837288:4"]).toEqual({ rating: 5, text: "Lampunya bagus" });

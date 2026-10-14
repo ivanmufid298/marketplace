@@ -8,6 +8,7 @@ import { useCatalog } from "@/features/catalog";
 import { useUi } from "@/shared/ui-state/ui-provider";
 import { useStore } from "../../providers/store-provider";
 import { AccountMenu } from "./account-menu";
+import { NotificationBell } from "./notification-bell";
 
 export function Header() {
   const { query, setQuery } = useCatalog();
@@ -18,6 +19,8 @@ export function Header() {
       <div className="notice">{t("store.header.notice")}</div>
       <header className="header">
         <div className="shell nav">
+          {/* On a phone the actions are in the bottom bar, but the bell has no place there, so it sits at the top right. */}
+          <NotificationBell className="notif-bell-mobile" />
           <a className="brand" href="#">
             <span className="brand-mark">M</span>
             <span className="brand-name">{t("common.brand")}</span>
@@ -32,6 +35,7 @@ export function Header() {
           />
           <div className="actions">
             <AccountMenu />
+            <NotificationBell />
             <IconButton label={t("store.header.orders")} onClick={() => openPanel("orders")}><Icon name="package" /></IconButton>
             <IconButton label={t("store.header.openCart")} onClick={() => openPanel("drawer")}>
               <Icon name="cart" />

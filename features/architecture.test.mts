@@ -11,6 +11,7 @@ export const ALLOWED: Record<string, string[]> = {
   catalog: [],
   reviews: [],
   orders: ["auth", "catalog"],
+  notifications: [],
 };
 
 /** Code every feature may use and that must never import a feature. */

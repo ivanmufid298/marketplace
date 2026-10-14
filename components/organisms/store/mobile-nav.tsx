@@ -11,7 +11,7 @@ export function MobileNav() {
   const { panels } = useUi();
   const { savedOnly } = useCatalog();
   const { mobileNav, cartCount } = useStore();
-  const overlayOpen = panels.drawer || panels.orders || panels.categorySheet;
+  const overlayOpen = panels.drawer || panels.orders || panels.categorySheet || panels.notifications;
 
   return (
     <nav className="mobile-nav" aria-label={t("store.mobileNav.label")}>

@@ -17,7 +17,7 @@ type OrderItemLineProps = {
   canReview: boolean;
   review?: MyReview;
   /** Returns false when the review was rejected (e.g. missing rating), so the form stays open. */
-  onSaveReview: (review: MyReview) => boolean;
+  onSaveReview: (review: MyReview) => boolean | Promise<boolean>;
 };
 
 export function OrderItemLine({ product: p, qty, canReview, review, onSaveReview }: OrderItemLineProps) {
@@ -34,8 +34,8 @@ export function OrderItemLine({ product: p, qty, canReview, review, onSaveReview
           <ReviewForm
             initial={review}
             onCancel={() => setEditing(false)}
-            onSubmit={(next) => {
-              if (onSaveReview(next)) setEditing(false);
+            onSubmit={async (next) => {
+              if (await onSaveReview(next)) setEditing(false);
             }}
           />
         )}

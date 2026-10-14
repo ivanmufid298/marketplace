@@ -79,6 +79,68 @@
       "addToCart": "Tambah ke keranjang",
       "openPage": "Buka halaman produk"
     },
+    "notifications": {
+      "title": "Notifikasi",
+      "bell": "Notifikasi",
+      "bellUnread": "Notifikasi, {count} belum dibaca",
+      "empty": "Belum ada notifikasi. Kabar tentang pesananmu akan muncul di sini.",
+      "markAll": "Tandai semua dibaca",
+      "loading": "Memuat notifikasi…",
+      "loadError": "Notifikasi belum bisa dimuat.",
+      "retry": "Coba lagi",
+      "signIn": "Masuk untuk melihat notifikasi.",
+      "toNew": "Baru",
+      "checkout": {
+        "title": "Checkout belum selesai",
+        "bodyShipping": "Tinggal pilih pengiriman dan bayar untuk menyelesaikan pesananmu.",
+        "bodyPayment": "Tinggal unggah bukti transfer lalu buat pesanan. Tanpa itu pesananmu belum tercatat.",
+        "action": "Lanjutkan checkout"
+      },
+      "kinds": {
+        "payment_needed": {
+          "title": "Selesaikan pembayaran pesanan #{number}",
+          "body": "Kirim bukti transfer sebelum pukul {time} WIB, atau pesanan dibatalkan otomatis.",
+          "action": "Unggah bukti"
+        },
+        "payment_rejected": {
+          "title": "Bukti pembayaran #{number} ditolak",
+          "body": "{reason} Kirim bukti baru sebelum pukul {time} WIB.",
+          "action": "Unggah ulang"
+        },
+        "payment_accepted": {
+          "title": "Pembayaran #{number} diterima",
+          "body": "Pesananmu sedang diproses dan dikirim."
+        },
+        "order_cancelled": {
+          "title": "Pesanan #{number} dibatalkan",
+          "body": "Alasan: {note}",
+          "bodyRefund": "Alasan: {note} Dana akan dikembalikan."
+        },
+        "refund_done": {
+          "title": "Refund pesanan #{number} sudah dikirim",
+          "body": "Silakan cek rekeningmu."
+        },
+        "order_expired": {
+          "title": "Pesanan #{number} kedaluwarsa",
+          "body": "Bukti pembayaran tidak diterima tepat waktu, jadi pesanan dibatalkan dan stoknya dikembalikan."
+        },
+        "review_invite": {
+          "title": "Bagaimana pesananmu #{number}?",
+          "body": "Tulis ulasan untuk barang yang sudah kamu terima.",
+          "action": "Tulis ulasan"
+        }
+      }
+    },
+    "reviewErrors": {
+      "notSignedIn": "Masuk dulu untuk menulis ulasan.",
+      "itemNotFound": "Barang ini tidak ditemukan di pesananmu.",
+      "notReviewable": "Ulasan hanya bisa ditulis setelah pesanan ditandai selesai.",
+      "invalidRating": "Pilih rating 1 sampai 5.",
+      "invalidReview": "Tulis ulasanmu (maksimal 2000 karakter).",
+      "forbidden": "Akun ini tidak bisa menulis ulasan. Coba masuk ulang.",
+      "network": "Tidak bisa terhubung. Periksa koneksi lalu coba lagi.",
+      "unknown": "Terjadi kesalahan. Coba lagi."
+    },
     "orderErrors": {
       "thisProduct": "produk ini",
       "notSignedIn": "Masuk dulu untuk membuat pesanan.",
@@ -777,7 +839,25 @@
       "hide": "Sembunyikan",
       "show": "Tampilkan",
       "toastShown": "Ulasan ditampilkan",
-      "toastHidden": "Ulasan disembunyikan"
+      "toastHidden": "Ulasan disembunyikan",
+      "loading": "Memuat ulasan…",
+      "loadError": "Ulasan belum bisa dimuat.",
+      "retry": "Coba lagi",
+      "empty": "Belum ada ulasan.",
+      "emptyFiltered": "Tidak ada ulasan yang cocok dengan filter.",
+      "unverifiedBuyer": "Ditambahkan admin",
+      "hiddenCount": "Disembunyikan",
+      "hiddenNote": "Tidak tampil di toko",
+      "errors": {
+        "notSignedIn": "Sesi berakhir. Masuk lagi sebagai admin.",
+        "itemNotFound": "Ulasan tidak ditemukan. Muat ulang daftar.",
+        "notReviewable": "Ulasan tidak bisa diubah.",
+        "invalidRating": "Ulasan tidak valid.",
+        "invalidReview": "Ulasan tidak valid.",
+        "forbidden": "Akun ini bukan admin, atau ulasannya sudah tidak ada. Muat ulang daftar.",
+        "network": "Tidak bisa terhubung. Periksa koneksi lalu coba lagi.",
+        "unknown": "Terjadi kesalahan. Coba lagi."
+      }
     },
     "promos": {
       "title": "Promo & scheduler",

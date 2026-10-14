@@ -1,18 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { t } from "@/lib/i18n";
 import { REVIEW_STATS } from "@/lib/mock/admin";
 import { AdminButton } from "../../atoms/admin-button";
 import { StatusBadge } from "../../atoms/badges";
 import { MetricCard } from "../../molecules/metric-card";
+import { OrdersStatusNote } from "../../molecules/orders-status-note";
 import { SectionTop } from "../../molecules/section-top";
 import { stars } from "../../molecules/review-summary";
 import { Select } from "../../molecules/select";
 import { useAdmin } from "../../providers/admin-provider";
 
 export function ReviewTable() {
-  const { reviews, toggleReview } = useAdmin();
+  const { reviews, toggleReview, reviewsDatabase, reviewsStatus, reloadReviews } = useAdmin();
   const [rating, setRating] = useState("all");
   const [status, setStatus] = useState("all");
 
@@ -22,6 +23,17 @@ export function ReviewTable() {
     { value: "visible", label: t("admin.reviews.visible") },
     { value: "hidden", label: t("admin.reviews.hidden") },
   ];
+  // Opening the screen shows the latest reviews.
+  useEffect(() => {
+    reloadReviews();
+    // Only opening the screen should refresh, not every change to the list.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // With the database the numbers come from the reviews themselves; the sample screen keeps its sample numbers.
+  const shownReviews = reviews.filter((r) => r.status === "visible");
+  const average = shownReviews.length ? (shownReviews.reduce((sum, r) => sum + r.rating, 0) / shownReviews.length).toLocaleString("id-ID", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : "0,0";
+  const hiddenCount = reviews.length - shownReviews.length;
   const list = reviews.filter((r) => (rating === "all" || r.rating === Number(rating)) && (status === "all" || r.status === status));
 
   return (
@@ -32,9 +44,19 @@ export function ReviewTable() {
           <Select options={statusOptions} value={status} onChange={setStatus} />
         </div>
       </SectionTop>
+      <OrdersStatusNote status={reviewsStatus} onRetry={reloadReviews} texts={{ loading: t("admin.reviews.loading"), error: t("admin.reviews.loadError"), retry: t("admin.reviews.retry") }} />
       <div className="cards" style={{ marginBottom: 18 }}>
-        <MetricCard label={t("admin.reviews.averageRating")} value={REVIEW_STATS.average} note={t("admin.reviews.averageNote", { count: REVIEW_STATS.count })} />
-        <MetricCard label={t("admin.reviews.pendingModeration")} value={String(REVIEW_STATS.pending)} note={t("admin.reviews.pendingNote")} warn />
+        {reviewsDatabase ? (
+          <>
+            <MetricCard label={t("admin.reviews.averageRating")} value={average} note={t("admin.reviews.averageNote", { count: shownReviews.length })} />
+            <MetricCard label={t("admin.reviews.hiddenCount")} value={String(hiddenCount)} note={t("admin.reviews.hiddenNote")} warn />
+          </>
+        ) : (
+          <>
+            <MetricCard label={t("admin.reviews.averageRating")} value={REVIEW_STATS.average} note={t("admin.reviews.averageNote", { count: REVIEW_STATS.count })} />
+            <MetricCard label={t("admin.reviews.pendingModeration")} value={String(REVIEW_STATS.pending)} note={t("admin.reviews.pendingNote")} warn />
+          </>
+        )}
       </div>
       <div className="table-card">
         <div className="table-wrap">
@@ -52,7 +74,7 @@ export function ReviewTable() {
             <tbody>
               {list.map((r) => (
                 <tr key={r.id}>
-                  <td><strong>{r.buyer}</strong><span className="sub">{t("admin.reviews.verifiedBuyer")}</span></td>
+                  <td><strong>{r.buyer}</strong><span className="sub">{r.verified === false ? t("admin.reviews.unverifiedBuyer") : t("admin.reviews.verifiedBuyer")}</span></td>
                   <td>{r.product}</td>
                   <td><span style={{ color: "#d66a87", whiteSpace: "nowrap" }}>{stars(r.rating)}</span></td>
                   <td style={{ maxWidth: 330 }}>{r.text}</td>
@@ -62,7 +84,7 @@ export function ReviewTable() {
                     </StatusBadge>
                   </td>
                   <td>
-                    <AdminButton small onClick={() => toggleReview(r.id)}>
+                    <AdminButton small onClick={() => void toggleReview(r.id)}>
                       {r.status === "visible" ? t("admin.reviews.hide") : t("admin.reviews.show")}
                     </AdminButton>
                   </td>
@@ -70,6 +92,7 @@ export function ReviewTable() {
               ))}
             </tbody>
           </table>
+          {list.length === 0 && reviewsStatus === "ready" && <p className="sub" style={{ textAlign: "center", padding: 28, margin: 0 }}>{t(reviews.length === 0 ? "admin.reviews.empty" : "admin.reviews.emptyFiltered")}</p>}
         </div>
       </div>
     </section>

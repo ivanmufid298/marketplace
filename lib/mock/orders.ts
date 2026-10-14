@@ -6,6 +6,8 @@ import type { ProductPhoto } from "./store";
 export type PaymentState = "pending" | "success" | "failed";
 
 export type OrderItem = {
+  /** The database id of this line of the order (what a review is attached to). Sample orders have none. */
+  itemId?: number;
   productId: number;
   qty: number;
   /** The unit price when it was bought. */

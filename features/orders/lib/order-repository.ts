@@ -38,7 +38,7 @@ export type OrderRepositoryDeps = {
 };
 
 const ORDER_COLUMNS =
-  "id, number, recipient_name, phone, address, city, postcode, shipping_label, shipping_fee, payment_status, expires_at, payment_rejection_reason, reupload_until, received_at, cancel_note, refund_status, created_at, order_items(product_id, product_name, product_slug, image_key, unit_price, quantity)";
+  "id, number, recipient_name, phone, address, city, postcode, shipping_label, shipping_fee, payment_status, expires_at, payment_rejection_reason, reupload_until, received_at, cancel_note, refund_status, created_at, order_items(id, product_id, product_name, product_slug, image_key, unit_price, quantity)";
 
 const ADMIN_COLUMNS = `${ORDER_COLUMNS}, buyer_id, order_status_history(event, actor_name, note, created_at), payment_proofs(object_key, mime_type, size_bytes, created_at)`;
 

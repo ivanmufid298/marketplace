@@ -7,7 +7,7 @@ const NOW = Date.parse("2026-10-13T12:00:00Z");
 const row = (over: Partial<OrderRow> = {}): OrderRow => ({
   id: "o-1", number: "100002", recipient_name: "Ana Putri", phone: "0811000111", address: "Jl. Mawar 1", city: "Jakarta", postcode: "12345", shipping_label: "Express", shipping_fee: 32000,
   payment_status: "awaiting_payment", expires_at: "2026-10-13T13:00:00Z", received_at: null, cancel_note: null, refund_status: null, created_at: "2026-10-13T11:00:00Z",
-  order_items: [{ product_id: 1, product_name: "Longchamp", product_slug: "longchamp", image_key: "products/1/a.webp", unit_price: 189000, quantity: 2 }], ...over,
+  order_items: [{ id: 41, product_id: 1, product_name: "Longchamp", product_slug: "longchamp", image_key: "products/1/a.webp", unit_price: 189000, quantity: 2 }], ...over,
 });
 const map = (over: Partial<OrderRow> = {}) => toOrder(row(over), "buyer-1", photoFor, NOW);
 
@@ -20,10 +20,13 @@ describe("the details", () => {
     expect(map().history).toEqual([]);
   });
   it("copies each item as bought: product id, quantity, the price paid, name, slug, and cover photo", () => {
-    expect(map().items).toEqual([{ productId: 1, qty: 2, price: 189000, name: "Longchamp", slug: "longchamp", photos: [photoFor("products/1/a.webp", "Longchamp")] }]);
+    expect(map().items).toEqual([{ itemId: 41, productId: 1, qty: 2, price: 189000, name: "Longchamp", slug: "longchamp", photos: [photoFor("products/1/a.webp", "Longchamp")] }]);
   });
   it("leaves out the slug and uses no photo when the item has none, and id 0 when the product is gone", () => {
     expect(map({ order_items: [{ product_id: null, product_name: "Lama", product_slug: null, image_key: null, unit_price: 1, quantity: 1 }] }).items).toEqual([{ productId: 0, qty: 1, price: 1, name: "Lama", photos: [] }]);
+  });
+  it("leaves out the item id when the row has none", () => {
+    expect(map({ order_items: [{ product_id: 1, product_name: "X", product_slug: null, image_key: null, unit_price: 1, quantity: 1 }] }).items[0]).not.toHaveProperty("itemId");
   });
   it("has no items for an order row without them", () => {
     expect(map({ order_items: null }).items).toEqual([]);

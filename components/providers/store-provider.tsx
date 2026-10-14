@@ -6,6 +6,8 @@ import { INITIAL_MY_REVIEWS, type MyReview, type Order } from "@/lib/mock/orders
 import { formatDateTime } from "@/lib/format";
 import { useAuth, type LoginIntent } from "@/features/auth";
 import { useCatalog, type Product, type SortMode } from "@/features/catalog";
+import { useNotifications, type AppNotification, type NotificationServices, type Notifications } from "@/features/notifications";
+import { useMyReviews, type BuyerReviewServices } from "@/features/reviews";
 import { MAX_PROOF_BYTES, MAX_PROOF_SOURCE_BYTES, useBuyerOrders, type OrderError, type ShippingMethod } from "@/features/orders";
 import { useUi, type PanelId } from "@/shared/ui-state/ui-provider";
 
@@ -17,6 +19,8 @@ export type MobileNavMode = "home" | "category" | "saved" | "orders" | "cart";
 const EMPTY_ADDRESS: Address = { fullName: "", phone: "", address: "", city: "", postcode: "", note: "" };
 const REQUIRED_ADDRESS_FIELDS: (keyof Address)[] = ["fullName", "phone", "address", "city", "postcode"];
 const CART_KEY_PREFIX = "marketplace-cart-v2:";
+/** A checkout the buyer left half done (step, address, shipping), kept per account so it survives closing the panel and a reload. */
+const CHECKOUT_DRAFT_PREFIX = "marketplace-checkout-v1:";
 const LEGACY_CART_KEY = "marketplace-cart-v1";
 
 type StoreContextValue = {
@@ -47,6 +51,10 @@ type StoreContextValue = {
   checkoutStep: number;
   goCheckoutStep: (step: number) => void;
   startCheckout: () => void;
+  /** A checkout the buyer started and closed before finishing, with the step it stopped at. `null` when there is none. */
+  pendingCheckout: { step: number } | null;
+  /** Opens the checkout again where the buyer left it. */
+  resumeCheckout: () => void;
   address: Address;
   setAddressField: (k: keyof Address, v: string) => void;
   /** The code of the chosen shipping method. */
@@ -75,8 +83,12 @@ type StoreContextValue = {
   /** Buyer taps "Pesanan selesai" on a paid order. */
   completeOrder: (orderNumber: string) => Promise<void>;
   myReviews: Record<string, MyReview>;
+  /** What happened to the buyer's orders and what they still have to do. */
+  notifications: Notifications;
+  /** The buyer chose a notification: it is marked read and "Pesanan saya" opens, where the thing to do is. */
+  openNotification: (notification: AppNotification) => void;
   /** Saves the review of one order item. Returns false (with a toast) when rating or text is missing. */
-  saveReview: (orderNumber: string, productId: number, review: MyReview) => boolean;
+  saveReview: (orderNumber: string, productId: number, review: MyReview) => boolean | Promise<boolean>;
 };
 
 const StoreContext = createContext<StoreContextValue | null>(null);
@@ -87,7 +99,15 @@ export function useStore() {
   return ctx;
 }
 
-export function StoreProvider({ children }: { children: ReactNode }) {
+type StoreProviderProps = {
+  children: ReactNode;
+  /** Tests pass fakes for the buyer's own reviews, which also switches them to the database path. */
+  reviewServices?: BuyerReviewServices;
+  /** The same for the buyer's notifications. */
+  notificationServices?: NotificationServices;
+};
+
+export function StoreProvider({ children, reviewServices, notificationServices }: StoreProviderProps) {
   const { products, status: catalogStatus, getProduct, visibleProducts, category, setCategory, query, setQuery, sort, setSort, savedOnly, liked, toggleLike, selected, openDetail, showSaved, showAll, scrollToProducts } = useCatalog();
   const { orders, shippingMethods, placeOrder: submitOrder, sendProof, confirmReceived } = useBuyerOrders();
   const [cart, setCart] = useState<CartLine[]>([]);
@@ -101,8 +121,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([{ from: "admin", text: t("store.chat.welcome"), meta: t("store.chat.metaAdmin") }]);
   const interactionId = useRef<string | null>(null);
   const proofFile = useRef<File | null>(null);
-  const [myReviews, setMyReviews] = useState(INITIAL_MY_REVIEWS);
+  const [localReviews, setLocalReviews] = useState(INITIAL_MY_REVIEWS);
   const { user, ready, loginOpen, intent, openLogin, closeLogin } = useAuth();
+  const reviews = useMyReviews(user?.id ?? null, reviewServices);
+  const notifications = useNotifications(user?.id ?? null, notificationServices);
   // The cart belongs to the signed-in account and is kept in this browser per account until it moves to the database.
   // Guests have no cart: adding to it asks them to sign in first.
   const userId = user?.id ?? null;
@@ -193,7 +215,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     if (!cart.length) return;
     if (!requireLogin("checkout")) return;
     setPanel("drawer", false);
-    setCheckoutStep(1);
+    // A checkout left half done picks up where it stopped (payment, say); anything else starts at the address.
+    setCheckoutStep((step) => (step === 2 || step === 3 ? step : 1));
     setPanel("checkout", true);
   }, [cart.length, requireLogin, setPanel]);
 
@@ -209,7 +232,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
     if (intent === "checkout" && cart.length) {
       setPanel("drawer", false);
-      setCheckoutStep(1);
+      setCheckoutStep((step) => (step === 2 || step === 3 ? step : 1));
       setPanel("checkout", true);
     }
     if (intent === "orders") setPanel("orders", true);
@@ -309,6 +332,57 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     showToast(t("store.toast.thanks"));
   }, [setPanel, showToast]);
 
+  // Closing the checkout from its last screen (the cross, or a click beside it) finishes the order too, so the cart is not
+  // left full of what was just bought. The "back to the shop" button does that itself and has emptied the cart by then.
+  const checkoutWasOpen = useRef(false);
+  useEffect(() => {
+    const wasOpen = checkoutWasOpen.current;
+    checkoutWasOpen.current = panels.checkout;
+    if (wasOpen && !panels.checkout && checkoutStep === 4 && cart.length > 0) finishOrder();
+  }, [panels.checkout, checkoutStep, cart.length, finishOrder]);
+
+  // A checkout left half done survives closing the panel and reloading the page: step, address, and shipping are kept per
+  // account. (The proof file cannot be kept, so a reload during payment asks for it again.)
+  const draftKey = userId ? CHECKOUT_DRAFT_PREFIX + userId : null;
+  const midCheckout = checkoutStep === 2 || checkoutStep === 3;
+  const restoredDraftFor = useRef<string | null>(null);
+  useEffect(() => {
+    if (!draftKey || cartOwner !== userId || restoredDraftFor.current === draftKey) return;
+    restoredDraftFor.current = draftKey;
+    if (!cart.length) return;
+    try {
+      const raw: unknown = JSON.parse(window.localStorage.getItem(draftKey) ?? "null");
+      const draft = raw as { step?: unknown; address?: Partial<Address>; shipping?: unknown } | null;
+      if (!draft || (draft.step !== 2 && draft.step !== 3)) return;
+      setCheckoutStep(draft.step);
+      if (draft.address && typeof draft.address === "object") setAddress((a) => ({ ...a, ...Object.fromEntries(Object.entries(draft.address as object).filter(([k, v]) => k in EMPTY_ADDRESS && typeof v === "string")) }));
+      if (typeof draft.shipping === "string") setShipping(draft.shipping);
+    } catch {
+      // Unreadable draft: start the checkout from the beginning.
+    }
+  }, [draftKey, cartOwner, userId, cart.length]);
+
+  useEffect(() => {
+    if (!draftKey || cartOwner !== userId || restoredDraftFor.current !== draftKey) return;
+    try {
+      if (midCheckout && cart.length > 0) window.localStorage.setItem(draftKey, JSON.stringify({ step: checkoutStep, address, shipping }));
+      else window.localStorage.removeItem(draftKey);
+    } catch {
+      // Storage blocked: the checkout still works for this tab.
+    }
+  }, [draftKey, cartOwner, userId, midCheckout, checkoutStep, address, shipping, cart.length]);
+
+  // An emptied cart ends a half-done checkout: there is nothing left to pay for.
+  useEffect(() => {
+    if (cartOwner === userId && cart.length === 0 && midCheckout) setCheckoutStep(1);
+  }, [cartOwner, userId, cart.length, midCheckout]);
+
+  const pendingCheckout = useMemo(() => (user && cart.length > 0 && midCheckout && !panels.checkout ? { step: checkoutStep } : null), [user, cart.length, midCheckout, panels.checkout, checkoutStep]);
+  const resumeCheckout = useCallback(() => {
+    closePanel("notifications");
+    startCheckout();
+  }, [closePanel, startCheckout]);
+
   const sendChat = useCallback(
     (text: string) => {
     const message = text.trim();
@@ -335,8 +409,22 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [confirmReceived, orderErrorText, orders, showToast],
   );
 
+  // The buyer's reviews as the order screens read them, by "order number:product". In the database they come from the
+  // reviews table, matched to the order items they are about; otherwise from this browser.
+  const myReviews = useMemo(() => {
+    if (!reviews.database) return localReviews;
+    const out: Record<string, MyReview> = {};
+    for (const order of orders) {
+      for (const item of order.items) {
+        const mine = item.itemId === undefined ? undefined : reviews.byItemId[item.itemId];
+        if (mine) out[`${order.number}:${item.productId}`] = { rating: mine.rating, text: mine.body };
+      }
+    }
+    return out;
+  }, [localReviews, orders, reviews.byItemId, reviews.database]);
+
   const saveReview = useCallback(
-    (orderNumber: string, productId: number, review: MyReview) => {
+    (orderNumber: string, productId: number, review: MyReview): boolean | Promise<boolean> => {
       if (review.rating < 1) {
         showToast(t("store.toast.reviewNeedRating"));
         return false;
@@ -346,11 +434,33 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         return false;
       }
       const key = `${orderNumber}:${productId}`;
-      showToast(myReviews[key] ? t("store.toast.reviewUpdated") : t("store.toast.reviewSent"));
-      setMyReviews((prev) => ({ ...prev, [key]: review }));
-      return true;
+      const updating = Boolean(myReviews[key]);
+      if (!reviews.database) {
+        showToast(updating ? t("store.toast.reviewUpdated") : t("store.toast.reviewSent"));
+        setLocalReviews((prev) => ({ ...prev, [key]: review }));
+        return true;
+      }
+      const itemId = orders.find((o) => o.number === orderNumber)?.items.find((i) => i.productId === productId)?.itemId;
+      if (itemId === undefined) {
+        showToast(t("store.reviewErrors.itemNotFound"));
+        return false;
+      }
+      return reviews.submit(itemId, review.rating, review.text).then((result) => {
+        showToast(result.ok ? (updating ? t("store.toast.reviewUpdated") : t("store.toast.reviewSent")) : t(`store.reviewErrors.${result.error}`));
+        return result.ok;
+      });
     },
-    [myReviews, showToast],
+    [myReviews, orders, reviews, showToast],
+  );
+
+  const { markRead: markNotificationRead } = notifications;
+  const openNotification = useCallback(
+    (notification: AppNotification) => {
+      void markNotificationRead(notification.id);
+      closePanel("notifications");
+      openPanel("orders");
+    },
+    [closePanel, markNotificationRead, openPanel],
   );
 
   const mobileNav = useCallback(
@@ -368,10 +478,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     products, visibleProducts, category, setCategory, query, setQuery, sort, setSort, savedOnly, liked, toggleLike,
     cart, cartCount, subtotal, addToCart, changeQty, removeFromCart, selected, openDetail,
     panels, openPanel, closePanel, togglePanel, mobileNav,
-    checkoutStep, goCheckoutStep, startCheckout,
+    checkoutStep, goCheckoutStep, startCheckout, pendingCheckout, resumeCheckout,
     address, setAddressField: (k, v) => setAddress((a) => ({ ...a, [k]: v })),
     shipping, setShipping, shippingMethods, shippingCost, proofName, setProof, placeOrder, placing, sendOrderProof, orderNumber, finishOrder,
-    chatMessages, sendChat, toast, showToast, scrollToProducts, signedIn: Boolean(user), orders, completeOrder, myReviews, saveReview,
+    chatMessages, sendChat, toast, showToast, scrollToProducts, signedIn: Boolean(user), orders, completeOrder, myReviews, saveReview, notifications, openNotification,
   };
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;

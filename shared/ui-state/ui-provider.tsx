@@ -5,11 +5,11 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 // Page-level UI state that every storefront module needs: which overlay panels are open, and the toast message.
 // It lives in shared/ so that modules do not have to import each other just to open the cart or say "saved".
 
-export type PanelId = "drawer" | "detail" | "checkout" | "categorySheet" | "chat" | "orders";
+export type PanelId = "drawer" | "detail" | "checkout" | "categorySheet" | "chat" | "orders" | "notifications";
 
-const ALL_PANELS_CLOSED: Record<PanelId, boolean> = { drawer: false, detail: false, checkout: false, categorySheet: false, chat: false, orders: false };
+const ALL_PANELS_CLOSED: Record<PanelId, boolean> = { drawer: false, detail: false, checkout: false, categorySheet: false, chat: false, orders: false, notifications: false };
 /** Panels that cover the page, so the page behind them must not scroll. The chat widget floats and does not lock. */
-const SCROLL_LOCKING: PanelId[] = ["drawer", "detail", "checkout", "categorySheet", "orders"];
+const SCROLL_LOCKING: PanelId[] = ["drawer", "detail", "checkout", "categorySheet", "orders", "notifications"];
 const TOAST_MS = 1800;
 
 type UiContextValue = {
