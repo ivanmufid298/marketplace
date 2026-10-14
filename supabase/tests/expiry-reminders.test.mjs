@@ -21,6 +21,7 @@ const NOTIFICATIONS = read("20261014030000_notifications.sql");
 const RESOLVED = read("20261014050000_notifications_resolved.sql");
 const REMINDERS = read("20261014070000_expiry_reminders.sql");
 const SCHEDULE = read("20261014070100_schedule_order_jobs.sql");
+const PURGE = read("20261014110100_purge_cron_history.sql");
 
 const db = new PGlite();
 // An unexpected error should read as one failing line, not a dump of the engine.
@@ -100,9 +101,19 @@ for (const run of ["", " a second time"]) {
   try { await db.exec(scheduleSql); check(`the schedule migration runs${run}`, true); } catch (e) { check(`the schedule migration runs${run}`, false, e.message); }
 }
 const jobs = await rows(`select name, schedule, command from cron.job order by name`);
-check("exactly two jobs are scheduled, none twice", jobs.length === 2, JSON.stringify(jobs));
+check("exactly two order jobs are scheduled, none twice", jobs.length === 2, JSON.stringify(jobs));
 check("expired orders are cleaned up every minute", jobs.some((j) => j.name === "expire-overdue-orders" && j.schedule === "* * * * *" && /public\.expire_overdue_orders\(\)/.test(j.command)));
 check("reminders go out every 5 minutes", jobs.some((j) => j.name === "remind-expiring-orders" && j.schedule === "*/5 * * * *" && /public\.remind_expiring_orders\(\)/.test(j.command)));
+// ---- the scheduler's own log is cleaned up
+await db.exec(`create table cron.job_run_details (runid bigserial primary key, jobid bigint, status text, end_time timestamptz)`);
+for (const run of ["", " a second time"]) {
+  try { await db.exec(PURGE); check(`the purge migration runs${run}`, true); } catch (e) { check(`the purge migration runs${run}`, false, e.message); }
+}
+const purge = (await rows(`select name, schedule, command from cron.job where name = 'purge-cron-history'`));
+check("the history is purged once a day, and only one such job exists", purge.length === 1 && purge[0].schedule === "17 3 * * *", JSON.stringify(purge));
+await db.exec(`insert into cron.job_run_details (jobid, status, end_time) values (1, 'succeeded', now() - interval '4 days'), (1, 'succeeded', now() - interval '3 days 1 hour'), (1, 'succeeded', now() - interval '2 days'), (1, 'failed', now() - interval '1 minute')`);
+await db.exec(purge[0].command);
+check("it deletes runs older than 3 days and keeps the recent ones, failed or not", (await count(`select 1 from cron.job_run_details`)) === 2 && (await count(`select 1 from cron.job_run_details where status = 'failed'`)) === 1);
 check("the real migration asks for the pg_cron extension", /create extension if not exists pg_cron with schema pg_catalog;/i.test(SCHEDULE));
 
 // ---- who is reminded

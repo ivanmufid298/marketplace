@@ -17,6 +17,7 @@ const ACTIONS = read("20261013120000_order_admin_actions.sql");
 const WEBP = read("20261013140000_payment_proofs_webp.sql");
 const REVIEWS = read("20261013080000_product_reviews.sql");
 const FROM_ORDERS = read("20261014010000_reviews_from_orders.sql");
+const MERGED = read("20261014110000_merge_review_select_policies.sql");
 
 const db = new PGlite();
 // An unexpected error should read as one failing line, not a dump of the engine.
@@ -64,7 +65,7 @@ const CHECK = /violates check constraint/i;
 for (const sql of PREREQUISITES) {
   try { await db.exec(sql); } catch (e) { check("a prerequisite migration runs", false, e.message); process.exit(1); }
 }
-for (const [name, sql] of [["orders", ORDERS], ["payment-proofs bucket", BUCKET], ["order actions", ACTIONS], ["webp proofs", WEBP], ["reviews", REVIEWS], ["reviews from orders", FROM_ORDERS]]) {
+for (const [name, sql] of [["orders", ORDERS], ["payment-proofs bucket", BUCKET], ["order actions", ACTIONS], ["webp proofs", WEBP], ["reviews", REVIEWS], ["reviews from orders", FROM_ORDERS], ["merged review read policy", MERGED]]) {
   try { await db.exec(sql); check(`${name} migration runs`, true); } catch (e) { check(`${name} migration runs`, false, e.message); process.exit(1); }
   try { await db.exec(sql); check(`${name} migration runs a second time (idempotent)`, true); } catch (e) { check(`${name} migration runs a second time (idempotent)`, false, e.message); }
 }
@@ -185,6 +186,10 @@ await db.exec(`insert into public.product_reviews (product_id, author_name, rati
 check("reviews an admin entered by hand (no item) can be many", true);
 await db.exec(`delete from public.order_items where id = ${toteItem}`);
 check("deleting the order item keeps its review, without the link", (await one(`select order_item_id from public.product_reviews where product_id = 2 and user_id = '${ANA}'`)).order_item_id === null);
+
+// ---- one read rule per role (the linter flags two permissive policies for the same role and action)
+const selectPolicies = await rows(`select roles::text as roles, count(*)::int as n from pg_policies where schemaname = 'public' and tablename = 'product_reviews' and cmd = 'SELECT' group by roles::text order by roles::text`);
+check("signed-in people and visitors each have exactly one read rule on reviews", selectPolicies.length === 2 && selectPolicies.every((p) => p.n === 1), JSON.stringify(selectPolicies));
 
 console.log(failed ? `\n${failed} FAILED` : "\nAll review-from-order checks passed");
 process.exit(failed ? 1 : 0);

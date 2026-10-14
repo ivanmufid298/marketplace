@@ -259,6 +259,25 @@ rollback;
 
 Wishlist, checkout, chat, interactions, dan review disimpan di React context (`StoreProvider` dan `AdminProvider` di `components/providers/`). Pesanan dan pembayaran disimpan di `lib/orders-store.ts` (`localStorage`) agar storefront dan admin membaca data yang sama. Keranjang disimpan di `localStorage` per akun (kunci `marketplace-cart-v2:<id pengguna>`), sehingga bertahan setelah reload dan kembali saat akun yang sama login lagi. Guest tidak punya keranjang. Saat backend tersedia, ganti context ini dengan data dari Supabase melalui Server Component, Route Handler, atau Server Action.
 
+## Biaya nol dan pemantauan
+
+Targetnya **tanpa biaya**. Saat ini: organisasi Supabase `Vancy` ada di paket **Free** (dicek 14 Okt 2026), dan Vercel dipakai sementara di paket gratis. Batas paket Free Supabase yang relevan (angka dari dokumentasi Supabase yang kutahu; cek halaman Settings > Usage untuk angka terbaru): database 500 MB, file storage 1 GB, bandwidth 5 GB per bulan, 50.000 pengguna aktif per bulan, dan maksimal 2 project aktif (jadi persis cukup untuk dev dan production, tanpa staging).
+
+**Memeriksa kesehatan dan pemakaian** (hanya membaca, tidak mengubah apa pun):
+
+```bash
+npm run monitor:supabase
+```
+
+Ia menampilkan ukuran database dan storage terhadap batas gratis (status `ok`, `watch` di atas 60%, `ACT` di atas 85%), jumlah akun dan berkas, tabel terbesar, apakah dua pekerjaan terjadwal (kedaluwarsa dan pengingat) aktif dan baru saja jalan, kegagalan pekerjaan 24 jam terakhir, dan **pesanan yang lewat waktu tetapi belum kedaluwarsa** (kalau tidak nol, pekerjaan kedaluwarsa bermasalah). Yang tidak terlihat dari SQL: bandwidth dan pengguna aktif bulanan (lihat dashboard Usage), dan peringatan project akan dijeda.
+
+Keadaan per 14 Okt 2026 (project dev): database 12 MB (2,5%), storage 2,4 MB (0,2%), 2 akun, semua pekerjaan terjadwal sehat, 0 kegagalan. Saran keamanan Supabase (advisor): sembilan peringatan "fungsi SECURITY DEFINER bisa dipanggil pengguna masuk" itu **disengaja** (itulah API pesanan, ulasan, dan pembayaran; tiap fungsi memeriksa siapa pemanggilnya dan `anon` sudah dicabut). **Perlindungan kata sandi bocor** (cek ke HaveIBeenPwned) tidak bisa dinyalakan di paket Free (fitur berbayar), jadi kata sandi hanya dibatasi panjang minimumnya. Peringatan performa "dua kebijakan baca di ulasan" sudah diperbaiki (migrasi `20261014110000`); empat indeks "belum terpakai" sengaja dibiarkan karena itu indeks kunci asing yang berguna saat data bertambah.
+
+**Yang perlu diperhatikan agar tetap gratis:**
+- Project Free yang **tidak aktif seminggu dijeda** otomatis. Untuk toko production itu berarti toko mati; perlu "denyut" berkala (mis. Cloudflare Worker terjadwal yang gratis memanggil Supabase). Belum kupasang karena production belum ada; apakah pekerjaan `pg_cron` dihitung sebagai aktivitas belum kupastikan, jadi jangan diandalkan.
+- Bandwidth 5 GB per bulan: foto produk publik dilayani dari Supabase Storage dan ikut terhitung. Foto sudah dikecilkan ke WebP beberapa ukuran. Bila lalu lintas tumbuh, taruh Cloudflare di depannya atau pindahkan foto ke R2 (gratis 10 GB, tanpa biaya egress), sesuai rencana PRD.
+- Riwayat `pg_cron` dihapus otomatis setelah 3 hari (pekerjaan `purge-cron-history`), supaya tidak memakan database.
+
 ## Target implementasi
 
 - **Frontend dan server logic:** Next.js App Router.
