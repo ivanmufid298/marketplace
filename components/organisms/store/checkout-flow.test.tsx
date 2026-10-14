@@ -1,4 +1,5 @@
 // Run with `npm run test:ui`. The checkout's steps: where the shopper is, and going back from payment.
+import { CartProvider } from "@/features/cart";
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AuthProvider } from "@/features/auth";
@@ -32,7 +33,7 @@ const steps = () => [...document.querySelectorAll(".steps .step")].map((el) => (
 async function atPayment() {
   window.localStorage.setItem(SESSION_KEY, JSON.stringify({ id: "nadia", email: "n@demo.test", name: "Nadia" }));
   render(
-    <AuthProvider><UiProvider><CatalogProvider><OrdersProvider><StoreProvider><Controls /><CheckoutFlow /></StoreProvider></OrdersProvider></CatalogProvider></UiProvider></AuthProvider>,
+    <AuthProvider><UiProvider><CatalogProvider><OrdersProvider><CartProvider><StoreProvider><Controls /><CheckoutFlow /></StoreProvider></CartProvider></OrdersProvider></CatalogProvider></UiProvider></AuthProvider>,
   );
   await flush();
   fireEvent.click(screen.getByText("add")); await flush();
@@ -48,7 +49,7 @@ afterEach(cleanup);
 describe("the checkout's steps", () => {
   it("starts on the address step, with the others waiting", async () => {
     window.localStorage.setItem(SESSION_KEY, JSON.stringify({ id: "nadia", email: "n@demo.test", name: "Nadia" }));
-    render(<AuthProvider><UiProvider><CatalogProvider><OrdersProvider><StoreProvider><Controls /><CheckoutFlow /></StoreProvider></OrdersProvider></CatalogProvider></UiProvider></AuthProvider>);
+    render(<AuthProvider><UiProvider><CatalogProvider><OrdersProvider><CartProvider><StoreProvider><Controls /><CheckoutFlow /></StoreProvider></CartProvider></OrdersProvider></CatalogProvider></UiProvider></AuthProvider>);
     await flush();
     expect(steps()).toEqual(["active", "todo", "todo"]);
   });

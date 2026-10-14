@@ -1,5 +1,6 @@
 // Run with `npm run test:ui`. Leaving the checkout half done: the step is kept, reopening resumes it, a reminder is raised
 // while it is unfinished, and it survives a reload.
+import { CartProvider } from "@/features/cart";
 import { act, cleanup, renderHook } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -15,7 +16,7 @@ const DRAFT_KEY = "marketplace-checkout-v1:nadia";
 const [mug] = products;
 
 const wrapper = ({ children }: { children: ReactNode }) => (
-  <AuthProvider><UiProvider><CatalogProvider><OrdersProvider><StoreProvider>{children}</StoreProvider></OrdersProvider></CatalogProvider></UiProvider></AuthProvider>
+  <AuthProvider><UiProvider><CatalogProvider><OrdersProvider><CartProvider><StoreProvider>{children}</StoreProvider></CartProvider></OrdersProvider></CatalogProvider></UiProvider></AuthProvider>
 );
 const mount = () => {
   const view = renderHook(() => useStore(), { wrapper });

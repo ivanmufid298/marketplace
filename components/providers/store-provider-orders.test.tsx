@@ -1,5 +1,6 @@
 // Run with `npm run test:ui`. Checkout against a database-backed orders module (a fake): what is sent, what the buyer
 // is told when it works or fails, and that a second tap cannot place a second order.
+import { CartProvider } from "@/features/cart";
 import { act, cleanup, renderHook } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -23,7 +24,7 @@ function setup(placeOrder: OrderServices["repo"]["placeOrder"], methods = [{ val
     confirmReceived: vi.fn(async () => ({ ok: true as const, value: null })),
   };
   const wrapper = ({ children }: { children: ReactNode }) => (
-    <AuthProvider><UiProvider><CatalogProvider><OrdersProvider services={{ repo } as OrderServices}><StoreProvider>{children}</StoreProvider></OrdersProvider></CatalogProvider></UiProvider></AuthProvider>
+    <AuthProvider><UiProvider><CatalogProvider><OrdersProvider services={{ repo } as OrderServices}><CartProvider><StoreProvider>{children}</StoreProvider></CartProvider></OrdersProvider></CatalogProvider></UiProvider></AuthProvider>
   );
   const view = renderHook(() => useStore(), { wrapper });
   return { view, repo, s: () => view.result.current };

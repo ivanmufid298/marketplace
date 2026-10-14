@@ -12,6 +12,7 @@ import { NotificationsPanel } from "../organisms/store/notifications-panel";
 import { OrdersPanel } from "../organisms/store/orders-panel";
 import { StoreToast } from "../organisms/store/store-toast";
 import { AuthProvider } from "@/features/auth";
+import { CartProvider } from "@/features/cart";
 import { CatalogProvider } from "@/features/catalog";
 import { ChatProvider } from "@/features/chat";
 import { OrdersProvider } from "@/features/orders";
@@ -27,6 +28,7 @@ export function StoreTemplate({ children }: { children: ReactNode }) {
           <CatalogProvider>
             <OrdersProvider>
             <ChatProvider>
+            <CartProvider>
             <StoreProvider>
               <Header />
               {children}
@@ -42,6 +44,7 @@ export function StoreTemplate({ children }: { children: ReactNode }) {
               <StoreLoginDialog />
               <StoreToast />
             </StoreProvider>
+            </CartProvider>
             </ChatProvider>
             </OrdersProvider>
           </CatalogProvider>

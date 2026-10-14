@@ -1,6 +1,7 @@
 // Run with `npm run test:ui`. The saved cart against a catalog that loads from the database. The cart is checked
 // against the catalog when it is restored, so it has to wait for the catalog; otherwise it would be checked against an
 // empty list and the shopper's saved cart would be erased.
+import { CartProvider } from "@/features/cart";
 import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -24,7 +25,7 @@ function mountWith(listCatalog: () => Promise<Result>) {
     <AuthProvider>
       <UiProvider>
         <CatalogProvider services={{ repo: { listCatalog } as never }}>
-          <OrdersProvider><StoreProvider>{children}</StoreProvider></OrdersProvider>
+          <OrdersProvider><CartProvider><StoreProvider>{children}</StoreProvider></CartProvider></OrdersProvider>
         </CatalogProvider>
       </UiProvider>
     </AuthProvider>

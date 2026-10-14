@@ -7,6 +7,7 @@ import { act, cleanup, renderHook } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AuthProvider, useAuth } from "@/features/auth";
+import { CartProvider } from "@/features/cart";
 import { CatalogProvider } from "@/features/catalog";
 import { ChatProvider } from "@/features/chat";
 import { products } from "@/lib/mock/store";
@@ -23,7 +24,7 @@ const wrapper = ({ children }: { children: ReactNode }) => (
   <AuthProvider>
     <UiProvider>
       <CatalogProvider>
-        <OrdersProvider><ChatProvider><StoreProvider>{children}</StoreProvider></ChatProvider></OrdersProvider>
+        <OrdersProvider><ChatProvider><CartProvider><StoreProvider>{children}</StoreProvider></CartProvider></ChatProvider></OrdersProvider>
       </CatalogProvider>
     </UiProvider>
   </AuthProvider>
@@ -193,96 +194,6 @@ describe("panels, toast, and global key handling", () => {
     expect(m.s().toast).toBe("Halo");
     await act(async () => { vi.advanceTimersByTime(2); });
     expect(m.s().toast).toBe("");
-  });
-});
-
-describe("cart", () => {
-  it("makes a guest sign in first, remembers the product, and adds it after sign in", async () => {
-    const m = mount();
-    await addTo(m, mug);
-    expect(m.s().cart).toEqual([]);
-    expect(m.a().loginOpen).toBe(true);
-    expect(m.a().intent).toBe("cart");
-
-    await run(async () => { await m.a().signIn("nadia@demo.test", "password123"); });
-    expect(m.a().loginOpen).toBe(false);
-    expect(m.s().cart).toEqual([{ id: 1, qty: 1 }]);
-    expect(m.s().signedIn).toBe(true);
-  });
-
-  it("adds, counts, and totals for a signed in buyer", async () => {
-    const m = mountSignedIn();
-    await addTo(m, mug);
-    await addTo(m, mug);
-    await addTo(m, headphone);
-    expect(m.s().cart).toEqual([{ id: 1, qty: 2 }, { id: 3, qty: 1 }]);
-    expect(m.s().cartCount).toBe(3);
-    expect(m.s().subtotal).toBe(2 * 89000 + 649000);
-  });
-
-  it("stops at the available stock with a toast", async () => {
-    const m = mountSignedIn();
-    await addTo(m, tote); // stock 1
-    expect(m.s().toast).toBe("Produk ditambahkan ke keranjang");
-    await addTo(m, tote);
-    expect(m.s().cart).toEqual([{ id: 2, qty: 1 }]);
-    expect(m.s().toast).toBe("Jumlah sudah mencapai stok tersedia");
-  });
-
-  it("closes the detail panel when a product is added", async () => {
-    const m = mountSignedIn();
-    await run(() => m.s().openDetail(mug));
-    await addTo(m, mug);
-    expect(m.s().panels.detail).toBe(false);
-  });
-
-  it("changes quantity within 0 and the stock, and removes at zero", async () => {
-    const m = mountSignedIn();
-    await addTo(m, mug);
-    await run(() => m.s().changeQty(1, 5));
-    expect(m.s().cart).toEqual([{ id: 1, qty: 2 }]); // capped at stock 2
-    await run(() => m.s().changeQty(1, -1));
-    expect(m.s().cart).toEqual([{ id: 1, qty: 1 }]);
-    await run(() => m.s().changeQty(1, -1));
-    expect(m.s().cart).toEqual([]);
-    await run(() => m.s().changeQty(999, 1)); // unknown product: ignored
-    expect(m.s().cart).toEqual([]);
-  });
-
-  it("removes a line", async () => {
-    const m = mountSignedIn();
-    await addTo(m, mug);
-    await addTo(m, headphone);
-    await run(() => m.s().removeFromCart(1));
-    expect(m.s().cart).toEqual([{ id: 3, qty: 1 }]);
-  });
-
-  it("keeps the cart per account in this browser and restores it", async () => {
-    const first = mountSignedIn();
-    await addTo(first, headphone);
-    expect(JSON.parse(window.localStorage.getItem("marketplace-cart-v2:nadia") ?? "null")).toEqual([{ id: 3, qty: 1 }]);
-    first.unmount();
-
-    const second = mount(); // same browser, session still stored
-    expect(second.s().cart).toEqual([{ id: 3, qty: 1 }]);
-  });
-
-  it("drops unknown products and clamps quantities when restoring", async () => {
-    window.localStorage.setItem("marketplace-cart-v2:nadia", JSON.stringify([{ id: 1, qty: 99 }, { id: 999, qty: 1 }, { id: 2, qty: 0 }, { id: 3, qty: "x" }]));
-    const m = mountSignedIn();
-    expect(m.s().cart).toEqual([{ id: 1, qty: 2 }]);
-  });
-
-  it("guests have no cart and nothing is saved for them", async () => {
-    const m = mount();
-    expect(m.s().cart).toEqual([]);
-    expect(Object.keys(window.localStorage).some((k) => k.startsWith("marketplace-cart-v2:"))).toBe(false);
-  });
-
-  it("removes the old shared cart key", async () => {
-    window.localStorage.setItem("marketplace-cart-v1", "[]");
-    mount();
-    expect(window.localStorage.getItem("marketplace-cart-v1")).toBeNull();
   });
 });
 

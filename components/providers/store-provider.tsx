@@ -5,22 +5,20 @@ import { t } from "@/lib/i18n";
 import { INITIAL_MY_REVIEWS, type MyReview, type Order } from "@/lib/mock/orders";
 import { formatDateTime } from "@/lib/format";
 import { useAuth, type LoginIntent } from "@/features/auth";
+import { useCart, type CartLine } from "@/features/cart";
 import { useCatalog, type Product, type SortMode } from "@/features/catalog";
 import { useNotifications, type AppNotification, type NotificationServices, type Notifications } from "@/features/notifications";
 import { useMyReviews, type BuyerReviewServices } from "@/features/reviews";
 import { MAX_PROOF_BYTES, MAX_PROOF_SOURCE_BYTES, useBuyerOrders, type OrderError, type ShippingMethod } from "@/features/orders";
 import { useUi, type PanelId } from "@/shared/ui-state/ui-provider";
 
-export type CartLine = { id: number; qty: number };
 export type Address = { fullName: string; phone: string; address: string; city: string; postcode: string; note: string };
 export type MobileNavMode = "home" | "category" | "saved" | "orders" | "cart";
 
 const EMPTY_ADDRESS: Address = { fullName: "", phone: "", address: "", city: "", postcode: "", note: "" };
 const REQUIRED_ADDRESS_FIELDS: (keyof Address)[] = ["fullName", "phone", "address", "city", "postcode"];
-const CART_KEY_PREFIX = "marketplace-cart-v2:";
 /** A checkout the buyer left half done (step, address, shipping), kept per account so it survives closing the panel and a reload. */
 const CHECKOUT_DRAFT_PREFIX = "marketplace-checkout-v1:";
-const LEGACY_CART_KEY = "marketplace-cart-v1";
 
 type StoreContextValue = {
   products: Product[];
@@ -105,9 +103,9 @@ type StoreProviderProps = {
 };
 
 export function StoreProvider({ children, reviewServices, notificationServices }: StoreProviderProps) {
-  const { products, status: catalogStatus, getProduct, visibleProducts, category, setCategory, query, setQuery, sort, setSort, savedOnly, liked, toggleLike, selected, openDetail, showSaved, showAll, scrollToProducts } = useCatalog();
+  const { products, getProduct, visibleProducts, category, setCategory, query, setQuery, sort, setSort, savedOnly, liked, toggleLike, selected, openDetail, showSaved, showAll, scrollToProducts } = useCatalog();
   const { orders, shippingMethods, placeOrder: submitOrder, sendProof, confirmReceived } = useBuyerOrders();
-  const [cart, setCart] = useState<CartLine[]>([]);
+  const { cart, cartCount, subtotal, loaded: cartLoaded, addToCart, changeQty, removeFromCart, clearCart } = useCart();
   const { panels, setPanel, openPanel, closePanel, togglePanel, toast, showToast } = useUi();
   const [checkoutStep, setCheckoutStep] = useState(1);
   const [address, setAddress] = useState<Address>(EMPTY_ADDRESS);
@@ -117,82 +115,11 @@ export function StoreProvider({ children, reviewServices, notificationServices }
   const [orderNumber, setOrderNumber] = useState("000000");
   const proofFile = useRef<File | null>(null);
   const [localReviews, setLocalReviews] = useState(INITIAL_MY_REVIEWS);
-  const { user, ready, loginOpen, intent, openLogin, closeLogin } = useAuth();
+  const { user, loginOpen, intent, openLogin, closeLogin } = useAuth();
   const reviews = useMyReviews(user?.id ?? null, reviewServices);
   const notifications = useNotifications(user?.id ?? null, notificationServices);
-  // The cart belongs to the signed-in account and is kept in this browser per account until it moves to the database.
-  // Guests have no cart: adding to it asks them to sign in first.
   const userId = user?.id ?? null;
-  const [cartOwner, setCartOwner] = useState<string | null>(null);
-  const [pendingAdd, setPendingAdd] = useState<Product | null>(null);
-  useEffect(() => {
-    // The saved cart is checked against the catalog, so wait until the catalog has loaded; checking against an empty list would wipe it.
-    if (!ready || catalogStatus !== "ready") return;
-    let stored: CartLine[] = [];
-    if (userId) {
-      try {
-        const raw: unknown = JSON.parse(window.localStorage.getItem(CART_KEY_PREFIX + userId) ?? "[]");
-        if (Array.isArray(raw)) {
-          stored = raw.flatMap((line: Partial<CartLine>) => {
-            const product = getProduct(line.id as number);
-            return product && typeof line.qty === "number" && line.qty > 0 ? [{ id: product.id, qty: Math.min(line.qty, product.stock) }] : [];
-          });
-        }
-      } catch {
-        // Unreadable cart: start empty.
-      }
-    }
-    try {
-      window.localStorage.removeItem(LEGACY_CART_KEY);
-    } catch {
-      // Storage blocked: nothing to clean up.
-    }
-    setCart(stored);
-    setCartOwner(userId);
-  }, [ready, catalogStatus, userId, getProduct]);
-  useEffect(() => {
-    if (!userId || cartOwner !== userId) return;
-    try {
-      window.localStorage.setItem(CART_KEY_PREFIX + userId, JSON.stringify(cart));
-    } catch {
-      // Storage blocked: the cart still works for this tab.
-    }
-  }, [cart, cartOwner, userId]);
 
-  const addToCart = useCallback(
-    (p: Product) => {
-      if (!user) {
-        // Remember what the buyer picked; it is added once they have signed in.
-        setPendingAdd(p);
-        openLogin("cart");
-        return;
-      }
-      const line = cart.find((l) => l.id === p.id);
-      if (line && line.qty >= p.stock) {
-        showToast(t("store.toast.stockMax"));
-        return;
-      }
-      setCart((prev) => (line ? prev.map((l) => (l.id === p.id ? { ...l, qty: l.qty + 1 } : l)) : [...prev, { id: p.id, qty: 1 }]));
-      setPanel("detail", false);
-      showToast(t("store.toast.cartAdded"));
-    },
-    [cart, openLogin, setPanel, showToast, user],
-  );
-
-  const changeQty = useCallback((id: number, delta: number) => {
-    const product = getProduct(id);
-    if (!product) return;
-    setCart((prev) =>
-      prev
-        .map((l) => (l.id === id ? { ...l, qty: Math.min(product.stock, l.qty + delta) } : l))
-        .filter((l) => l.qty > 0),
-    );
-  }, [getProduct]);
-
-  const removeFromCart = useCallback((id: number) => setCart((prev) => prev.filter((l) => l.id !== id)), []);
-
-  const cartCount = cart.reduce((s, l) => s + l.qty, 0);
-  const subtotal = cart.reduce((s, l) => s + (getProduct(l.id)?.price ?? 0) * l.qty, 0);
   const chosenShipping = shippingMethods.find((m) => m.value === shipping) ?? shippingMethods[0];
   const shippingCost = chosenShipping?.cost ?? 0;
 
@@ -218,20 +145,16 @@ export function StoreProvider({ children, reviewServices, notificationServices }
   // A user appearing while the login dialog is open means sign-in worked: close it and pick up where the buyer left off.
   useEffect(() => {
     if (!user || !loginOpen) return;
-    // Adding to the cart has to wait until this account's saved cart has loaded, or it would be overwritten.
-    if (intent === "cart" && cartOwner !== userId) return;
+    // The cart adds what the buyer picked itself, once this account's saved cart has loaded.
+    if (intent === "cart" && !cartLoaded) return;
     closeLogin();
-    if (intent === "cart" && pendingAdd) {
-      addToCart(pendingAdd);
-      setPendingAdd(null);
-    }
     if (intent === "checkout" && cart.length) {
       setPanel("drawer", false);
       setCheckoutStep((step) => (step === 2 || step === 3 ? step : 1));
       setPanel("checkout", true);
     }
     if (intent === "orders") setPanel("orders", true);
-  }, [user, userId, loginOpen, intent, cartOwner, pendingAdd, cart.length, addToCart, closeLogin, setPanel]);
+  }, [user, loginOpen, intent, cartLoaded, cart.length, closeLogin, setPanel]);
 
   // Pre-fill the receiver name from the account the first time.
   useEffect(() => {
@@ -318,13 +241,13 @@ export function StoreProvider({ children, reviewServices, notificationServices }
   );
 
   const finishOrder = useCallback(() => {
-    setCart([]);
+    clearCart();
     proofFile.current = null;
     setProofName("");
     setAddress(EMPTY_ADDRESS);
     setPanel("checkout", false);
     showToast(t("store.toast.thanks"));
-  }, [setPanel, showToast]);
+  }, [clearCart, setPanel, showToast]);
 
   // Closing the checkout from its last screen (the cross, or a click beside it) finishes the order too, so the cart is not
   // left full of what was just bought. The "back to the shop" button does that itself and has emptied the cart by then.
@@ -341,7 +264,7 @@ export function StoreProvider({ children, reviewServices, notificationServices }
   const midCheckout = checkoutStep === 2 || checkoutStep === 3;
   const restoredDraftFor = useRef<string | null>(null);
   useEffect(() => {
-    if (!draftKey || cartOwner !== userId || restoredDraftFor.current === draftKey) return;
+    if (!draftKey || !cartLoaded || restoredDraftFor.current === draftKey) return;
     restoredDraftFor.current = draftKey;
     if (!cart.length) return;
     try {
@@ -354,22 +277,22 @@ export function StoreProvider({ children, reviewServices, notificationServices }
     } catch {
       // Unreadable draft: start the checkout from the beginning.
     }
-  }, [draftKey, cartOwner, userId, cart.length]);
+  }, [draftKey, cartLoaded, userId, cart.length]);
 
   useEffect(() => {
-    if (!draftKey || cartOwner !== userId || restoredDraftFor.current !== draftKey) return;
+    if (!draftKey || !cartLoaded || restoredDraftFor.current !== draftKey) return;
     try {
       if (midCheckout && cart.length > 0) window.localStorage.setItem(draftKey, JSON.stringify({ step: checkoutStep, address, shipping }));
       else window.localStorage.removeItem(draftKey);
     } catch {
       // Storage blocked: the checkout still works for this tab.
     }
-  }, [draftKey, cartOwner, userId, midCheckout, checkoutStep, address, shipping, cart.length]);
+  }, [draftKey, cartLoaded, userId, midCheckout, checkoutStep, address, shipping, cart.length]);
 
   // An emptied cart ends a half-done checkout: there is nothing left to pay for.
   useEffect(() => {
-    if (cartOwner === userId && cart.length === 0 && midCheckout) setCheckoutStep(1);
-  }, [cartOwner, userId, cart.length, midCheckout]);
+    if (cartLoaded && cart.length === 0 && midCheckout) setCheckoutStep(1);
+  }, [cartLoaded, cart.length, midCheckout]);
 
   const pendingCheckout = useMemo(() => (user && cart.length > 0 && midCheckout && !panels.checkout ? { step: checkoutStep } : null), [user, cart.length, midCheckout, panels.checkout, checkoutStep]);
   const resumeCheckout = useCallback(() => {
