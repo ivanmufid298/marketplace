@@ -1,0 +1,9 @@
+{
+  // Cloudflare Workers settings for the shop (built with OpenNext). Deploy steps are in README.md ("Menayangkan di Cloudflare").
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "marketplace",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": { "directory": ".open-next/assets", "binding": "ASSETS" }
+}

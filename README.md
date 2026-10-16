@@ -260,6 +260,30 @@ rollback;
 
 Wishlist, checkout, chat, interactions, dan review disimpan di React context (`StoreProvider` dan `AdminProvider` di `components/providers/`). Pesanan dan pembayaran disimpan di `lib/orders-store.ts` (`localStorage`) agar storefront dan admin membaca data yang sama. Keranjang disimpan di `localStorage` per akun (kunci `marketplace-cart-v2:<id pengguna>`), sehingga bertahan setelah reload dan kembali saat akun yang sama login lagi. Guest tidak punya keranjang. Saat backend tersedia, ganti context ini dengan data dari Supabase melalui Server Component, Route Handler, atau Server Action.
 
+## Menayangkan di Cloudflare (gratis)
+
+Toko dibangun untuk **Cloudflare Workers** lewat [OpenNext](https://opennext.js.org/cloudflare) (`@opennextjs/cloudflare`). Paket gratis Cloudflare mengizinkan penggunaan komersial (Vercel Hobby tidak, jadi Vercel hanya untuk sementara). Batas paket gratis yang relevan: 100.000 permintaan per hari, 10 ms waktu CPU per permintaan, dan ukuran Worker 3 MiB setelah dikompres. **Hasil uji kelayakan (16 Okt 2026, di komputer lokal, tanpa akun):** Worker toko 2,1 MiB terkompres (batasnya 3 MiB, jadi masih ada ruang sekitar 30%), dan di runtime Cloudflare lokal (`workerd`) beranda, halaman login admin, sitemap, robots, halaman produk yang tidak ada (404), dan pengalihan `/admin` ke login semuanya berjalan. Yang **belum bisa dipastikan tanpa akun**: waktu CPU per permintaan di Cloudflare sungguhan (batas 10 ms di paket gratis; halaman dinamis seperti halaman produk dan `/admin` paling berisiko), jadi ukurlah setelah penayangan pertama lewat dashboard Workers (Metrics).
+
+Dua hal yang perlu diketahui:
+- OpenNext menandai dukungan **proxy (middleware Node.js) sebagai eksperimental**. Pengunci `/admin` kita (`proxy.ts`) berjalan baik di uji lokal, dan ada kunci kedua di layout panel serta RLS di database, tetapi **setelah ditayangkan, uji sendiri bahwa `/admin` menolak tamu dan pembeli** (butir uji manual setelah penayangan).
+- OpenNext Cloudflare mensyaratkan Next.js 16.4.1 atau lebih baru; proyek ini sudah dinaikkan ke 16.4.2.
+
+Perintah (semuanya lokal; tidak ada yang menulis ke akun sampai `cf:deploy`):
+
+```bash
+npm run cf:build     # membangun Worker di .open-next (tanpa akun)
+npm run cf:preview   # membangun lalu menjalankannya lokal di runtime Cloudflare
+npm run cf:deploy    # membangun lalu MENAYANGKAN ke akun Cloudflare yang sedang masuk
+```
+
+Langkah menayangkan (kamu yang masuk ke akunmu; token tidak pernah kuminta atau kulihat):
+1. Buat akun Cloudflare gratis di dash.cloudflare.com (tanpa kartu), lalu di terminal `npx wrangler login` (membuka browser; setujui di sana).
+2. Isi variabel build di `.env.production.local` (tidak ikut git): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (kunci anon memang publik; **jangan pernah** menaruh service-role key di sini), dan `NEXT_PUBLIC_SITE_URL` (alamat toko, mis. `https://marketplace.<subdomain-kamu>.workers.dev`). Nilainya ditanam saat build, jadi ulangi `cf:deploy` bila berubah.
+3. `npm run cf:deploy`. Alamat gratis `*.workers.dev` langsung aktif; domain sendiri berbayar (di registrar), menyusul nanti dan dipasang gratis di Cloudflare.
+4. Di Supabase production: Authentication > URL Configuration diisi alamat toko (Site URL dan Redirect URLs `https://<alamat>/**`), dan "Confirm email" **dinyalakan**.
+
+Keselamatan: remote Supabase yang tertaut di repo ini adalah **dev**. Supaya `supabase db push` tidak pernah tak sengaja mengenai production, tautan production dibuat dari folder terpisah, bukan dari repo ini (lihat langkah di PROGRESS.md saat production dibuat).
+
 ## Biaya nol dan pemantauan
 
 Targetnya **tanpa biaya**. Saat ini: organisasi Supabase `Vancy` ada di paket **Free** (dicek 14 Okt 2026), dan Vercel dipakai sementara di paket gratis. Batas paket Free Supabase yang relevan (angka dari dokumentasi Supabase yang kutahu; cek halaman Settings > Usage untuk angka terbaru): database 500 MB, file storage 1 GB, bandwidth 5 GB per bulan, 50.000 pengguna aktif per bulan, dan maksimal 2 project aktif (jadi persis cukup untuk dev dan production, tanpa staging).

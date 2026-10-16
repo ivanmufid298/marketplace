@@ -6,6 +6,8 @@ next-env.d.ts
 *.tsbuildinfo
 .env*
 .vercel
+.open-next
+.wrangler
 !.env.example
 
 # Agent instruction files (local only)

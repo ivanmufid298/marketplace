@@ -9,18 +9,22 @@
     "lint": "tsc --noEmit",
     "test": "node --test \"lib/**/*.test.mts\" \"features/**/*.test.mts\" && vitest run",
     "test:ui": "vitest run",
+    "cf:build": "opennextjs-cloudflare build",
+    "cf:preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "cf:deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "monitor:supabase": "supabase db query --linked -f supabase/monitor.sql",
     "test:sql": "node supabase/tests/profiles.test.mjs && node supabase/tests/catalog.test.mjs && node supabase/tests/reviews.test.mjs && node supabase/tests/orders.test.mjs && node supabase/tests/orders-admin.test.mjs && node supabase/tests/reviews-orders.test.mjs && node supabase/tests/notifications.test.mjs && node supabase/tests/expiry-reminders.test.mjs && node supabase/tests/admin-notifications.test.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.117.2",
-    "next": "^16.4.0",
+    "next": "^16.4.2",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.8",
+    "@opennextjs/cloudflare": "^1.20.12",
     "@tailwindcss/postcss": "^4.3.3",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/react": "^16.3.3",
@@ -32,6 +36,7 @@
     "tailwindcss": "^4.3.3",
     "typescript": "^7.0.2",
     "vite": "^8.3.4",
-    "vitest": "^5.0.4"
+    "vitest": "^5.0.4",
+    "wrangler": "^4.151.0"
   }
 }
