@@ -1,0 +1,8 @@
+{
+  // The anti-pause Worker for the free Supabase plan. SUPABASE_URL and SUPABASE_ANON_KEY (both public) are given at deploy time.
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "marketplace-keepalive",
+  "main": "index.mjs",
+  "compatibility_date": "2026-10-01",
+  "triggers": { "crons": ["17 3 * * *"] }
+}

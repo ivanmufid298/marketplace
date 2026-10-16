@@ -282,6 +282,29 @@ Langkah menayangkan (kamu yang masuk ke akunmu; token tidak pernah kuminta atau 
 3. `npm run cf:deploy`. Alamat gratis `*.workers.dev` langsung aktif; domain sendiri berbayar (di registrar), menyusul nanti dan dipasang gratis di Cloudflare.
 4. Di Supabase production: Authentication > URL Configuration diisi alamat toko (Site URL dan Redirect URLs `https://<alamat>/**`), dan "Confirm email" **dinyalakan**.
 
+**Mencegah project Supabase gratis dijeda.** Project Free yang tidak aktif seminggu dijeda, dan toko ikut mati. `workers/keepalive` adalah Worker kecil terjadwal (sehari sekali, 03.17 UTC) yang membaca satu id produk dengan kunci anon, panggilan yang sama dengan yang dilakukan browser pengunjung, jadi tidak butuh rahasia. Bila gagal (Supabase menjawab galat atau belum diatur), jalannya tercatat gagal di dashboard Workers. Cron Trigger gratis. Tayangkan sekali, terpisah dari toko, sesudah Supabase production ada:
+
+```bash
+npx wrangler deploy --config workers/keepalive/wrangler.jsonc \
+  --var SUPABASE_URL:https://<ref>.supabase.co --var SUPABASE_ANON_KEY:<kunci anon production>
+```
+
+Apakah satu pembacaan REST sehari cukup untuk dihitung sebagai "aktif" oleh Supabase belum kupastikan di dokumentasi terbaru; ini praktik umum, tetapi cek status project di dashboard setelah seminggu pertama.
+
+**Memasang migrasi ke Supabase production** (kamu yang menjalankannya di terminalmu karena butuh kata sandi database production; aku tidak pernah memintanya). Remote Supabase yang tertaut di repo ini adalah **dev**, jadi tautan production dibuat dari folder terpisah supaya `db push` tidak pernah tak sengaja mengenai production:
+
+```bash
+mkdir ~/Ivan/marketplace-prod && cd ~/Ivan/marketplace-prod
+supabase init
+rm -rf supabase/migrations && ln -s ~/Ivan/marketplace/supabase/migrations supabase/migrations   # migrasi yang sama
+supabase link --project-ref <ref production>
+export SUPABASE_DB_PASSWORD='<kata sandi database production>'   # hanya di terminal itu
+supabase db push --dry-run     # periksa daftarnya: harus semua migrasi, dari 20261012061023
+supabase db push               # setelah daftarnya benar
+```
+
+Sesudahnya (tanpa kata sandi) aku bisa memeriksa hasilnya lewat MCP Supabase yang hanya membaca: daftar migrasi, tabel, saran keamanan dan performa, dan jadwal `pg_cron`.
+
 Keselamatan: remote Supabase yang tertaut di repo ini adalah **dev**. Supaya `supabase db push` tidak pernah tak sengaja mengenai production, tautan production dibuat dari folder terpisah, bukan dari repo ini (lihat langkah di PROGRESS.md saat production dibuat).
 
 ## Biaya nol dan pemantauan

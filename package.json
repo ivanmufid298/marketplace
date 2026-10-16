@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "tsc --noEmit",
-    "test": "node --test \"lib/**/*.test.mts\" \"features/**/*.test.mts\" && vitest run",
+    "test": "node --test \"lib/**/*.test.mts\" \"features/**/*.test.mts\" \"workers/**/*.test.mts\" && vitest run",
     "test:ui": "vitest run",
     "cf:build": "opennextjs-cloudflare build",
     "cf:preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
