@@ -6,13 +6,16 @@ import { BANK_ACCOUNT, formatAccountNumber } from "@/lib/mock/store";
 import { Button } from "../../atoms/button";
 import { CloseButton } from "../../atoms/close-button";
 import { BankCard } from "../../molecules/bank-card";
-import { Field } from "../../molecules/field";
 import { ShippingOption } from "../../molecules/shipping-option";
 import { StepIndicator } from "../../molecules/step-indicator";
 import { SummaryBox, SummaryLine } from "../../molecules/summary-box";
 import { UploadField } from "../../molecules/upload-field";
+import Link from "next/link";
+import { useState } from "react";
+import { addressLine, MAX_ADDRESSES, AddressForm, useAddresses, type AddressInput } from "@/features/account";
+import { useAuth } from "@/features/auth";
 import { useCart } from "@/features/cart";
-import { useCheckout, type Address } from "@/features/checkout";
+import { useCheckout } from "@/features/checkout";
 import { useUi } from "@/shared/ui-state/ui-provider";
 
 const STEPS = ["address", "shipping", "payment"] as const;
@@ -30,36 +33,60 @@ function OrderSummary() {
 }
 
 function AddressStep({ active }: { active: boolean }) {
-  const { address, setAddressField, goCheckoutStep } = useCheckout();
-  const input = (id: keyof Address, label: string, placeholder: string, props: { autoComplete?: string; inputMode?: "tel" | "numeric" } = {}) => (
-    <Field label={label} htmlFor={id}>
-      <input id={id} value={address[id]} placeholder={placeholder} onChange={(e) => setAddressField(id, e.target.value)} {...props} />
-    </Field>
-  );
+  const { user } = useAuth();
+  const { addresses, status, add, reload } = useAddresses();
+  const { selectedAddressId, selectAddress, goCheckoutStep } = useCheckout();
+  const { closePanel } = useUi();
+  const [adding, setAdding] = useState(false);
+  const empty = addresses.length === 0;
+  const saveNew = async (input: AddressInput) => {
+    const result = await add(input);
+    if (result.ok) selectAddress(result.value);
+    return result;
+  };
 
   return (
     <section className={`co-page${active ? " active" : ""}`}>
-      <h3>{t("store.checkout.address.title")}</h3>
-      <p className="co-note">{t("store.checkout.address.note")}</p>
-      <div className="fields">
-        {input("fullName", t("store.checkout.address.fullName"), t("store.checkout.address.fullNamePlaceholder"), { autoComplete: "name" })}
-        {input("phone", t("store.checkout.address.phone"), t("store.checkout.address.phonePlaceholder"), { inputMode: "tel" })}
-        <Field full label={t("store.checkout.address.address")} htmlFor="address">
-          <textarea id="address" placeholder={t("store.checkout.address.addressPlaceholder")} value={address.address} onChange={(e) => setAddressField("address", e.target.value)} />
-        </Field>
-        {input("city", t("store.checkout.address.city"), t("store.checkout.address.cityPlaceholder"))}
-        {input("postcode", t("store.checkout.address.postcode"), t("store.checkout.address.postcodePlaceholder"), { inputMode: "numeric" })}
-        <Field
-          full
-          htmlFor="note"
-          label={<>{t("store.checkout.address.courierNote")} <span style={{ fontWeight: 400, color: "var(--muted)" }}>{t("store.checkout.address.optional")}</span></>}
-        >
-          <input id="note" placeholder={t("store.checkout.address.courierNotePlaceholder")} value={address.note} onChange={(e) => setAddressField("note", e.target.value)} />
-        </Field>
-      </div>
+      <h3>{t(empty ? "store.checkout.address.noneTitle" : "store.checkout.address.pickTitle")}</h3>
+      <p className="co-note">{t(empty ? "store.checkout.address.noneNote" : "store.checkout.address.pickNote")}</p>
+
+      {status === "loading" && empty ? (
+        <p className="co-note" role="status">{t("store.checkout.address.loading")}</p>
+      ) : status === "error" && empty ? (
+        <p className="login-error" role="alert">{t("store.checkout.address.loadError")} <button type="button" className="link-btn" onClick={reload}>{t("store.checkout.address.retry")}</button></p>
+      ) : empty ? (
+        <AddressForm defaultName={user?.name ?? ""} idPrefix="co-new-address" submitLabel={t("store.account.form.save")} onSave={saveNew} onSaved={() => undefined} />
+      ) : (
+        <>
+          <div className="address-choices" role="radiogroup" aria-label={t("store.checkout.address.pickTitle")}>
+            {addresses.map((a) => (
+              <label key={a.id} className={`address-choice${a.id === selectedAddressId ? " selected" : ""}`}>
+                <input type="radio" name="checkoutAddress" checked={a.id === selectedAddressId} onChange={() => selectAddress(a)} />
+                <span className="address-choice-body">
+                  <span className="address-card-head"><b>{a.label}</b>{a.isDefault && <span className="address-badge">{t("store.account.addresses.default")}</span>}</span>
+                  <span>{a.recipientName} · {a.phone}</span>
+                  <span className="address-line">{addressLine(a)}</span>
+                  {a.note && <span className="sub">{a.note}</span>}
+                </span>
+              </label>
+            ))}
+          </div>
+          {adding ? (
+            <div className="address-new">
+              <AddressForm defaultName={user?.name ?? ""} idPrefix="co-new-address" offerDefault submitLabel={t("store.account.form.save")} onSave={saveNew} onSaved={() => setAdding(false)} onCancel={() => setAdding(false)} />
+            </div>
+          ) : (
+            <div className="address-tools">
+              {addresses.length < MAX_ADDRESSES && <button type="button" className="link-btn" onClick={() => setAdding(true)}>{t("store.checkout.address.addNew")}</button>}
+              <Link className="link-btn" href="/akun" onClick={() => closePanel("checkout")}>{t("store.checkout.address.manage")}</Link>
+            </div>
+          )}
+        </>
+      )}
+
       <div className="co-actions">
         <span />
-        <Button onClick={() => goCheckoutStep(2)}>{t("store.checkout.address.next")}</Button>
+        <Button disabled={!selectedAddressId} onClick={() => goCheckoutStep(2)}>{t("store.checkout.address.next")}</Button>
       </div>
     </section>
   );

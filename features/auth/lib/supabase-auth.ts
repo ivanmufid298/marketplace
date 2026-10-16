@@ -1,5 +1,5 @@
 import { createBrowserClient } from "@supabase/ssr";
-import type { AuthError, Session, User } from "@supabase/supabase-js";
+import type { AuthError, Session, SupabaseClient, User } from "@supabase/supabase-js";
 import type { ActionResult, AuthClient, AuthErrorKey, AuthResult, AuthUser } from "./types";
 
 /** Maps a Supabase auth error to the keys under store.auth.errors. Unknown errors fall back to "unknown". */
@@ -32,6 +32,24 @@ export function toAuthUser(user: User | null | undefined): AuthUser | null {
   const email = user.email ?? "";
   const fullName = typeof user.user_metadata?.full_name === "string" ? user.user_metadata.full_name : "";
   return { id: user.id, email, name: fullName || email.split("@")[0] };
+}
+
+/** The part of the Supabase client that changing a password needs, so it can be tested without the network. */
+export type PasswordClient = { auth: Pick<SupabaseClient["auth"], "getUser" | "signInWithPassword" | "updateUser"> };
+
+/** Checks the current password by signing in with it, then sets the new one. */
+export async function changePasswordWith(supabase: PasswordClient, currentPassword: string, newPassword: string): Promise<ActionResult> {
+  try {
+    const { data, error: userError } = await supabase.auth.getUser();
+    const email = data?.user?.email;
+    if (userError || !email) return { ok: false, error: "notSignedIn" };
+    const check = await supabase.auth.signInWithPassword({ email, password: currentPassword });
+    if (check.error) return { ok: false, error: check.error.code === "invalid_credentials" ? "wrongCurrentPassword" : mapAuthError(check.error) };
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    return error ? { ok: false, error: mapAuthError(error) } : { ok: true };
+  } catch {
+    return { ok: false, error: "unknown" };
+  }
 }
 
 /** Supabase Auth with email and password. Needs NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY. */
@@ -86,6 +104,7 @@ export function createSupabaseAuth(url: string, key: string): AuthClient {
         return { ok: false, error: "unknown" };
       }
     },
+    changePassword: (currentPassword, newPassword) => changePasswordWith(supabase, currentPassword, newPassword),
     async signOut() {
       try {
         await supabase.auth.signOut();

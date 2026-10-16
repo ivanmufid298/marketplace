@@ -79,6 +79,79 @@
       "addToCart": "Tambah ke keranjang",
       "openPage": "Buka halaman produk"
     },
+    "account": {
+      "title": "Akun saya",
+      "metaTitle": "Akun saya — Marketplace",
+      "signIn": "Masuk untuk melihat akunmu.",
+      "signInAction": "Masuk",
+      "name": "Nama",
+      "email": "Email",
+      "addresses": {
+        "title": "Alamat saya",
+        "intro": "Alamat yang tersimpan tinggal dipilih saat checkout.",
+        "empty": "Belum ada alamat. Tambahkan satu supaya checkout lebih cepat.",
+        "add": "Tambah alamat",
+        "full": "Kamu sudah menyimpan {max} alamat, batas maksimal. Hapus satu untuk menambah yang baru.",
+        "default": "Utama",
+        "makeDefault": "Jadikan utama",
+        "edit": "Ubah",
+        "delete": "Hapus",
+        "deleteAsk": "Hapus alamat \"{label}\"?",
+        "deleteYes": "Ya, hapus",
+        "deleteNo": "Batal",
+        "loading": "Memuat alamat…",
+        "loadError": "Alamat belum bisa dimuat.",
+        "retry": "Coba lagi",
+        "toastSaved": "Alamat disimpan",
+        "toastUpdated": "Alamat diperbarui",
+        "toastDeleted": "Alamat dihapus",
+        "toastDefault": "Alamat utama diganti"
+      },
+      "form": {
+        "label": "Nama alamat",
+        "labelPlaceholder": "Rumah, Kantor, …",
+        "recipient": "Nama penerima",
+        "phone": "Nomor telepon",
+        "phonePlaceholder": "08xxxxxxxxxx",
+        "address": "Alamat lengkap",
+        "addressPlaceholder": "Jalan, nomor rumah, RT/RW, kelurahan",
+        "city": "Kota / kecamatan",
+        "postcode": "Kode pos",
+        "note": "Catatan untuk kurir",
+        "optional": "(opsional)",
+        "notePlaceholder": "Patokan, titip satpam, dan sebagainya",
+        "makeDefault": "Jadikan alamat utama",
+        "save": "Simpan alamat",
+        "saveChanges": "Simpan perubahan",
+        "saving": "Menyimpan…",
+        "cancel": "Batal",
+        "problems": {
+          "required": "Wajib diisi.",
+          "tooShort": "Terlalu pendek (minimal {min} karakter).",
+          "tooLong": "Terlalu panjang (maksimal {max} karakter)."
+        }
+      },
+      "errors": {
+        "network": "Tidak bisa terhubung. Periksa koneksi lalu coba lagi.",
+        "forbidden": "Sesimu sudah berakhir. Masuk lagi lalu coba ulangi.",
+        "tooMany": "Alamat sudah mencapai batas {max}. Hapus satu dulu.",
+        "invalid": "Ada isian yang belum benar. Periksa lagi.",
+        "notFound": "Alamat tidak ditemukan. Muat ulang halaman.",
+        "unknown": "Terjadi kesalahan. Coba lagi."
+      },
+      "password": {
+        "title": "Ganti kata sandi",
+        "intro": "Masukkan kata sandimu yang sekarang, lalu pilih yang baru.",
+        "current": "Kata sandi saat ini",
+        "new": "Kata sandi baru",
+        "confirm": "Ulangi kata sandi baru",
+        "hint": "Minimal 8 karakter.",
+        "submit": "Ganti kata sandi",
+        "saving": "Menyimpan…",
+        "done": "Kata sandi sudah diganti.",
+        "demo": "Mode demo: tidak ada kata sandi sungguhan yang diganti."
+      }
+    },
     "notifications": {
       "title": "Notifikasi",
       "bell": "Notifikasi",
@@ -213,6 +286,16 @@
         "payment": "Pembayaran"
       },
       "address": {
+        "pickTitle": "Pilih alamat pengiriman",
+        "pickNote": "Pesananmu dikirim ke alamat yang kamu pilih.",
+        "manage": "Kelola alamat",
+        "addNew": "Tambah alamat baru",
+        "noneTitle": "Tambahkan alamat pengiriman",
+        "noneNote": "Alamat ini tersimpan di akunmu, jadi lain kali tinggal dipilih.",
+        "loading": "Memuat alamatmu…",
+        "loadError": "Alamat belum bisa dimuat.",
+        "retry": "Coba lagi",
+        "choose": "Pilih atau tambah alamat dulu",
         "title": "Alamat pengiriman",
         "note": "Pastikan pesanan sampai ke tangan yang tepat.",
         "fullName": "Nama lengkap",
@@ -384,6 +467,8 @@
         "emailTaken": "Email ini sudah terdaftar. Coba masuk.",
         "weakPassword": "Kata sandi terlalu lemah.",
         "samePassword": "Kata sandi baru harus berbeda dari yang lama.",
+        "wrongCurrentPassword": "Kata sandi saat ini salah.",
+        "notSignedIn": "Sesimu sudah berakhir. Masuk lagi lalu coba ulangi.",
         "passwordMismatch": "Kedua kata sandi belum sama.",
         "linkExpired": "Tautan sudah kedaluwarsa. Minta tautan baru.",
         "emailNotConfirmed": "Email belum dikonfirmasi. Cek kotak masukmu.",
@@ -420,6 +505,7 @@
       "signedOut": "Kamu sudah keluar",
       "account": {
         "signedInAs": "Masuk sebagai",
+        "profile": "Akun saya",
         "orders": "Pesanan saya",
         "signOut": "Keluar"
       },

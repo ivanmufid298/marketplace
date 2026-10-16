@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { t } from "@/lib/i18n";
+import { useAddresses, type SavedAddress } from "@/features/account";
 import { useAuth } from "@/features/auth";
 import { useCart } from "@/features/cart";
 import { useCatalog } from "@/features/catalog";
@@ -24,6 +25,10 @@ type CheckoutContextValue = {
   /** Opens the checkout again where the buyer left it. */
   resumeCheckout: () => void;
   address: Address;
+  /** The saved address the order will go to, when one was chosen from the buyer's address book. */
+  selectedAddressId: string | null;
+  /** Chooses a saved address: its details become the address of this checkout. */
+  selectAddress: (address: SavedAddress) => void;
   setAddressField: (k: keyof Address, v: string) => void;
   /** The code of the chosen shipping method. */
   shipping: string;
@@ -55,9 +60,11 @@ export function CheckoutProvider({ children }: { children: ReactNode }) {
   const { panels, setPanel, closePanel, showToast } = useUi();
   const { user, loginOpen, intent, openLogin, closeLogin } = useAuth();
   const orderErrorText = useOrderErrorText();
+  const { addresses, status: addressesStatus } = useAddresses();
   const userId = user?.id ?? null;
   const [checkoutStep, setCheckoutStep] = useState(1);
   const [address, setAddress] = useState<Address>(EMPTY_ADDRESS);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [shipping, setShipping] = useState("regular");
   const [placing, setPlacing] = useState(false);
   const [proofName, setProofName] = useState("");
@@ -94,6 +101,28 @@ export function CheckoutProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (user) setAddress((a) => (a.fullName ? a : { ...a, fullName: user.name }));
   }, [user]);
+
+  const selectAddress = useCallback((saved: SavedAddress) => {
+    setSelectedAddressId(saved.id);
+    setAddress({ fullName: saved.recipientName, phone: saved.phone, address: saved.address, city: saved.city, postcode: saved.postcode, note: saved.note });
+  }, []);
+
+  // The chosen address follows the address book: the default is chosen first, a change to the chosen one is picked up, and
+  // one that is gone is dropped (so the default is chosen again).
+  useEffect(() => {
+    const chosen = selectedAddressId === null ? undefined : addresses.find((a) => a.id === selectedAddressId);
+    if (chosen) {
+      selectAddress(chosen);
+      return;
+    }
+    if (selectedAddressId !== null) {
+      // Only once the book has been read: until then a restored choice is not yet known to be gone.
+      if (addressesStatus === "ready") setSelectedAddressId(null);
+      return;
+    }
+    const first = addresses.find((a) => a.isDefault) ?? addresses[0];
+    if (first) selectAddress(first);
+  }, [addresses, addressesStatus, selectedAddressId, selectAddress]);
 
   const goCheckoutStep = useCallback(
     (step: number) => {
@@ -164,6 +193,7 @@ export function CheckoutProvider({ children }: { children: ReactNode }) {
     proofFile.current = null;
     setProofName("");
     setAddress(EMPTY_ADDRESS);
+    setSelectedAddressId(null);
     setPanel("checkout", false);
     showToast(t("store.toast.thanks"));
   }, [clearCart, setPanel, showToast]);
@@ -188,10 +218,11 @@ export function CheckoutProvider({ children }: { children: ReactNode }) {
     if (!cart.length) return;
     try {
       const raw: unknown = JSON.parse(window.localStorage.getItem(draftKey) ?? "null");
-      const draft = raw as { step?: unknown; address?: Partial<Address>; shipping?: unknown } | null;
+      const draft = raw as { step?: unknown; address?: Partial<Address>; addressId?: unknown; shipping?: unknown } | null;
       if (!draft || (draft.step !== 2 && draft.step !== 3)) return;
       setCheckoutStep(draft.step);
       if (draft.address && typeof draft.address === "object") setAddress((a) => ({ ...a, ...Object.fromEntries(Object.entries(draft.address as object).filter(([k, v]) => k in EMPTY_ADDRESS && typeof v === "string")) }));
+      if (typeof draft.addressId === "string") setSelectedAddressId(draft.addressId);
       if (typeof draft.shipping === "string") setShipping(draft.shipping);
     } catch {
       // Unreadable draft: start the checkout from the beginning.
@@ -201,12 +232,12 @@ export function CheckoutProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!draftKey || !cartLoaded || restoredDraftFor.current !== draftKey) return;
     try {
-      if (midCheckout && cart.length > 0) window.localStorage.setItem(draftKey, JSON.stringify({ step: checkoutStep, address, shipping }));
+      if (midCheckout && cart.length > 0) window.localStorage.setItem(draftKey, JSON.stringify({ step: checkoutStep, address, addressId: selectedAddressId, shipping }));
       else window.localStorage.removeItem(draftKey);
     } catch {
       // Storage blocked: the checkout still works for this tab.
     }
-  }, [draftKey, cartLoaded, userId, midCheckout, checkoutStep, address, shipping, cart.length]);
+  }, [draftKey, cartLoaded, userId, midCheckout, checkoutStep, address, selectedAddressId, shipping, cart.length]);
 
   // An emptied cart ends a half-done checkout: there is nothing left to pay for.
   useEffect(() => {
@@ -223,7 +254,7 @@ export function CheckoutProvider({ children }: { children: ReactNode }) {
 
   const value: CheckoutContextValue = {
     checkoutStep, goCheckoutStep, startCheckout, pendingCheckout, resumeCheckout,
-    address, setAddressField, shipping, setShipping, shippingMethods, shippingCost,
+    address, selectedAddressId, selectAddress, setAddressField, shipping, setShipping, shippingMethods, shippingCost,
     proofName, setProof, placeOrder, placing, orderNumber, finishOrder,
   };
   return <CheckoutContext.Provider value={value}>{children}</CheckoutContext.Provider>;

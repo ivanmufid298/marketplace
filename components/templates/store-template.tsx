@@ -11,6 +11,7 @@ import { MobileNav } from "../organisms/store/mobile-nav";
 import { NotificationsPanel } from "../organisms/store/notifications-panel";
 import { OrdersPanel } from "../organisms/store/orders-panel";
 import { StoreToast } from "../organisms/store/store-toast";
+import { AddressesProvider } from "@/features/account";
 import { AuthProvider } from "@/features/auth";
 import { CartProvider } from "@/features/cart";
 import { CatalogProvider } from "@/features/catalog";
@@ -30,6 +31,7 @@ export function StoreTemplate({ children }: { children: ReactNode }) {
             <OrdersProvider>
             <ChatProvider>
             <CartProvider>
+            <AddressesProvider>
             <CheckoutProvider>
             <NotificationsProvider>
               <Header />
@@ -47,6 +49,7 @@ export function StoreTemplate({ children }: { children: ReactNode }) {
               <StoreToast />
             </NotificationsProvider>
             </CheckoutProvider>
+            </AddressesProvider>
             </CartProvider>
             </ChatProvider>
             </OrdersProvider>

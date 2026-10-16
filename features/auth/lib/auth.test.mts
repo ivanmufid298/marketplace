@@ -4,7 +4,7 @@ import { describe, it } from "node:test";
 import { checkAdminAccess, loginRedirect, type GuardClient } from "./admin-guard.ts";
 import { resolveAuthMode, type AuthEnv } from "./config.ts";
 import { safeAdminNext } from "./safe-next.ts";
-import { mapAuthError } from "./supabase-auth.ts";
+import { changePasswordWith, mapAuthError, type PasswordClient } from "./supabase-auth.ts";
 
 const SUPA = { supabaseUrl: "https://abc.supabase.co", supabaseKey: "sb_publishable_x" };
 
@@ -105,4 +105,47 @@ describe("mapAuthError (password reset)", () => {
   for (const [name, error, expected] of cases) {
     it(name, () => assert.equal(mapAuthError(error as never), expected));
   }
+});
+
+describe("changePasswordWith (the current password is checked first)", () => {
+  type Calls = string[];
+  const client = (over: { user?: unknown; userError?: unknown; signIn?: unknown; update?: unknown } = {}, calls: Calls = []): PasswordClient =>
+    ({
+      auth: {
+        getUser: async () => { calls.push("getUser"); return (over.userError ? { data: { user: null }, error: over.userError } : { data: { user: "user" in over ? over.user : { email: "ana@x.test" } }, error: null }) as never; },
+        signInWithPassword: async (credentials: { email: string; password: string }) => { calls.push(`signIn:${credentials.email}:${credentials.password}`); return ("signIn" in over ? over.signIn : { data: {}, error: null }) as never; },
+        updateUser: async (attributes: { password?: string }) => { calls.push(`update:${attributes.password}`); return ("update" in over ? over.update : { data: {}, error: null }) as never; },
+      },
+    }) as PasswordClient;
+
+  it("checks the current password with the account's own email, then sets the new one", async () => {
+    const calls: Calls = [];
+    assert.deepEqual(await changePasswordWith(client({}, calls), "lama-123", "baru-4567"), { ok: true });
+    assert.deepEqual(calls, ["getUser", "signIn:ana@x.test:lama-123", "update:baru-4567"]);
+  });
+  it("says the current password is wrong, and changes nothing", async () => {
+    const calls: Calls = [];
+    const result = await changePasswordWith(client({ signIn: { data: {}, error: { code: "invalid_credentials", status: 400 } } }, calls), "salah", "baru-4567");
+    assert.deepEqual(result, { ok: false, error: "wrongCurrentPassword" });
+    assert.equal(calls.some((c) => c.startsWith("update")), false);
+  });
+  it("passes on other reasons the check failed (too many tries, unconfirmed email)", async () => {
+    assert.deepEqual(await changePasswordWith(client({ signIn: { data: {}, error: { code: "over_request_rate_limit", status: 429 } } }), "x", "y"), { ok: false, error: "tooMany" });
+    assert.deepEqual(await changePasswordWith(client({ signIn: { data: {}, error: { code: "email_not_confirmed", status: 400 } } }), "x", "y"), { ok: false, error: "emailNotConfirmed" });
+  });
+  it("explains a new password that is too weak or the same as the old one", async () => {
+    assert.deepEqual(await changePasswordWith(client({ update: { data: {}, error: { code: "weak_password", status: 422 } } }), "a", "b"), { ok: false, error: "weakPassword" });
+    assert.deepEqual(await changePasswordWith(client({ update: { data: {}, error: { code: "same_password", status: 422 } } }), "a", "b"), { ok: false, error: "samePassword" });
+  });
+  it("says the session has ended when nobody is signed in, without trying a password", async () => {
+    const calls: Calls = [];
+    assert.deepEqual(await changePasswordWith(client({ user: null }, calls), "a", "b"), { ok: false, error: "notSignedIn" });
+    assert.deepEqual(await changePasswordWith(client({ userError: { name: "AuthSessionMissingError" } }, calls), "a", "b"), { ok: false, error: "notSignedIn" });
+    assert.deepEqual(await changePasswordWith(client({ user: { email: "" } }, calls), "a", "b"), { ok: false, error: "notSignedIn" });
+    assert.equal(calls.some((c) => c.startsWith("signIn")), false);
+  });
+  it("answers unknown instead of throwing when the connection fails", async () => {
+    const broken = { auth: { getUser: async () => { throw new Error("offline"); } } } as unknown as PasswordClient;
+    assert.deepEqual(await changePasswordWith(broken, "a", "b"), { ok: false, error: "unknown" });
+  });
 });

@@ -25,9 +25,9 @@ describe("sitemap", () => {
 });
 
 describe("robots", () => {
-  it("lets everyone in except the admin and the email-link pages, and points to the sitemap", () => {
+  it("lets everyone in except the admin, the buyer's own account page, and the email-link pages, and points to the sitemap", () => {
     const r = robots();
-    expect(r.rules).toEqual({ userAgent: "*", allow: "/", disallow: ["/admin", "/reset-password", "/lupa-sandi"] });
+    expect(r.rules).toEqual({ userAgent: "*", allow: "/", disallow: ["/admin", "/akun", "/reset-password", "/lupa-sandi"] });
     expect(r.sitemap).toBe("https://tokoku.id/sitemap.xml");
   });
 });

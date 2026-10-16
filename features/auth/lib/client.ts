@@ -22,6 +22,9 @@ const unavailableAuth: AuthClient = {
   async updatePassword() {
     return { ok: false, error: "notConfigured" };
   },
+  async changePassword() {
+    return { ok: false, error: "notConfigured" };
+  },
   async signOut() {},
 };
 

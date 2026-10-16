@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { t } from "@/lib/i18n";
 import { Icon } from "../../atoms/icon";
@@ -48,6 +49,7 @@ export function AccountMenu() {
             <b>{user.name}</b>
             <small>{user.email}</small>
           </div>
+          <Link href="/akun" role="menuitem" onClick={() => setOpen(false)}>{t("store.auth.account.profile")}</Link>
           <button type="button" role="menuitem" onClick={() => { setOpen(false); openPanel("orders"); }}>{t("store.auth.account.orders")}</button>
           <button
             type="button"

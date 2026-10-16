@@ -1,5 +1,6 @@
 // Run with `npm run test:ui`. Leaving the checkout half done: the step is kept, reopening resumes it, a reminder is raised
 // while it is unfinished, and it survives a reload.
+import { AddressesProvider } from "@/features/account";
 import { CartProvider, useCart } from "@/features/cart";
 import { act, cleanup, renderHook } from "@testing-library/react";
 import type { ReactNode } from "react";
@@ -21,7 +22,7 @@ function useAll() {
 }
 
 const wrapper = ({ children }: { children: ReactNode }) => (
-  <AuthProvider><UiProvider><CatalogProvider><OrdersProvider><CartProvider><CheckoutProvider>{children}</CheckoutProvider></CartProvider></OrdersProvider></CatalogProvider></UiProvider></AuthProvider>
+  <AuthProvider><UiProvider><CatalogProvider><OrdersProvider><CartProvider><AddressesProvider><CheckoutProvider>{children}</CheckoutProvider></AddressesProvider></CartProvider></OrdersProvider></CatalogProvider></UiProvider></AuthProvider>
 );
 const mount = () => {
   const view = renderHook(() => useAll(), { wrapper });

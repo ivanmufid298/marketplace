@@ -1,5 +1,6 @@
 // Test support for the tests that look at the storefront as a whole: the modules wired together the way StoreTemplate wires
 // them, and one hook that reads what they offer. Not used by the app.
+import { AddressesProvider } from "@/features/account";
 import type { ComponentProps, ReactNode } from "react";
 import { AuthProvider, useAuth } from "@/features/auth";
 import { CartProvider, useCart } from "@/features/cart";
@@ -27,9 +28,9 @@ export function Storefront({ children, orderServices, catalogServices, notificat
           <OrdersProvider services={orderServices}>
             <ChatProvider>
               <CartProvider>
-                <CheckoutProvider>
+                <AddressesProvider><CheckoutProvider>
                   <NotificationsProvider services={notificationServices}>{children}</NotificationsProvider>
-                </CheckoutProvider>
+                </CheckoutProvider></AddressesProvider>
               </CartProvider>
             </ChatProvider>
           </OrdersProvider>

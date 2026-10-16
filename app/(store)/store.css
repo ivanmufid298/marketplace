@@ -119,3 +119,16 @@
 .store .notif-time{color:var(--muted);font-size:12px;margin-top:2px}
 .store .notif-dot{position:absolute;left:14px;top:19px;width:10px;height:10px;border-radius:50%;background:var(--rose)}
 .store .notif-action{margin:0 16px 14px 34px;padding:9px 16px;font-size:14px}
+.store .account-menu a[role=menuitem]{display:block;width:100%;text-align:left;border:0;background:transparent;padding:10px;border-radius:10px;font:inherit;color:var(--ink);text-decoration:none;cursor:pointer}.store .account-menu a[role=menuitem]:hover{background:var(--pink2)}
+.store .account-page{max-width:760px;padding:36px 20px 90px}.store .account-page h1{font-family:Georgia,serif;color:var(--wine);font-size:32px;font-weight:500;margin:0 0 20px}
+.store .account-section{background:var(--white);border-radius:22px;padding:22px 24px;margin-bottom:18px;box-shadow:0 12px 34px rgba(46,32,36,.07)}.store .account-section h2{font-family:Georgia,serif;color:var(--wine);font-size:22px;font-weight:500;margin:0 0 4px}.store .account-section h3{font-size:16px;margin:0 0 12px}
+.store .account-section-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:12px}.store .account-section-head .co-note{margin:4px 0 0}
+.store .account-profile dl{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:0}.store .account-profile dt{font-size:12px;color:var(--muted)}.store .account-profile dd{margin:2px 0 0;font-weight:700;word-break:break-all}
+.store .address-list{list-style:none;margin:0;padding:0;display:grid;gap:12px}.store .address-card,.store .address-choice{border:1px solid var(--line);border-radius:16px;padding:14px 16px;background:#fffdf9}.store .address-card.default{border-color:var(--rose)}
+.store .address-card p{margin:3px 0}.store .address-card-head{display:flex;align-items:center;gap:8px;margin-bottom:2px}.store .address-badge{font-size:11px;font-weight:800;color:var(--wine);background:var(--pink2);border-radius:999px;padding:3px 8px}
+.store .address-line{color:#59484d}.store .address-actions{display:flex;gap:16px;flex-wrap:wrap;margin-top:8px}.store .address-confirm{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px}
+.store .address-empty{text-align:center;padding:22px 10px;color:var(--muted)}.store .address-empty p{margin:0 0 12px}
+.store .address-new{margin-top:16px;border-top:1px solid var(--line);padding-top:16px}.store .address-form-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:14px}.store .address-default-option{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:14px}
+.store .address-choices{display:grid;gap:10px}.store .address-choice{display:flex;align-items:flex-start;gap:12px;cursor:pointer}.store .address-choice.selected{border-color:var(--wine);box-shadow:0 0 0 2px rgba(114,32,61,.12)}.store .address-choice input{margin-top:4px}.store .address-choice-body{display:grid;gap:3px;min-width:0}
+.store .address-tools{display:flex;gap:18px;flex-wrap:wrap;margin-top:12px}
+@media(max-width:500px){.store .account-profile dl{grid-template-columns:1fr}.store .account-section{padding:18px 16px}.store .account-section-head{flex-direction:column}}

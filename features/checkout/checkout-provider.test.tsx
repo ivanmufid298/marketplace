@@ -1,6 +1,7 @@
 // Run with `npm run test:ui`. The checkout: opening it, the address step, shipping, the proof, placing the order, and
 // finishing. (These were the checkout tests of the old StoreProvider; the assertions are the same, only the way the
 // checkout is reached changed. Leaving it half done is in checkout-draft.test.tsx.)
+import { AddressesProvider } from "@/features/account";
 import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -22,7 +23,7 @@ function useAll() {
   return { ...useCatalog(), ...useCart(), ...useUi(), ...useBuyerOrders(), ...useCheckout(), auth: useAuth() };
 }
 const wrapper = ({ children }: { children: ReactNode }) => (
-  <AuthProvider><UiProvider><CatalogProvider><OrdersProvider><CartProvider><CheckoutProvider>{children}</CheckoutProvider></CartProvider></OrdersProvider></CatalogProvider></UiProvider></AuthProvider>
+  <AuthProvider><UiProvider><CatalogProvider><OrdersProvider><CartProvider><AddressesProvider><CheckoutProvider>{children}</CheckoutProvider></AddressesProvider></CartProvider></OrdersProvider></CatalogProvider></UiProvider></AuthProvider>
 );
 function mountSignedIn() {
   window.localStorage.setItem(SESSION_KEY, JSON.stringify(NADIA));

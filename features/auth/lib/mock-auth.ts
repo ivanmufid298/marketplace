@@ -76,6 +76,9 @@ export const mockAuth: AuthClient = {
   async updatePassword() {
     return { ok: true };
   },
+  async changePassword() {
+    return { ok: true };
+  },
   async signOut() {
     writeJson(SESSION_KEY, null);
     emit();

@@ -1,4 +1,5 @@
 // Run with `npm run test:ui`. The checkout's steps: where the shopper is, and going back from payment.
+import { AddressesProvider } from "@/features/account";
 import { CheckoutProvider, useCheckout } from "@/features/checkout";
 import { CartProvider, useCart } from "@/features/cart";
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
@@ -14,7 +15,7 @@ const SESSION_KEY = "marketplace-demo-session-v1";
 
 function Controls() {
   const { addToCart } = useCart();
-  const { startCheckout, setAddressField, goCheckoutStep, checkoutStep } = useCheckout();
+  const { startCheckout, setAddressField, goCheckoutStep, checkoutStep, address } = useCheckout();
   return (
     <>
       <button onClick={() => addToCart(products[0])}>add</button>
@@ -23,6 +24,7 @@ function Controls() {
       <button onClick={() => goCheckoutStep(2)}>to2</button>
       <button onClick={() => goCheckoutStep(3)}>to3</button>
       <p data-testid="step">{checkoutStep}</p>
+      <p data-testid="street">{address.address}</p>
     </>
   );
 }
@@ -34,7 +36,7 @@ const steps = () => [...document.querySelectorAll(".steps .step")].map((el) => (
 async function atPayment() {
   window.localStorage.setItem(SESSION_KEY, JSON.stringify({ id: "nadia", email: "n@demo.test", name: "Nadia" }));
   render(
-    <AuthProvider><UiProvider><CatalogProvider><OrdersProvider><CartProvider><CheckoutProvider><Controls /><CheckoutFlow /></CheckoutProvider></CartProvider></OrdersProvider></CatalogProvider></UiProvider></AuthProvider>,
+    <AuthProvider><UiProvider><CatalogProvider><OrdersProvider><CartProvider><AddressesProvider><CheckoutProvider><Controls /><CheckoutFlow /></CheckoutProvider></AddressesProvider></CartProvider></OrdersProvider></CatalogProvider></UiProvider></AuthProvider>,
   );
   await flush();
   fireEvent.click(screen.getByText("add")); await flush();
@@ -50,7 +52,7 @@ afterEach(cleanup);
 describe("the checkout's steps", () => {
   it("starts on the address step, with the others waiting", async () => {
     window.localStorage.setItem(SESSION_KEY, JSON.stringify({ id: "nadia", email: "n@demo.test", name: "Nadia" }));
-    render(<AuthProvider><UiProvider><CatalogProvider><OrdersProvider><CartProvider><CheckoutProvider><Controls /><CheckoutFlow /></CheckoutProvider></CartProvider></OrdersProvider></CatalogProvider></UiProvider></AuthProvider>);
+    render(<AuthProvider><UiProvider><CatalogProvider><OrdersProvider><CartProvider><AddressesProvider><CheckoutProvider><Controls /><CheckoutFlow /></CheckoutProvider></AddressesProvider></CartProvider></OrdersProvider></CatalogProvider></UiProvider></AuthProvider>);
     await flush();
     expect(steps()).toEqual(["active", "todo", "todo"]);
   });
@@ -77,9 +79,11 @@ describe("the checkout's steps", () => {
     fireEvent.click(screen.getByRole("button", { name: "Tutup" }));
     expect(document.querySelector("#checkoutFlow")!.className).not.toContain("open");
   });
-  it("keeps what was typed when going back and forth", async () => {
+  it("keeps the address that was chosen when going back and forth", async () => {
     await atPayment();
     fireEvent.click(screen.getByRole("button", { name: "Alamat" }));
-    expect((document.getElementById("phone") as HTMLInputElement).value).toBe("0811000111");
+    // This buyer has no saved address, so the details were set directly; going back shows the step, and the details stay.
+    expect(step()).toBe("1");
+    expect(screen.getByTestId("street").textContent).toBe("Jl. Mawar 1");
   });
 });

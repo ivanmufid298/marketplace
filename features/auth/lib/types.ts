@@ -10,6 +10,8 @@ export type AuthErrorKey =
   | "emailTaken"
   | "weakPassword"
   | "samePassword"
+  | "wrongCurrentPassword"
+  | "notSignedIn"
   | "linkExpired"
   | "emailNotConfirmed"
   | "tooMany"
@@ -40,5 +42,10 @@ export interface AuthClient {
   requestPasswordReset(email: string): Promise<ActionResult>;
   /** Sets a new password for the signed-in user (the recovery session from the emailed link counts). */
   updatePassword(password: string): Promise<ActionResult>;
+  /**
+   * Changes the password of the signed-in user after checking the current one, so someone who finds a signed-in browser cannot
+   * lock the owner out. Fails with `wrongCurrentPassword` when the current password is not right.
+   */
+  changePassword(currentPassword: string, newPassword: string): Promise<ActionResult>;
   signOut(): Promise<void>;
 }

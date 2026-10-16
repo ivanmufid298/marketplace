@@ -22,6 +22,7 @@ type AuthContextValue = {
   signUp: (input: SignUpInput) => Promise<AuthResult>;
   requestPasswordReset: (email: string) => Promise<ActionResult>;
   updatePassword: (password: string) => Promise<ActionResult>;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<ActionResult>;
   signOut: () => Promise<void>;
 };
 
@@ -72,6 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signUp: client.signUp,
     requestPasswordReset: client.requestPasswordReset,
     updatePassword: client.updatePassword,
+    changePassword: client.changePassword,
     signOut: client.signOut,
   };
 
