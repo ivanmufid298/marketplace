@@ -134,6 +134,7 @@ export function createOrderRepository({ db, storage, photoFor, newId, now = Date
         p_address: input.address,
         p_city: input.city,
         p_postcode: input.postcode,
+        ...(input.shippingQuote ? { p_shipping_quote: input.shippingQuote.token, p_address_id: input.shippingQuote.addressId } : {}),
       });
       if (error) return fail(mapOrderError(error));
 

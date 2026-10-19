@@ -18,6 +18,11 @@ export type PlaceOrderInput = {
   postcode: string;
   /** The transfer proof chosen at checkout. */
   proof: File | null;
+  /**
+   * Set when the shipping cost is a courier's price from /api/shipping/quote: the quote's signed token and the saved address
+   * it was asked for. The database then checks the token and sends the order to that address; `shippingCode` is not used.
+   */
+  shippingQuote?: { token: string; addressId: string };
 };
 
 /** The reasons an order action can fail. The shop shows its own text for each (store.orderErrors in content/id.json). */
@@ -26,6 +31,8 @@ export type OrderErrorKind =
   | "invalidItems"
   | "invalidAddress"
   | "invalidShipping"
+  | "shippingQuoteChanged"
+  | "shippingQuoteUnavailable"
   | "tooManyPending"
   | "productUnavailable"
   | "outOfStock"

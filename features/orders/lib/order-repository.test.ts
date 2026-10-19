@@ -76,6 +76,17 @@ describe("placeOrder", () => {
     });
     expect(JSON.stringify(rpcCalls[0].args)).not.toContain("189000");
   });
+  it("sends the signed shipping quote and the saved address it is for, when the cost is a courier's price", async () => {
+    const { repo, rpcCalls } = fakes({ rpc: [{ data: { id: "o-1", number: "100002" } }, {}] });
+    await repo.placeOrder(input({ shippingQuote: { token: "abc.def", addressId: "addr-1" } }));
+    expect(rpcCalls[0].args).toMatchObject({ p_shipping_quote: "abc.def", p_address_id: "addr-1", p_shipping_code: "express" });
+  });
+  it("sends no quote at all for the shop's own rates, so the database takes its old path", async () => {
+    const { repo, rpcCalls } = fakes({ rpc: [{ data: { id: "o-1", number: "100002" } }, {}] });
+    await repo.placeOrder(input());
+    expect(Object.keys(rpcCalls[0].args as object)).not.toContain("p_shipping_quote");
+    expect(Object.keys(rpcCalls[0].args as object)).not.toContain("p_address_id");
+  });
   it("then uploads the proof into the order's folder and records it", async () => {
     const { repo, rpcCalls, storage } = fakes({ rpc: [{ data: { id: "o-1", number: "100002" } }, {}] });
     const result = await repo.placeOrder(input({ proof: file("image/png", 1234) }));

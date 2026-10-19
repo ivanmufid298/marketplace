@@ -1,7 +1,7 @@
 // Run with `npm run test:ui`. The checkout: opening it, the address step, shipping, the proof, placing the order, and
 // finishing. (These were the checkout tests of the old StoreProvider; the assertions are the same, only the way the
 // checkout is reached changed. Leaving it half done is in checkout-draft.test.tsx.)
-import { AddressesProvider } from "@/features/account";
+import { AddressesProvider, useAddresses } from "@/features/account";
 import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -20,7 +20,7 @@ const [mug, , headphone] = products;
 
 /** What the checkout reads from its neighbours, in one object. */
 function useAll() {
-  return { ...useCatalog(), ...useCart(), ...useUi(), ...useBuyerOrders(), ...useCheckout(), auth: useAuth() };
+  return { ...useCatalog(), ...useCart(), ...useUi(), ...useBuyerOrders(), ...useCheckout(), auth: useAuth(), book: useAddresses() };
 }
 const wrapper = ({ children }: { children: ReactNode }) => (
   <AuthProvider><UiProvider><CatalogProvider><OrdersProvider><CartProvider><AddressesProvider><CheckoutProvider>{children}</CheckoutProvider></AddressesProvider></CartProvider></OrdersProvider></CatalogProvider></UiProvider></AuthProvider>
@@ -77,6 +77,15 @@ describe("checkout", () => {
     expect(m.s().checkoutStep).toBe(2);
     await run(() => m.s().goCheckoutStep(1)); // going back needs no validation
     expect(m.s().checkoutStep).toBe(1);
+  });
+
+  it("offers the shop's own rates without any note in the demo, which has no courier prices", async () => {
+    const m = mountSignedIn();
+    await addTo(m, mug);
+    await run(async () => { await m.s().book.add({ label: "Rumah", recipientName: "Nadia", phone: "0811000111", address: "Jl. Mawar 1", city: "Jakarta", postcode: "12150", note: "" }); });
+    expect(m.s().selectedAddressId).not.toBeNull();
+    expect(m.s().shippingSource).toBe("manual");
+    expect(m.s().shippingFallback).toBeNull();
   });
 
   it("prices shipping by method", async () => {

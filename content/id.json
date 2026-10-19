@@ -252,6 +252,8 @@
       "invalidItems": "Keranjang tidak valid. Muat ulang halaman lalu coba lagi.",
       "invalidAddress": "Alamat pengiriman belum lengkap atau terlalu panjang.",
       "invalidShipping": "Layanan pengiriman ini tidak tersedia. Pilih yang lain.",
+      "shippingQuoteChanged": "Ongkos kirim perlu dihitung ulang karena isi keranjang, alamat, atau pengaturan toko berubah. Pilih layanan pengiriman lagi.",
+      "shippingQuoteUnavailable": "Ongkos kirim otomatis sedang tidak bisa dipakai. Pilih tarif toko, atau coba lagi nanti.",
       "tooManyPending": "Kamu punya 3 pesanan yang belum dibayar. Selesaikan salah satunya dulu, atau tunggu sampai kedaluwarsa.",
       "productUnavailable": "{name} sudah tidak dijual. Hapus dari keranjang.",
       "outOfStock": "Stok {name} tidak cukup. Kurangi jumlahnya.",
@@ -338,7 +340,13 @@
       "shipping": {
         "title": "Pilih pengiriman",
         "note": "Estimasi dihitung untuk alamat yang kamu isi.",
-        "next": "Lanjut bayar"
+        "next": "Lanjut bayar",
+        "loading": "Menghitung ongkos kirim…",
+        "quoteNote": "Tarif tiap kurir untuk alamat ini. Estimasi tiba dari kurir dan bisa meleset; berat paket dibulatkan ke atas.",
+        "eta": "Estimasi {etd}",
+        "noPlace": "Alamat ini belum punya lokasi dari pencarian, jadi ongkir memakai tarif toko. Lengkapi lokasinya di halaman Akun untuk melihat tarif tiap kurir.",
+        "failed": "Tarif tiap kurir belum bisa dihitung, jadi ongkir memakai tarif toko.",
+        "retry": "Coba hitung lagi"
       },
       "payment": {
         "title": "Transfer pembayaran",
@@ -449,6 +457,7 @@
       "proofPending": "Pesanan dibuat, tetapi bukti belum terunggah. Kirim lewat Pesanan saya dalam 2 jam.",
       "proofSent": "Bukti transfer terkirim. Admin akan memeriksanya.",
       "needProof": "Unggah bukti transfer dulu",
+      "shippingLoading": "Ongkos kirim masih dihitung. Tunggu sebentar.",
       "accountCopied": "Nomor rekening disalin",
       "reviewSent": "Terima kasih, ulasanmu terkirim",
       "reviewUpdated": "Ulasanmu diperbarui",
@@ -870,6 +879,8 @@
         "invalidItems": "Data pesanan tidak valid.",
         "invalidAddress": "Data pesanan tidak valid.",
         "invalidShipping": "Data pesanan tidak valid.",
+        "shippingQuoteChanged": "Data pesanan tidak valid.",
+        "shippingQuoteUnavailable": "Data pesanan tidak valid.",
         "tooManyPending": "Data pesanan tidak valid.",
         "productUnavailable": "Data pesanan tidak valid.",
         "outOfStock": "Data pesanan tidak valid.",

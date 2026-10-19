@@ -16,7 +16,7 @@ export const ALLOWED: Record<string, string[]> = {
   cart: ["auth", "catalog"],
   shipping: [],
   account: ["auth", "shipping"],
-  checkout: ["auth", "catalog", "cart", "orders", "account"],
+  checkout: ["auth", "catalog", "cart", "orders", "account", "shipping"],
 };
 
 /** Code every feature may use and that must never import a feature. */

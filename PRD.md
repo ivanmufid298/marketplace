@@ -216,6 +216,8 @@ Ongkir disalin ke order saat checkout. Perubahan tarif berikutnya tidak boleh me
 
 **Pengaturan admin.** Penyedia aktif, kurir yang diizinkan, alamat toko, serta opsi markup atau subsidi ongkir. Minimal belanja gratis ongkir tetap berlaku di atas hasil API.
 
+**Status implementasi (20 Oktober 2026).** Berjalan di database dev: pencarian lokasi untuk alamat, pengaturan toko (asal, kurir, gratis ongkir, markup, tarif cadangan), `POST /api/shipping/quote` yang menandatangani tarif, pilihan tarif kurir di checkout, dan `place_order` yang memeriksa tanda tangan (rahasia di Supabase Vault) lalu mengambil ongkir dan alamat dari tarif dan alamat tersimpan, bukan dari browser. Zona manual (bagian 10.1) menjadi tarif cadangan bernama "tarif toko". Belum: produksi (migrasi, rahasia Vault, secret Cloudflare).
+
 **Kandidat penyedia (belum diputuskan).** Informasi di bawah berasal dari pencarian 12 Oktober 2026 dan harus diverifikasi di dokumentasi serta halaman harga resmi sebelum memilih.
 
 | Penyedia | Yang diketahui | Yang masih perlu dicek |

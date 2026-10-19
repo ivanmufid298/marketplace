@@ -93,20 +93,28 @@ function AddressStep({ active }: { active: boolean }) {
 }
 
 function ShippingStep({ active }: { active: boolean }) {
-  const { shipping, setShipping, shippingMethods, goCheckoutStep } = useCheckout();
+  const { shipping, setShipping, shippingMethods, shippingSource, shippingFallback, retryShipping, goCheckoutStep } = useCheckout();
+  const chosen = shippingMethods.find((m) => m.value === shipping) ?? shippingMethods[0];
   return (
     <section className={`co-page${active ? " active" : ""}`}>
       <h3>{t("store.checkout.shipping.title")}</h3>
-      <p className="co-note">{t("store.checkout.shipping.note")}</p>
+      <p className="co-note">{t(shippingSource === "quote" ? "store.checkout.shipping.quoteNote" : "store.checkout.shipping.note")}</p>
+      {shippingSource === "loading" && <p className="co-note" role="status">{t("store.checkout.shipping.loading")}</p>}
+      {shippingFallback && (
+        <p className="co-note" role="status">
+          {t(shippingFallback === "noPlace" ? "store.checkout.shipping.noPlace" : "store.checkout.shipping.failed")}
+          {shippingFallback === "failed" && <> <button type="button" className="link-btn" onClick={retryShipping}>{t("store.checkout.shipping.retry")}</button></>}
+        </p>
+      )}
       <div className="option-list">
         {shippingMethods.map((o) => (
-          <ShippingOption key={o.value} value={o.value} label={o.label} note={o.note} price={money(o.cost)} checked={shipping === o.value} onSelect={() => setShipping(o.value)} />
+          <ShippingOption key={o.value} value={o.value} label={o.label} note={o.note} price={money(o.cost)} checked={chosen?.value === o.value} onSelect={() => setShipping(o.value)} />
         ))}
       </div>
       <OrderSummary />
       <div className="co-actions">
         <Button variant="secondary" onClick={() => goCheckoutStep(1)}>{t("common.back")}</Button>
-        <Button onClick={() => goCheckoutStep(3)}>{t("store.checkout.shipping.next")}</Button>
+        <Button disabled={!chosen} onClick={() => goCheckoutStep(3)}>{t("store.checkout.shipping.next")}</Button>
       </div>
     </section>
   );

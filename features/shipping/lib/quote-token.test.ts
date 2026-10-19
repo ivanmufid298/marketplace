@@ -1,4 +1,5 @@
 // Run with `npm run test:ui`. The signed quote: that what the server signs is accepted, and that anything changed, forged, or old is not.
+import { createHmac } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { QUOTE_TTL_SECONDS, signQuote, verifyQuote, type QuotePayload } from "./quote-token";
 
@@ -12,6 +13,26 @@ const swap = (token: string, change: (p: QuotePayload) => QuotePayload) => {
   const forged = btoa(JSON.stringify(change(original))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
   return `${forged}.${signature}`;
 };
+
+describe("what the database checks", () => {
+  // place_order() recomputes the signature in SQL (supabase/tests/shipping-quotes.test.mjs checks that against Node's HMAC too). If the
+  // two ever disagreed on the bytes, every order with a courier price would be refused, so the signature is pinned to the standard HMAC.
+  it("is the standard HMAC-SHA256 of the payload text, in url-safe base64", async () => {
+    const token = await signQuote(payload, SECRET);
+    const [body, signature] = token.split(".");
+    expect(signature).toBe(createHmac("sha256", SECRET).update(body).digest("base64url"));
+    expect(JSON.parse(Buffer.from(body, "base64url").toString("utf8"))).toEqual(payload);
+  });
+  it("signs text with characters beyond ASCII as UTF-8", async () => {
+    const odd = { ...payload, e: "1–2 hari ☀" };
+    const [body, signature] = (await signQuote(odd, SECRET)).split(".");
+    expect(signature).toBe(createHmac("sha256", SECRET).update(body).digest("base64url"));
+    expect(JSON.parse(Buffer.from(body, "base64url").toString("utf8")).e).toBe("1–2 hari ☀");
+  });
+  it("writes no padding and no characters outside the url-safe set", async () => {
+    for (const f of [1, 22, 333, 4444]) expect(await signQuote({ ...payload, f }, SECRET)).toMatch(/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/);
+  });
+});
 
 describe("signing and checking", () => {
   it("accepts a token the secret signed, and gives back what was signed", async () => {

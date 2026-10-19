@@ -7,6 +7,7 @@ import { useAuth } from "@/features/auth";
 import { useCart } from "@/features/cart";
 import { useCatalog } from "@/features/catalog";
 import { MAX_PROOF_BYTES, MAX_PROOF_SOURCE_BYTES, useBuyerOrders, useOrderErrorText, type ShippingMethod } from "@/features/orders";
+import { etdText, useShippingQuote } from "@/features/shipping";
 import { useUi } from "@/shared/ui-state/ui-provider";
 
 export type Address = { fullName: string; phone: string; address: string; city: string; postcode: string; note: string };
@@ -33,8 +34,18 @@ type CheckoutContextValue = {
   /** The code of the chosen shipping method. */
   shipping: string;
   setShipping: (s: string) => void;
-  shippingMethods: ShippingMethod[];
+  /** What the buyer can choose: each courier's price for this address when it could be asked, the shop's own rates when not. */
+  shippingMethods: ShippingChoice[];
   shippingCost: number;
+  /**
+   * Where the choices come from. "loading": courier prices are being asked, nothing can be chosen yet. "quote": courier prices.
+   * "manual": the shop's own rates, and `shippingFallback` says why when courier prices were wanted ("noPlace": the address was
+   * saved without a place from the search; "failed": the prices could not be had).
+   */
+  shippingSource: "loading" | "quote" | "manual";
+  shippingFallback: "noPlace" | "failed" | null;
+  /** Asks for the courier prices again. */
+  retryShipping: () => void;
   proofName: string;
   setProof: (file: File | null) => boolean;
   /** Places the order and sends the proof. Does nothing while a request is already running. */
@@ -43,6 +54,9 @@ type CheckoutContextValue = {
   orderNumber: string;
   finishOrder: () => void;
 };
+
+/** One way to ship in the checkout. A courier's price carries the signed quote the order is placed with. */
+export type ShippingChoice = ShippingMethod & { quoteToken?: string };
 
 const CheckoutContext = createContext<CheckoutContextValue | null>(null);
 
@@ -55,10 +69,10 @@ export function useCheckout() {
 /** The checkout: address, shipping, payment proof, the order itself, and picking a half-done checkout up again. */
 export function CheckoutProvider({ children }: { children: ReactNode }) {
   const { getProduct } = useCatalog();
-  const { shippingMethods, placeOrder: submitOrder } = useBuyerOrders();
+  const { shippingMethods: manualMethods, placeOrder: submitOrder } = useBuyerOrders();
   const { cart, loaded: cartLoaded, clearCart } = useCart();
   const { panels, setPanel, closePanel, showToast } = useUi();
-  const { user, loginOpen, intent, openLogin, closeLogin } = useAuth();
+  const { user, loginOpen, intent, openLogin, closeLogin, mode } = useAuth();
   const orderErrorText = useOrderErrorText();
   const { addresses, status: addressesStatus } = useAddresses();
   const userId = user?.id ?? null;
@@ -69,9 +83,39 @@ export function CheckoutProvider({ children }: { children: ReactNode }) {
   const [placing, setPlacing] = useState(false);
   const [proofName, setProofName] = useState("");
   const [orderNumber, setOrderNumber] = useState("000000");
+  // An address the database said it cannot take courier prices for (until another address is chosen): the shop's own rates are used.
+  const [manualOnlyFor, setManualOnlyFor] = useState<string | null>(null);
   const proofFile = useRef<File | null>(null);
 
-  const chosenShipping = shippingMethods.find((m) => m.value === shipping) ?? shippingMethods[0];
+  // Courier prices need a saved address with a place from the search, a signed-in buyer, and the database (the demo has no quotes).
+  const destinationId = (selectedAddressId === null ? undefined : addresses.find((a) => a.id === selectedAddressId))?.destinationId ?? null;
+  const quoteWanted = mode === "supabase" && !!user && panels.checkout && selectedAddressId !== null && selectedAddressId !== manualOnlyFor;
+  const quote = useShippingQuote(
+    destinationId,
+    cart.flatMap((line) => {
+      const product = getProduct(line.id);
+      return product ? [{ productId: product.id, qty: line.qty }] : [];
+    }),
+    quoteWanted,
+  );
+  const shippingSource: CheckoutContextValue["shippingSource"] = quoteWanted && destinationId !== null ? (quote.status === "ready" ? "quote" : quote.status === "error" ? "manual" : "loading") : "manual";
+  const shippingFallback: CheckoutContextValue["shippingFallback"] =
+    mode !== "supabase" || shippingSource !== "manual" || !user || selectedAddressId === null ? null : destinationId === null ? "noPlace" : "failed";
+  const shippingMethods = useMemo<ShippingChoice[]>(() => {
+    if (shippingSource === "manual") return manualMethods;
+    return quote.options.map((o) => {
+      const eta = etdText(o.etd);
+      return {
+        value: `api:${o.courier}:${o.service}`.toLowerCase(),
+        label: `${o.courierName} ${o.service}`.trim(),
+        note: [o.description, eta && t("store.checkout.shipping.eta", { etd: eta })].filter(Boolean).join(" · "),
+        cost: o.fee,
+        quoteToken: o.token,
+      };
+    });
+  }, [shippingSource, manualMethods, quote.options]);
+
+  const chosenShipping: ShippingChoice | undefined = shippingMethods.find((m) => m.value === shipping) ?? shippingMethods[0];
   const shippingCost = chosenShipping?.cost ?? 0;
 
   const openCheckout = useCallback(() => {
@@ -164,6 +208,11 @@ export function CheckoutProvider({ children }: { children: ReactNode }) {
       openLogin("checkout");
       return;
     }
+    // Never at the shop's own rate while the courier prices are still on their way: the cost shown would not be the one charged.
+    if (shippingSource === "loading") {
+      showToast(t("store.toast.shippingLoading"));
+      return;
+    }
     setPlacing(true);
     const result = await submitOrder({
       items: cart.flatMap((line) => {
@@ -177,16 +226,24 @@ export function CheckoutProvider({ children }: { children: ReactNode }) {
       city: address.city.trim(),
       postcode: address.postcode.trim(),
       proof: proofFile.current,
+      ...(chosenShipping?.quoteToken && selectedAddressId ? { shippingQuote: { token: chosenShipping.quoteToken, addressId: selectedAddressId } } : {}),
     });
     setPlacing(false);
     if (!result.ok) {
+      // The price no longer holds (the cart, the address, or the shop's settings changed, or the quote ran out): ask again and
+      // let the buyer choose again. If the database cannot check courier prices at all, the shop's own rates are used instead.
+      if (result.error.kind === "shippingQuoteChanged" || result.error.kind === "shippingQuoteUnavailable") {
+        if (result.error.kind === "shippingQuoteUnavailable") setManualOnlyFor(selectedAddressId);
+        quote.refresh();
+        setCheckoutStep(2);
+      }
       showToast(orderErrorText(result.error));
       return;
     }
     if (!result.value.proofSent) showToast(t("store.toast.proofPending"));
     setOrderNumber(result.value.number);
     setCheckoutStep(4);
-  }, [address, cart, chosenShipping, getProduct, openLogin, orderErrorText, placing, shipping, showToast, submitOrder, user]);
+  }, [address, cart, chosenShipping, getProduct, openLogin, orderErrorText, placing, quote, selectedAddressId, shipping, shippingSource, showToast, submitOrder, user]);
 
   const finishOrder = useCallback(() => {
     clearCart();
@@ -255,6 +312,7 @@ export function CheckoutProvider({ children }: { children: ReactNode }) {
   const value: CheckoutContextValue = {
     checkoutStep, goCheckoutStep, startCheckout, pendingCheckout, resumeCheckout,
     address, selectedAddressId, selectAddress, setAddressField, shipping, setShipping, shippingMethods, shippingCost,
+    shippingSource, shippingFallback, retryShipping: quote.refresh,
     proofName, setProof, placeOrder, placing, orderNumber, finishOrder,
   };
   return <CheckoutContext.Provider value={value}>{children}</CheckoutContext.Provider>;
