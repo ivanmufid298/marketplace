@@ -5,6 +5,8 @@ import { createRajaOngkirProvider } from "./lib/rajaongkir";
 import type { ShippingProvider } from "./lib/types";
 
 export { answerDestinationSearch, type DestinationSearchBody, type Reply } from "./lib/handlers";
+export { answerQuote, type QuoteBody } from "./lib/quote-handler";
+export { quoteLoaders } from "./lib/quote-loaders";
 
 /** The shipping provider this deployment uses: RajaOngkir, with its key from the environment (never `NEXT_PUBLIC_`). */
 export const shippingProvider = (): ShippingProvider => createRajaOngkirProvider({ apiKey: process.env.RAJAONGKIR_API_KEY });
