@@ -292,14 +292,13 @@ npx wrangler deploy --config workers/keepalive/wrangler.jsonc \
 
 Apakah satu pembacaan REST sehari cukup untuk dihitung sebagai "aktif" oleh Supabase belum kupastikan di dokumentasi terbaru; ini praktik umum, tetapi cek status project di dashboard setelah seminggu pertama.
 
-**Memasang migrasi ke Supabase production** (kamu yang menjalankannya di terminalmu karena butuh kata sandi database production; aku tidak pernah memintanya). Remote Supabase yang tertaut di repo ini adalah **dev**, jadi tautan production dibuat dari folder terpisah supaya `db push` tidak pernah tak sengaja mengenai production:
+**Memasang migrasi ke Supabase production** (sudah dilakukan 19 Okt 2026 untuk project `vancy-kithz-prod`: 18 migrasi; CLI memakai login sementara dari `supabase login`, jadi tidak butuh kata sandi database). Remote Supabase yang tertaut di repo ini adalah **dev**, jadi tautan production dibuat dari folder terpisah supaya `db push` tidak pernah tak sengaja mengenai production:
 
 ```bash
 mkdir ~/Ivan/marketplace-prod && cd ~/Ivan/marketplace-prod
 supabase init
 rm -rf supabase/migrations && ln -s ~/Ivan/marketplace/supabase/migrations supabase/migrations   # migrasi yang sama
 supabase link --project-ref <ref production>
-export SUPABASE_DB_PASSWORD='<kata sandi database production>'   # hanya di terminal itu
 supabase db push --dry-run     # periksa daftarnya: harus semua migrasi, dari 20261012061023
 supabase db push               # setelah daftarnya benar
 ```
