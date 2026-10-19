@@ -132,3 +132,13 @@
 .store .address-choices{display:grid;gap:10px}.store .address-choice{display:flex;align-items:flex-start;gap:12px;cursor:pointer}.store .address-choice.selected{border-color:var(--wine);box-shadow:0 0 0 2px rgba(114,32,61,.12)}.store .address-choice input{margin-top:4px}.store .address-choice-body{display:grid;gap:3px;min-width:0}
 .store .address-tools{display:flex;gap:18px;flex-wrap:wrap;margin-top:12px}
 @media(max-width:500px){.store .account-profile dl{grid-template-columns:1fr}.store .account-section{padding:18px 16px}.store .account-section-head{flex-direction:column}}
+.store .destination-picker{display:grid;gap:8px}.store .destination-picker input{width:100%}
+.store .destination-note{margin:0;color:var(--muted);font-size:13px}
+.store .destination-results{list-style:none;margin:0;padding:6px;border:1px solid var(--line);border-radius:16px;background:#fff;box-shadow:0 14px 34px rgba(72,31,45,.12);max-height:288px;overflow:auto;display:grid;gap:2px}
+.store .destination-results li{display:grid;gap:2px;padding:10px 12px;border-radius:12px;cursor:pointer}.store .destination-results li b{font-size:14px;color:var(--ink)}.store .destination-results li small{font-size:12px;color:var(--muted);line-height:1.35}
+.store .destination-results li:hover,.store .destination-results li.active{background:var(--pink2)}.store .destination-results li.active{box-shadow:inset 3px 0 0 var(--wine)}
+.store .destination-chosen{display:flex;align-items:center;gap:12px;border:1px solid var(--rose);background:#fff8f9;border-radius:14px;padding:11px 14px}
+.store .destination-mark{flex:none;width:22px;height:22px;border-radius:50%;background:var(--wine);color:#fff;font-size:12px;display:grid;place-items:center}
+.store .destination-text{display:grid;gap:1px;min-width:0;flex:1}.store .destination-text b{font-size:14px}.store .destination-text small{color:var(--muted);font-size:12px;line-height:1.35}
+.store .field .link-btn,.store .destination-chosen .link-btn{justify-self:start;font-size:13px}.store .destination-chosen .link-btn{flex:none}
+.store .field .co-note.full-row,.store .fields>.co-note{grid-column:1/-1;margin:0}

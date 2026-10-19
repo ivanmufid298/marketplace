@@ -5,7 +5,7 @@ import { addAddress, forDisplay, removeAddress, setDefaultAddress, updateAddress
 import { MAX_ADDRESSES, type AddressInput, type SavedAddress } from "./types";
 
 const input = (label: string, over: Partial<AddressInput> = {}): AddressInput => ({ label, recipientName: "Ana", phone: "0811000111", address: "Jl. Mawar 1", city: "Jakarta", postcode: "12345", note: "", ...over });
-const saved = (id: string, isDefault = false): SavedAddress => ({ id, label: id, recipientName: "Ana", phone: "0811000111", address: "Jl", city: "Jkt", postcode: "1", note: "", isDefault });
+const saved = (id: string, isDefault = false): SavedAddress => ({ id, label: id, recipientName: "Ana", phone: "0811000111", address: "Jl", city: "Jkt", postcode: "1", note: "", isDefault, destinationId: null, destinationLabel: null });
 const defaults = (book: SavedAddress[]) => book.filter((a) => a.isDefault).map((a) => a.id).join(",");
 function fill(n: number) {
   let book: SavedAddress[] = [];
@@ -47,6 +47,24 @@ describe("adding", () => {
   });
   it("checks validity before the limit, so a bad address in a full book says what is wrong with it", () => {
     expect(addAddress(fill(MAX_ADDRESSES), input("", {}), "z")).toEqual({ ok: false, error: "invalid" });
+  });
+});
+
+describe("the place of an address", () => {
+  it("is kept when an address is added with one, and empty when it is not", () => {
+    const placed = addAddress([], input("A", { destinationId: 17536, destinationLabel: "CIPETE UTARA" }), "a1");
+    expect(placed.ok && placed.value.added).toMatchObject({ destinationId: 17536, destinationLabel: "CIPETE UTARA" });
+    const plain = addAddress([], input("A"), "a1");
+    expect(plain.ok && plain.value.added).toMatchObject({ destinationId: null, destinationLabel: null });
+  });
+  it("is changed or taken away by an update that says so, and left alone by one that does not", () => {
+    const book = [{ ...saved("a1", true), destinationId: 7, destinationLabel: "Lama" }];
+    const changed = updateAddress(book, "a1", input("x", { destinationId: 9, destinationLabel: "Baru" }));
+    expect(changed.ok && changed.value[0]).toMatchObject({ destinationId: 9, destinationLabel: "Baru" });
+    const cleared = updateAddress(book, "a1", input("x", { destinationId: null, destinationLabel: null }));
+    expect(cleared.ok && cleared.value[0]).toMatchObject({ destinationId: null, destinationLabel: null });
+    const left = updateAddress(book, "a1", input("x"));
+    expect(left.ok && left.value[0]).toMatchObject({ destinationId: 7, destinationLabel: "Lama" });
   });
 });
 

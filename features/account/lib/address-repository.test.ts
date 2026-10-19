@@ -29,7 +29,11 @@ const input = (over: Partial<AddressInput> = {}): AddressInput => ({ label: " Ru
 
 describe("toSavedAddress", () => {
   it("maps a row to the app's address", () => {
-    expect(toSavedAddress(row())).toStrictEqual({ id: "a-1", label: "Rumah", recipientName: "Ana", phone: "0811000111", address: "Jl. Mawar 1", city: "Jakarta", postcode: "12345", note: "", isDefault: true });
+    expect(toSavedAddress(row())).toStrictEqual({ id: "a-1", label: "Rumah", recipientName: "Ana", phone: "0811000111", address: "Jl. Mawar 1", city: "Jakarta", postcode: "12345", note: "", isDefault: true, destinationId: null, destinationLabel: null });
+  });
+  it("carries the place the address was found under, and has none for an address filled in by hand", () => {
+    expect(toSavedAddress(row({ destination_id: 17536, destination_label: "CIPETE UTARA" }))).toMatchObject({ destinationId: 17536, destinationLabel: "CIPETE UTARA" });
+    expect(toSavedAddress(row({ destination_id: null, destination_label: null }))).toMatchObject({ destinationId: null, destinationLabel: null });
   });
   it("turns a missing note into an empty one", () => expect(toSavedAddress(row({ note: null })).note).toBe(""));
 });
@@ -72,6 +76,15 @@ describe("adding", () => {
     expect(opsOf(q.queries[0], "single")).toHaveLength(1);
     expect(result).toMatchObject({ ok: true, value: { id: "a-1", label: "Rumah" } });
   });
+  it("sends the place with the address when there is one, and nothing about it when there is not", async () => {
+    const withPlace = fake({ data: row() });
+    await createAddressRepository(withPlace.db).add(input({ destinationId: 17536, destinationLabel: " CIPETE UTARA " }));
+    expect(opsOf(withPlace.queries[0], "insert")[0][0]).toMatchObject({ destination_id: 17536, destination_label: "CIPETE UTARA" });
+    const without = fake({ data: row() });
+    await createAddressRepository(without.db).add(input());
+    expect(opsOf(without.queries[0], "insert")[0][0]).not.toHaveProperty("destination_id");
+    expect(opsOf(without.queries[0], "insert")[0][0]).not.toHaveProperty("destination_label");
+  });
   it("asks for the default only when it was asked for", async () => {
     const asked = fake({ data: row() });
     await createAddressRepository(asked.db).add(input({ isDefault: true }));
@@ -96,6 +109,17 @@ describe("changing", () => {
     const asked = fake({ data: [{ id: "a-1" }] });
     await createAddressRepository(asked.db).update("a-1", input({ isDefault: true }));
     expect((opsOf(asked.queries[0], "update")[0][0] as Record<string, unknown>).is_default).toBe(true);
+  });
+  it("changes the place of an address, takes it away on request, and leaves it alone when it is not mentioned", async () => {
+    const set = fake({ data: [{ id: "a-1" }] });
+    await createAddressRepository(set.db).update("a-1", input({ destinationId: 5, destinationLabel: "X, Y" }));
+    expect(opsOf(set.queries[0], "update")[0][0]).toMatchObject({ destination_id: 5, destination_label: "X, Y" });
+    const cleared = fake({ data: [{ id: "a-1" }] });
+    await createAddressRepository(cleared.db).update("a-1", input({ destinationId: null, destinationLabel: null }));
+    expect(opsOf(cleared.queries[0], "update")[0][0]).toMatchObject({ destination_id: null, destination_label: null });
+    const left = fake({ data: [{ id: "a-1" }] });
+    await createAddressRepository(left.db).update("a-1", input());
+    expect(opsOf(left.queries[0], "update")[0][0]).not.toHaveProperty("destination_id");
   });
   it("chooses the default by setting only that flag", async () => {
     const q = fake({ data: [{ id: "a-2" }] });

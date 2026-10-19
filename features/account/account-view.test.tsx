@@ -10,7 +10,7 @@ import { AccountView } from "./components/account-view";
 import { MAX_ADDRESSES, type AddressInput, type AddressRepository, type AddressResult, type AddressServices, type SavedAddress } from "./lib/types";
 
 const SESSION_KEY = "marketplace-demo-session-v1";
-const saved = (id: string, over: Partial<SavedAddress> = {}): SavedAddress => ({ id, label: `Alamat ${id}`, recipientName: "Ana Putri", phone: "0811000111", address: "Jl. Mawar 1", city: "Jakarta", postcode: "12345", note: "", isDefault: false, ...over });
+const saved = (id: string, over: Partial<SavedAddress> = {}): SavedAddress => ({ id, label: `Alamat ${id}`, recipientName: "Ana Putri", phone: "0811000111", address: "Jl. Mawar 1", city: "Jakarta", postcode: "12345", note: "", isDefault: false, destinationId: null, destinationLabel: null, ...over });
 
 function fakeRepo(initial: SavedAddress[], over: Partial<AddressRepository> = {}) {
   let book = initial;
@@ -34,6 +34,8 @@ function show(initial: SavedAddress[] = [], over: Partial<AddressRepository> = {
 const toast = () => screen.getByTestId("toast").textContent;
 const card = (label: string) => screen.getByText(label).closest("li") as HTMLElement;
 const type = (label: string | RegExp, value: string) => fireEvent.change(screen.getByLabelText(label), { target: { value } });
+/** Fills the address in by hand: the form asks for a place from the search first, and fields for the city and postcode only on request. */
+const byHand = () => fireEvent.click(screen.getByRole("button", { name: "Isi manual" }));
 const flush = () => act(async () => { await new Promise((r) => setTimeout(r, 20)); });
 
 beforeEach(() => { window.localStorage.clear(); vi.unstubAllEnvs(); vi.stubEnv("NODE_ENV", "development"); vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", ""); });
@@ -97,7 +99,12 @@ describe("adding an address", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Tambah alamat" }));
     type("Nama penerima", "");
     fireEvent.click(screen.getByRole("button", { name: "Simpan alamat" }));
-    expect(screen.getAllByText("Wajib diisi.").length).toBeGreaterThanOrEqual(5);
+    expect(screen.getAllByText("Wajib diisi.").length).toBeGreaterThanOrEqual(4);
+    expect(screen.getByText("Pilih lokasi dari hasil pencarian, atau isi manual.")).toBeTruthy();
+    byHand();
+    fireEvent.click(screen.getByRole("button", { name: "Simpan alamat" }));
+    expect(screen.getAllByText("Wajib diisi.").length).toBeGreaterThanOrEqual(6);
+    expect(screen.queryByText("Pilih lokasi dari hasil pencarian, atau isi manual.")).toBeNull();
     type("Nomor telepon", "123");
     fireEvent.click(screen.getByRole("button", { name: "Simpan alamat" }));
     expect(screen.getByText("Terlalu pendek (minimal 5 karakter).")).toBeTruthy();
@@ -109,6 +116,7 @@ describe("adding an address", () => {
   it("puts the cursor in the first field that needs attention", async () => {
     show([]);
     fireEvent.click(await screen.findByRole("button", { name: "Tambah alamat" }));
+    byHand();
     type("Nama alamat", "Rumah");
     fireEvent.click(screen.getByRole("button", { name: "Simpan alamat" }));
     expect(document.activeElement).toBe(screen.getByLabelText("Nomor telepon"));
@@ -117,6 +125,7 @@ describe("adding an address", () => {
     let finish: (v: AddressResult<SavedAddress>) => void = () => {};
     const repo = show([], { add: vi.fn(() => new Promise((resolve) => { finish = resolve as never; })) as never });
     fireEvent.click(await screen.findByRole("button", { name: "Tambah alamat" }));
+    byHand();
     type("Nama alamat", "Rumah"); type("Nomor telepon", "0811000111"); type("Alamat lengkap", "Jl"); type("Kota / kecamatan", "J"); type("Kode pos", "1");
     const form = screen.getByRole("button", { name: "Simpan alamat" }).closest("form")!;
     fireEvent.submit(form);
@@ -136,6 +145,7 @@ describe("adding an address", () => {
   it("saves a complete address (trimmed), says so, and shows it in the list as the main one", async () => {
     const repo = show([]);
     fireEvent.click(await screen.findByRole("button", { name: "Tambah alamat" }));
+    byHand();
     type("Nama alamat", "  Rumah ");
     type("Nomor telepon", "0811000111");
     type("Alamat lengkap", "Jl. Mawar 1");
@@ -152,6 +162,7 @@ describe("adding an address", () => {
     const repo = show([saved("a1", { isDefault: true })]);
     fireEvent.click(await screen.findByRole("button", { name: "Tambah alamat" }));
     expect(screen.getByRole("button", { name: "Batal" })).toBeTruthy();
+    byHand();
     type("Nama alamat", "Kantor"); type("Nomor telepon", "0811000111"); type("Alamat lengkap", "Jl. Kantor 2"); type("Kota / kecamatan", "Jakarta"); type("Kode pos", "12345");
     fireEvent.click(screen.getByLabelText("Jadikan alamat utama"));
     fireEvent.click(screen.getByRole("button", { name: "Simpan alamat" }));
@@ -169,6 +180,7 @@ describe("adding an address", () => {
   it("shows what the database said when saving fails, keeps the form, and lets the buyer cancel", async () => {
     show([saved("a1", { isDefault: true })], { add: async () => ({ ok: false as const, error: "tooMany" as const }) });
     fireEvent.click(await screen.findByRole("button", { name: "Tambah alamat" }));
+    byHand();
     type("Nama alamat", "X"); type("Nomor telepon", "0811000111"); type("Alamat lengkap", "Jl"); type("Kota / kecamatan", "J"); type("Kode pos", "1");
     fireEvent.click(screen.getByRole("button", { name: "Simpan alamat" }));
     expect((await screen.findByRole("alert")).textContent).toBe("Alamat sudah mencapai batas 10. Hapus satu dulu.");

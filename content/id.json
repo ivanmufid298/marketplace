@@ -79,6 +79,24 @@
       "addToCart": "Tambah ke keranjang",
       "openPage": "Buka halaman produk"
     },
+    "shipping": {
+      "picker": {
+        "label": "Kecamatan, kelurahan, atau kode pos",
+        "placeholder": "Ketik minimal 3 huruf, misalnya Kebayoran Baru atau 12150",
+        "searching": "Mencari…",
+        "none": "Tidak ketemu. Coba kata lain, atau isi manual.",
+        "change": "Ganti",
+        "manual": "Isi manual",
+        "resultsLabel": "Lokasi yang cocok",
+        "errors": {
+          "signIn": "Masuk lagi untuk mencari lokasi.",
+          "quota": "Pencarian lokasi sedang penuh hari ini. Isi manual saja.",
+          "unavailable": "Pencarian lokasi belum bisa dipakai. Isi manual saja.",
+          "notConfigured": "Pencarian lokasi belum bisa dipakai. Isi manual saja.",
+          "failed": "Tidak bisa terhubung. Coba lagi, atau isi manual."
+        }
+      }
+    },
     "account": {
       "title": "Akun saya",
       "metaTitle": "Akun saya — Marketplace",
@@ -121,6 +139,9 @@
         "optional": "(opsional)",
         "notePlaceholder": "Patokan, titip satpam, dan sebagainya",
         "makeDefault": "Jadikan alamat utama",
+        "locationRequired": "Pilih lokasi dari hasil pencarian, atau isi manual.",
+        "manualNote": "Kota dan kode pos diisi sendiri. Ongkir memakai tarif toko, bukan tarif per lokasi.",
+        "chooseLocation": "Pilih lokasi supaya ongkir dihitung sesuai tujuan.",
         "save": "Simpan alamat",
         "saveChanges": "Simpan perubahan",
         "saving": "Menyimpan…",

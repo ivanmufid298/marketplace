@@ -6,6 +6,7 @@ import { PGlite } from "@electric-sql/pglite";
 
 const read = (name) => fs.readFileSync(new URL(`../migrations/${name}`, import.meta.url), "utf8");
 const ADDRESSES = read("20261016040000_addresses.sql");
+const DESTINATION = read("20261019040000_address_destination.sql");
 const PREREQUISITES = [
   "20261012061023_profiles_and_roles.sql", "20261012065146_revoke_rls_auto_enable_execute.sql", 
 ].map(read);
@@ -57,8 +58,10 @@ const CHECK = /violates check constraint/i;
 for (const sql of PREREQUISITES) {
   try { await db.exec(sql); } catch (e) { check("a prerequisite migration runs", false, e.message); process.exit(1); }
 }
-for (const run of ["", " a second time (idempotent)"]) {
-  try { await db.exec(ADDRESSES); check(`the addresses migration runs${run}`, true); } catch (e) { check(`the addresses migration runs${run}`, false, e.message); process.exit(1); }
+for (const [name, sql] of [["addresses", ADDRESSES], ["address destination", DESTINATION]]) {
+  for (const run of ["", " a second time (idempotent)"]) {
+    try { await db.exec(sql); check(`the ${name} migration runs${run}`, true); } catch (e) { check(`the ${name} migration runs${run}`, false, e.message); process.exit(1); }
+  }
 }
 
 const ANA = "00000000-0000-0000-0000-0000000000a1", BIMA = "00000000-0000-0000-0000-0000000000b1", ADMIN = "00000000-0000-0000-0000-0000000000ad";
@@ -186,6 +189,27 @@ for (const [what, over, ok] of [["a label of exactly 30 characters", { label: "x
   try { await as_(ANA, add("Batas", over.label ? { ...over } : over)); check(`${what} is accepted`, true); } catch (e) { check(`${what} is accepted`, false, e.message); }
   await db.exec(`delete from public.addresses where label = 'Batas' or label = '${over.label ?? ""}'`);
 }
+
+// ---- the place in the shipping provider's terms
+await as_(ANA, `delete from public.addresses`);
+await as_(ANA, `insert into public.addresses (label, recipient_name, phone, address, city, postcode, destination_id, destination_label) values ('Tujuan', 'Ana', '0811000111', 'Jl. Mawar 1', 'Kebayoran Baru, Jakarta Selatan', '12150', 17536, 'CIPETE UTARA, KEBAYORAN BARU, JAKARTA SELATAN, DKI JAKARTA, 12150')`);
+const withPlace = await one(`select destination_id, destination_label from public.addresses where label = 'Tujuan'`);
+check("an address keeps the provider's id for its place, with the name it was found under", Number(withPlace.destination_id) === 17536 && /^CIPETE UTARA/.test(withPlace.destination_label));
+await as_(ANA, add("Tanpa tujuan"));
+const without = await one(`select destination_id, destination_label from public.addresses where label = 'Tanpa tujuan'`);
+check("an address saved by hand has no place", without.destination_id === null && without.destination_label === null);
+await as_(ANA, `update public.addresses set destination_id = 99, destination_label = 'X, Y, Z' where label = 'Tanpa tujuan'`);
+check("the owner can add a place to an address later", Number((await one(`select destination_id from public.addresses where label = 'Tanpa tujuan'`)).destination_id) === 99);
+await as_(ANA, `update public.addresses set destination_id = null, destination_label = null where label = 'Tanpa tujuan'`);
+check("and take it away again", (await one(`select destination_id from public.addresses where label = 'Tanpa tujuan'`)).destination_id === null);
+await fails("an id without a name is refused", ANA, `update public.addresses set destination_id = 5, destination_label = null where label = 'Tanpa tujuan'`, CHECK);
+await fails("a name without an id is refused", ANA, `update public.addresses set destination_id = null, destination_label = 'X' where label = 'Tanpa tujuan'`, CHECK);
+await fails("an id of zero or less is refused", ANA, `update public.addresses set destination_id = 0, destination_label = 'X' where label = 'Tanpa tujuan'`, CHECK);
+await fails("a name longer than 200 characters is refused", ANA, `update public.addresses set destination_id = 5, destination_label = '${"x".repeat(201)}' where label = 'Tanpa tujuan'`, CHECK);
+await fails("an empty name is refused", ANA, `update public.addresses set destination_id = 5, destination_label = '' where label = 'Tanpa tujuan'`, CHECK);
+check("a name of exactly 200 characters is accepted", await as_(ANA, `update public.addresses set destination_id = 5, destination_label = '${"x".repeat(200)}' where label = 'Tanpa tujuan'`).then(() => true, () => false));
+check("another buyer cannot read the place of this buyer's address", await (async () => { await as("authenticated", BIMA); const n = await count(`select 1 from public.addresses where destination_id is not null`); await as("postgres"); return n === 0; })());
+await db.exec(`delete from public.addresses where user_id = '${ANA}'`);
 
 // ---- deleting the account deletes its book
 const countBefore = await count(`select 1 from public.addresses where user_id = '${BIMA}'`);

@@ -10,12 +10,18 @@ type Storage = Pick<globalThis.Storage, "getItem" | "setItem">;
 const isAddress = (x: unknown): x is SavedAddress =>
   typeof x === "object" && x !== null && ["id", "label", "recipientName", "phone", "address", "city", "postcode", "note"].every((k) => typeof (x as Record<string, unknown>)[k] === "string") && typeof (x as { isDefault: unknown }).isDefault === "boolean";
 
+/** An address saved before places existed has no place. */
+const withPlace = (a: SavedAddress): SavedAddress => {
+  const whole = typeof a.destinationId === "number" && typeof a.destinationLabel === "string" && a.destinationLabel.length > 0;
+  return { ...a, destinationId: whole ? a.destinationId : null, destinationLabel: whole ? a.destinationLabel : null };
+};
+
 export function createLocalAddressRepository(userId: string, storage: Storage = window.localStorage, newId: () => string = () => crypto.randomUUID()): AddressRepository {
   const key = LOCAL_ADDRESSES_PREFIX + userId;
   const read = (): SavedAddress[] => {
     try {
       const raw: unknown = JSON.parse(storage.getItem(key) ?? "[]");
-      return Array.isArray(raw) ? raw.filter(isAddress) : [];
+      return Array.isArray(raw) ? raw.filter(isAddress).map(withPlace) : [];
     } catch {
       return [];
     }

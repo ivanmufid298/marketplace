@@ -37,6 +37,26 @@ describe("cleanAddress", () => {
   });
 });
 
+describe("the place of an address", () => {
+  const withPlace = (id: unknown, label: unknown) => cleanAddress({ ...good, destinationId: id as number, destinationLabel: label as string });
+  it("is kept, with its name trimmed, when it is whole", () => {
+    expect(withPlace(17536, " CIPETE UTARA ")).toMatchObject({ destinationId: 17536, destinationLabel: "CIPETE UTARA" });
+  });
+  it("is not mentioned at all when it was not given, so an update leaves it as it is", () => {
+    const clean = cleanAddress(good);
+    expect(clean).not.toHaveProperty("destinationId");
+    expect(clean).not.toHaveProperty("destinationLabel");
+  });
+  it("is taken away when it is asked to be, or when it is not whole (an id without a name, a name without an id, an id that is not a positive whole number)", () => {
+    for (const [id, label] of [[null, null], [5, ""], [5, "  "], [5, null], [null, "X"], [0, "X"], [-1, "X"], [1.5, "X"], ["5", "X"]]) {
+      expect(withPlace(id, label), `${String(id)}/${String(label)}`).toMatchObject({ destinationId: null, destinationLabel: null });
+    }
+  });
+  it("keeps a name of at most 200 characters", () => {
+    expect(withPlace(5, "x".repeat(250)).destinationLabel).toHaveLength(200);
+  });
+});
+
 describe("addressLine", () => {
   it("is street, city, postcode", () => expect(addressLine(good)).toBe("Jl. Mawar 1, Jakarta, 12345"));
 });

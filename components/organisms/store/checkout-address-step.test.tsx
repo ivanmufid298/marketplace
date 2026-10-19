@@ -13,7 +13,7 @@ import { UiProvider, useUi } from "@/shared/ui-state/ui-provider";
 import { CheckoutFlow } from "./checkout-flow";
 
 const SESSION_KEY = "marketplace-demo-session-v1";
-const saved = (id: string, over: Partial<SavedAddress> = {}): SavedAddress => ({ id, label: `Alamat ${id}`, recipientName: `Penerima ${id}`, phone: "0811000111", address: `Jl. ${id}`, city: "Jakarta", postcode: "12345", note: "", isDefault: false, ...over });
+const saved = (id: string, over: Partial<SavedAddress> = {}): SavedAddress => ({ id, label: `Alamat ${id}`, recipientName: `Penerima ${id}`, phone: "0811000111", address: `Jl. ${id}`, city: "Jakarta", postcode: "12345", note: "", isDefault: false, destinationId: null, destinationLabel: null, ...over });
 
 function fakeRepo(initial: SavedAddress[], over: Partial<AddressRepository> = {}) {
   let book = initial;
@@ -62,7 +62,9 @@ async function open(initial: SavedAddress[], over: Partial<AddressRepository> = 
 const stepOne = () => document.querySelectorAll(".co-page")[0] as HTMLElement;
 const next = () => within(stepOne()).getByRole("button", { name: "Pilih pengiriman" }) as HTMLButtonElement;
 const type = (label: string, value: string) => fireEvent.change(within(stepOne()).getByLabelText(label), { target: { value } });
-const fillNew = (label = "Kantor") => { type("Nama alamat", label); type("Nomor telepon", "0811000111"); type("Alamat lengkap", "Jl. Kantor 2"); type("Kota / kecamatan", "Jakarta"); type("Kode pos", "12345"); };
+const byHand = () => fireEvent.click(within(stepOne()).getByRole("button", { name: "Isi manual" }));
+const fillNew = (label = "Kantor") => {
+  byHand(); type("Nama alamat", label); type("Nomor telepon", "0811000111"); type("Alamat lengkap", "Jl. Kantor 2"); type("Kota / kecamatan", "Jakarta"); type("Kode pos", "12345"); };
 
 beforeEach(() => { Element.prototype.scrollTo = vi.fn() as never; window.localStorage.clear(); vi.unstubAllEnvs(); vi.stubEnv("NODE_ENV", "development"); vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", ""); });
 afterEach(cleanup);
@@ -78,7 +80,9 @@ describe("a buyer with no saved address yet", () => {
   it("names what is missing and saves nothing", async () => {
     const repo = await open([]);
     fireEvent.click(within(stepOne()).getByRole("button", { name: "Simpan alamat" }));
-    expect(within(stepOne()).getAllByText("Wajib diisi.").length).toBeGreaterThanOrEqual(5);
+    // The name is already filled in from the account, and the city and postcode are asked for only when filling in by hand.
+    expect(within(stepOne()).getAllByText("Wajib diisi.").length).toBeGreaterThanOrEqual(3);
+    expect(within(stepOne()).getByText("Pilih lokasi dari hasil pencarian, atau isi manual.")).toBeTruthy();
     expect(repo.add).not.toHaveBeenCalled();
   });
   it("saves it to the address book, chooses it, and lets the buyer go on", async () => {

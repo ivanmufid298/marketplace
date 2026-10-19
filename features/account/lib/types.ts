@@ -12,13 +12,22 @@ export type SavedAddress = {
   note: string;
   /** The address checkout picks first. There is exactly one when the book is not empty. */
   isDefault: boolean;
+  /** The shipping provider's id for the place, chosen from a search; null for an address filled in by hand (priced with the shop's own rates). */
+  destinationId: number | null;
+  /** The name the place was found under ("CIPETE UTARA, KEBAYORAN BARU, ..."). Present exactly when `destinationId` is. */
+  destinationLabel: string | null;
 };
 
 /** What the buyer fills in. `isDefault` true makes it the default; it cannot be used to take the default away (choose another instead). */
-export type AddressInput = Omit<SavedAddress, "id" | "isDefault"> & { isDefault?: boolean };
+export type AddressInput = Omit<SavedAddress, "id" | "isDefault" | "destinationId" | "destinationLabel"> & {
+  isDefault?: boolean;
+  /** Left out, the place is left as it is (nothing for a new address); `null` takes it away. Given, both must be given. */
+  destinationId?: number | null;
+  destinationLabel?: string | null;
+};
 
 /** The same limits the database holds (and an order's address), so a saved address is always one an order will accept. */
-export const ADDRESS_LIMITS = { label: 30, recipientName: 120, phoneMin: 5, phoneMax: 30, address: 500, city: 100, postcode: 10, note: 200 } as const;
+export const ADDRESS_LIMITS = { label: 30, recipientName: 120, phoneMin: 5, phoneMax: 30, address: 500, city: 100, postcode: 10, note: 200, destinationLabel: 200 } as const;
 /** How many addresses one account may keep. */
 export const MAX_ADDRESSES = 10;
 

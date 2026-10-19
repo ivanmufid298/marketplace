@@ -4,6 +4,14 @@ export type AddressField = "label" | "recipientName" | "phone" | "address" | "ci
 export type AddressProblem = "required" | "tooShort" | "tooLong";
 export type AddressProblems = Partial<Record<AddressField, AddressProblem>>;
 
+/** The place of an address, kept only when it is whole: a positive id with its name. Left out when it was not given at all. */
+function cleanPlace(input: AddressInput): Pick<AddressInput, "destinationId" | "destinationLabel"> {
+  if (input.destinationId === undefined && input.destinationLabel === undefined) return {};
+  const label = (input.destinationLabel ?? "").trim();
+  const whole = typeof input.destinationId === "number" && Number.isInteger(input.destinationId) && input.destinationId > 0 && label.length > 0;
+  return whole ? { destinationId: input.destinationId, destinationLabel: label.slice(0, ADDRESS_LIMITS.destinationLabel) } : { destinationId: null, destinationLabel: null };
+}
+
 /** The input with every text trimmed, as it is saved. */
 export function cleanAddress(input: AddressInput): AddressInput {
   return {
@@ -15,6 +23,7 @@ export function cleanAddress(input: AddressInput): AddressInput {
     postcode: input.postcode.trim(),
     note: input.note.trim(),
     ...(input.isDefault === undefined ? {} : { isDefault: input.isDefault }),
+    ...cleanPlace(input),
   };
 }
 

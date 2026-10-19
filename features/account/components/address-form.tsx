@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { t } from "@/lib/i18n";
 import { Button } from "@/components/atoms/button";
 import { Field } from "@/components/molecules/field";
+import { cityLine, DestinationPicker, type Destination } from "@/features/shipping";
 import { validateAddress, type AddressField, type AddressProblems } from "../lib/validate";
 import { ADDRESS_LIMITS, MAX_ADDRESSES, type AddressInput, type AddressResult, type SavedAddress } from "../lib/types";
 
@@ -44,6 +45,11 @@ export function AddressForm({ initial, defaultName = "", offerDefault = false, i
     postcode: initial?.postcode ?? "",
     note: initial?.note ?? "",
   });
+  // The place the shipping provider knows the address by. Without one (filled in by hand) the address is priced with the shop's own rates.
+  const [destination, setDestination] = useState<{ id: number; label: string } | null>(initial?.destinationId && initial.destinationLabel ? { id: initial.destinationId, label: initial.destinationLabel } : null);
+  // An address that already exists without a place is shown with its city and postcode, as it was saved.
+  const [manual, setManual] = useState(Boolean(initial && !initial.destinationId));
+  const [locationProblem, setLocationProblem] = useState(false);
   const [makeDefault, setMakeDefault] = useState(false);
   const [problems, setProblems] = useState<AddressProblems>({});
   const [failure, setFailure] = useState<string | null>(null);
@@ -54,13 +60,27 @@ export function AddressForm({ initial, defaultName = "", offerDefault = false, i
     if (problems[field]) setProblems((p) => ({ ...p, [field]: undefined }));
   };
 
+  const pick = (d: Destination) => {
+    setDestination({ id: d.id, label: d.label });
+    setValues((v) => ({ ...v, city: cityLine(d), postcode: d.postcode }));
+    setProblems((p) => ({ ...p, city: undefined, postcode: undefined }));
+    setLocationProblem(false);
+  };
+
   async function submit(e: FormEvent) {
     e.preventDefault();
     if (busy) return;
-    const input: AddressInput = { ...values, ...(makeDefault ? { isDefault: true } : {}) };
+    const input: AddressInput = { ...values, destinationId: destination?.id ?? null, destinationLabel: destination?.label ?? null, ...(makeDefault ? { isDefault: true } : {}) };
     const found = validateAddress(input);
     setProblems(found);
     setFailure(null);
+    // A place has to be chosen from the search, unless the buyer says they will fill the address in by hand.
+    setLocationProblem(false);
+    if (!destination && !manual) {
+      setLocationProblem(true);
+      document.getElementById(`${idPrefix}-where`)?.focus();
+      return;
+    }
     const first = (Object.keys(found) as AddressField[])[0];
     if (first) {
       document.getElementById(`${idPrefix}-${first}`)?.focus();
@@ -84,6 +104,8 @@ export function AddressForm({ initial, defaultName = "", offerDefault = false, i
     );
   };
 
+  // City and postcode are filled in from the place that was chosen; they are asked for only when filling in by hand, or when the chosen place lacked one.
+  const showFields = (manual && !destination) || (Boolean(destination) && (!values.city.trim() || !values.postcode.trim()));
   const addressProblem = problemText("address", problems);
   const noteProblem = problemText("note", problems);
   return (
@@ -96,8 +118,21 @@ export function AddressForm({ initial, defaultName = "", offerDefault = false, i
           <textarea id={`${idPrefix}-address`} value={values.address} placeholder={t("store.account.form.addressPlaceholder")} aria-invalid={addressProblem ? true : undefined} aria-describedby={addressProblem ? `${idPrefix}-address-problem` : undefined} onChange={(e) => set("address", e.target.value)} />
           {addressProblem && <small id={`${idPrefix}-address-problem`} className="login-error" role="alert">{addressProblem}</small>}
         </Field>
-        {field("city", t("store.account.form.city"), { autoComplete: "address-level2" })}
-        {field("postcode", t("store.account.form.postcode"), { inputMode: "numeric", autoComplete: "postal-code" })}
+        <Field full label={t("store.shipping.picker.label")} htmlFor={`${idPrefix}-where`}>
+          <DestinationPicker
+            id={`${idPrefix}-where`}
+            selected={destination}
+            onSelect={pick}
+            onClear={() => setDestination(null)}
+            onUnavailable={() => setManual(true)}
+          />
+          {!destination && !manual && <button type="button" className="link-btn" onClick={() => setManual(true)}>{t("store.shipping.picker.manual")}</button>}
+          {!destination && manual && initial && !initial.destinationId && <small className="co-note">{t("store.account.form.chooseLocation")}</small>}
+          {locationProblem && <small className="login-error" role="alert">{t("store.account.form.locationRequired")}</small>}
+        </Field>
+        {showFields && <p className="co-note full-row">{t("store.account.form.manualNote")}</p>}
+        {showFields && field("city", t("store.account.form.city"), { autoComplete: "address-level2" })}
+        {showFields && field("postcode", t("store.account.form.postcode"), { inputMode: "numeric", autoComplete: "postal-code" })}
         <Field full htmlFor={`${idPrefix}-note`} label={<>{t("store.account.form.note")} <span style={{ fontWeight: 400, color: "var(--muted)" }}>{t("store.account.form.optional")}</span></>}>
           <input id={`${idPrefix}-note`} value={values.note} placeholder={t("store.account.form.notePlaceholder")} aria-invalid={noteProblem ? true : undefined} aria-describedby={noteProblem ? `${idPrefix}-note-problem` : undefined} onChange={(e) => set("note", e.target.value)} />
           {noteProblem && <small id={`${idPrefix}-note-problem`} className="login-error" role="alert">{noteProblem}</small>}

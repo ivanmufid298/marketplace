@@ -58,6 +58,20 @@ describe("the demo address book", () => {
     for (let i = 0; i < 10; i++) await repo.add(input(`A${i}`));
     expect(await repo.add(input("Lagi"))).toEqual({ ok: false, error: "tooMany" });
   });
+  it("keeps an address's place, and gives one saved before places existed none", async () => {
+    const store = memory();
+    const repo = createLocalAddressRepository("ana", store, ids);
+    await repo.add(input("Tujuan", { destinationId: 17536, destinationLabel: "CIPETE UTARA" }));
+    store.setItem(LOCAL_ADDRESSES_PREFIX + "ana", JSON.stringify([...JSON.parse(store.getItem(LOCAL_ADDRESSES_PREFIX + "ana") ?? "[]"), { id: "old", label: "Lama", recipientName: "A", phone: "12345", address: "Jl", city: "J", postcode: "1", note: "", isDefault: false }]));
+    const list = await repo.list();
+    expect(list.ok && list.value.map((a) => [a.label, a.destinationId, a.destinationLabel])).toEqual([["Tujuan", 17536, "CIPETE UTARA"], ["Lama", null, null]]);
+  });
+  it("ignores half a place that was stored (an id with no name)", async () => {
+    const store = memory();
+    store.setItem(LOCAL_ADDRESSES_PREFIX + "ana", JSON.stringify([{ id: "x", label: "L", recipientName: "A", phone: "12345", address: "Jl", city: "J", postcode: "1", note: "", isDefault: true, destinationId: 5, destinationLabel: "" }]));
+    const list = await createLocalAddressRepository("ana", store, ids).list();
+    expect(list.ok && list.value[0]).toMatchObject({ destinationId: null, destinationLabel: null });
+  });
   it("starts empty when what is stored is damaged, and ignores entries that are not addresses", async () => {
     const store = memory();
     store.setItem(LOCAL_ADDRESSES_PREFIX + "ana", "{not json");

@@ -7,11 +7,11 @@ import type { AddressInput, AddressRepository, AddressResult, AddressesError, Sa
 
 export type AddressesDb = Pick<SupabaseClient, "from">;
 
-type Row = { id: string; label: string; recipient_name: string; phone: string; address: string; city: string; postcode: string; note: string; is_default: boolean };
-const COLUMNS = "id, label, recipient_name, phone, address, city, postcode, note, is_default";
+type Row = { id: string; label: string; recipient_name: string; phone: string; address: string; city: string; postcode: string; note: string; is_default: boolean; destination_id?: number | null; destination_label?: string | null };
+const COLUMNS = "id, label, recipient_name, phone, address, city, postcode, note, is_default, destination_id, destination_label";
 
 export function toSavedAddress(row: Row): SavedAddress {
-  return { id: row.id, label: row.label, recipientName: row.recipient_name, phone: row.phone, address: row.address, city: row.city, postcode: row.postcode, note: row.note ?? "", isDefault: row.is_default };
+  return { id: row.id, label: row.label, recipientName: row.recipient_name, phone: row.phone, address: row.address, city: row.city, postcode: row.postcode, note: row.note ?? "", isDefault: row.is_default, destinationId: row.destination_id ?? null, destinationLabel: row.destination_label ?? null };
 }
 
 /** The database's short codes and the connection's failures, as one small set of reasons. */
@@ -27,7 +27,9 @@ export function mapAddressError(error: { code?: string | null; message?: string 
 
 const columns = (input: AddressInput) => {
   const a = cleanAddress(input);
-  return { label: a.label, recipient_name: a.recipientName, phone: a.phone, address: a.address, city: a.city, postcode: a.postcode, note: a.note };
+  // The place is sent only when it was given: left out, an update leaves it as it is.
+  const place = a.destinationId === undefined ? {} : { destination_id: a.destinationId, destination_label: a.destinationLabel ?? null };
+  return { label: a.label, recipient_name: a.recipientName, phone: a.phone, address: a.address, city: a.city, postcode: a.postcode, note: a.note, ...place };
 };
 
 export function createAddressRepository(db: AddressesDb): AddressRepository {

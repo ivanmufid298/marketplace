@@ -14,7 +14,8 @@ export const ALLOWED: Record<string, string[]> = {
   notifications: ["auth"],
   chat: ["auth"],
   cart: ["auth", "catalog"],
-  account: ["auth"],
+  shipping: [],
+  account: ["auth", "shipping"],
   checkout: ["auth", "catalog", "cart", "orders", "account"],
 };
 

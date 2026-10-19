@@ -224,6 +224,19 @@ Ongkir disalin ke order saat checkout. Perubahan tarif berikutnya tidak boleh me
 | Biteship | Rates API (`/v1/rates/couriers`), lebih dari 30 kurir, satu produk untuk tarif, order, dan pelacakan; situsnya menyebut harga mulai dari Rp5 per permintaan | Harga terkini dan struktur biaya per volume |
 | RajaOngkir (Komerce) | Paket langganan dengan batas hit harian (Starter 100 per hari, Pro 20.000 per hari) | Harga paket; pembuatan order/resi ada di produk terpisah |
 
+**Hasil pengecekan 19 Oktober 2026** (dari halaman resmi atau halaman penyedia sendiri; konfirmasi lagi saat mendaftar karena harga dan kuota bisa berubah):
+
+| Penyedia | Biaya | Kuota | Catatan |
+| --- | --- | --- | --- |
+| RajaOngkir (Komerce) Starter | **Gratis** (halaman harga resmi) | 100 hit per hari untuk Cek Ongkir API | 17 kurir domestik (JNE, SiCepat, J&T, dan lainnya) dan 6 internasional; pencarian tujuan sampai kecamatan (`/destination/domestic-destination?search=`), kunci dikirim di header `key`. Pro: Rp149.000 per bulan, 25.000 hit per hari. Belum jelas apakah pencarian tujuan ikut menghabiskan kuota. |
+| AgenWebsite Rate API, paket Free | Gratis | 150 per hari | Hanya lima kurir (J&T, Lion, SAP, SPX, J&T Cargo; tanpa JNE); penyedia kecil, ditulis oleh vendor sendiri. |
+| Api.co.id | Tidak gratis | Tidak ada kuota gratis | Rp5 per panggilan tarif yang berhasil, dipotong dari saldo; endpoint wilayah dan daftar kurir gratis; 10 kurir. |
+| Biteship | Tidak gratis | Paket Starter Rp0 per bulan tetapi tanpa kuota gratis | Rp5 per permintaan sejak permintaan pertama (Grow Rp149.000 per bulan berisi 10.000 permintaan); lebih dari 30 kurir. |
+| KiriminAja | Belum bisa dipastikan | Belum diketahui | Perlu daftar akun Sandbox dan menunggu persetujuan; API mencakup tarif, order, jemput paket, dan pelacakan. Biaya tidak tercantum di dokumentasi publik. |
+| PluginOngkosKirim | Uji coba 7 hari | n/a | Bukan pilihan jangka panjang. |
+
+**Keputusan sementara (19 Oktober 2026):** RajaOngkir Starter sebagai penyedia pertama karena satu-satunya yang gratis dengan kurir besar dan halaman harga resmi; terpasang di balik antarmuka penyedia supaya bisa diganti (Biteship atau KiriminAja) tanpa mengubah checkout. Kuota 100 hit per hari berarti hasil tarif dan pencarian tujuan harus di-cache, ID tujuan disimpan pada alamat tersimpan pembeli sehingga pencarian hanya sekali per alamat, dan bila kuota habis checkout jatuh ke tarif manual (bagian 10.1).
+
 **Kriteria memilih.** (1) Biaya sesuai constraint biaya nol selama masih mungkin, (2) cakupan kurir yang dipakai pasar target, (3) sandbox untuk pengujian, (4) ID wilayah yang mudah dipetakan ke alamat buyer, dan (5) kemampuan lanjutan seperti membuat order, jemput paket, dan pelacakan resi, karena fulfillment akan membutuhkannya.
 
 Keputusan MVP tidak berubah: sampai bagian ini dikerjakan, ongkir memakai zona manual (bagian 10.1).

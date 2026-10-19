@@ -9,7 +9,7 @@ import type { AddressInput, AddressRepository, AddressServices, SavedAddress } f
 
 const SESSION_KEY = "marketplace-demo-session-v1";
 const NADIA = { id: "nadia", email: "nadia@demo.test", name: "Nadia Putri" };
-const saved = (id: string, over: Partial<SavedAddress> = {}): SavedAddress => ({ id, label: id, recipientName: "Ana", phone: "0811000111", address: "Jl", city: "Jkt", postcode: "1", note: "", isDefault: false, ...over });
+const saved = (id: string, over: Partial<SavedAddress> = {}): SavedAddress => ({ id, label: id, recipientName: "Ana", phone: "0811000111", address: "Jl", city: "Jkt", postcode: "1", note: "", isDefault: false, destinationId: null, destinationLabel: null, ...over });
 const input = (label = "Rumah"): AddressInput => ({ label, recipientName: "Ana", phone: "0811000111", address: "Jl. Mawar 1", city: "Jakarta", postcode: "12345", note: "" });
 
 function fakeRepo(initial: SavedAddress[] = [], over: Partial<AddressRepository> = {}) {

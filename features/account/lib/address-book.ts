@@ -14,7 +14,7 @@ export function addAddress(book: Book, input: AddressInput, id: string): Address
   if (book.length >= MAX_ADDRESSES) return { ok: false, error: "tooMany" };
   const clean = cleanAddress(input);
   // The first address is the default whatever was asked.
-  const added: SavedAddress = { id, label: clean.label, recipientName: clean.recipientName, phone: clean.phone, address: clean.address, city: clean.city, postcode: clean.postcode, note: clean.note, isDefault: book.length === 0 || clean.isDefault === true };
+  const added: SavedAddress = { id, label: clean.label, recipientName: clean.recipientName, phone: clean.phone, address: clean.address, city: clean.city, postcode: clean.postcode, note: clean.note, isDefault: book.length === 0 || clean.isDefault === true, destinationId: clean.destinationId ?? null, destinationLabel: clean.destinationLabel ?? null };
   const next = added.isDefault ? makeDefault([...book, added], id) : [...book, added];
   return { ok: true, value: { book: next, added } };
 }
@@ -23,7 +23,8 @@ export function updateAddress(book: Book, id: string, input: AddressInput): Addr
   if (!only(book, id)) return { ok: false, error: "notFound" };
   if (Object.keys(validateAddress(input)).length > 0) return { ok: false, error: "invalid" };
   const clean = cleanAddress(input);
-  const changed = book.map((a) => (a.id === id ? { ...a, label: clean.label, recipientName: clean.recipientName, phone: clean.phone, address: clean.address, city: clean.city, postcode: clean.postcode, note: clean.note } : a));
+  const place = clean.destinationId === undefined ? {} : { destinationId: clean.destinationId, destinationLabel: clean.destinationLabel ?? null };
+  const changed = book.map((a) => (a.id === id ? { ...a, label: clean.label, recipientName: clean.recipientName, phone: clean.phone, address: clean.address, city: clean.city, postcode: clean.postcode, note: clean.note, ...place } : a));
   // Asking for the default moves it; not asking leaves things as they are (the default is never taken away, only moved).
   return { ok: true, value: clean.isDefault === true ? makeDefault(changed, id) : changed };
 }
