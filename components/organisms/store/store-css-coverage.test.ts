@@ -3,15 +3,19 @@
 import fs from "node:fs";
 import { describe, expect, it } from "vitest";
 
-const css = fs.readFileSync("app/(store)/store.css", "utf8");
-/** Components of the storefront whose class names must all be styled in store.css. */
-const FILES = [
-  "features/account/components/account-view.tsx",
-  "features/account/components/address-book.tsx",
-  "features/account/components/address-form.tsx",
-  "features/account/components/change-password-form.tsx",
-  "features/shipping/components/destination-picker.tsx",
-  "components/organisms/store/checkout-flow.tsx",
+const STORE_CSS = "app/(store)/store.css";
+const ADMIN_CSS = "app/admin/admin.css";
+const read = (file: string) => fs.readFileSync(file, "utf8");
+/** Components that build their own markup, with the stylesheet that must style every class name in them. The picker is in both. */
+const FILES: [file: string, stylesheet: string][] = [
+  ["features/account/components/account-view.tsx", STORE_CSS],
+  ["features/account/components/address-book.tsx", STORE_CSS],
+  ["features/account/components/address-form.tsx", STORE_CSS],
+  ["features/account/components/change-password-form.tsx", STORE_CSS],
+  ["features/shipping/components/destination-picker.tsx", STORE_CSS],
+  ["features/shipping/components/destination-picker.tsx", ADMIN_CSS],
+  ["components/organisms/store/checkout-flow.tsx", STORE_CSS],
+  ["components/organisms/admin/shipping-settings-db.tsx", ADMIN_CSS],
 ];
 
 /** The class names written out in a file's `className="..."` (and template strings, without their `${}` parts). */
@@ -23,7 +27,7 @@ export function classNamesIn(source: string): string[] {
   }
   return [...names].sort();
 }
-const styled = (name: string) => new RegExp(`\\.${name.replace(/[-]/g, "\\-")}(?![\\w-])`).test(css);
+const styled = (name: string, css = read(STORE_CSS)) => new RegExp(`\\.${name.replace(/[-]/g, "\\-")}(?![\\w-])`).test(css);
 
 describe("classNamesIn", () => {
   it("finds plain and template class names, and skips what is computed", () => {
@@ -45,9 +49,10 @@ describe("styled", () => {
 });
 
 describe("the storefront's own components", () => {
-  for (const file of FILES) {
-    it(`${file} uses only class names that store.css styles`, () => {
-      const missing = classNamesIn(fs.readFileSync(file, "utf8")).filter((c) => !styled(c));
+  for (const [file, stylesheet] of FILES) {
+    it(`${file} uses only class names that ${stylesheet.split("/").pop()} styles`, () => {
+      const css = read(stylesheet);
+      const missing = classNamesIn(read(file)).filter((c) => !styled(c, css));
       expect(missing).toEqual([]);
     });
   }

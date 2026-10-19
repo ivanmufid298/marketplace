@@ -4,3 +4,10 @@ export { DestinationPicker } from "./components/destination-picker";
 export { cityLine, placeLine, placeParts, titleCase } from "./lib/places";
 export { forgetDestinations, useDestinationSearch, type DestinationSearch, type SearchError } from "./lib/use-destination-search";
 export type { Destination, ProviderRate } from "./lib/types";
+
+// The shop's own shipping settings and manual rates, for the admin screen.
+export { useShippingSettings, type ShippingSettingsState } from "./use-shipping-settings";
+export { COURIERS, MAX_FEE, MAX_MARKUP, type ManualMethod, type SettingsError, type SettingsRepository, type SettingsResult, type SettingsServices, type ShippingSettings } from "./lib/settings-types";
+export { settingsInDatabase } from "./lib/settings-services";
+export { parseRupiah, groupRupiah } from "./lib/rupiah";
+export { validateMethod, validateSettings } from "./lib/settings-validate";

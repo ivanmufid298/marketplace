@@ -1018,7 +1018,49 @@
       "add": "＋ Tambah layanan",
       "baseRate": "Tarif dasar",
       "freeMin": "Gratis ongkir min.",
-      "toggle": "Aktifkan {name}"
+      "toggle": "Aktifkan {name}",
+      "db": {
+        "originTitle": "Asal pengiriman",
+        "originText": "Dari mana paket dikirim. Ongkir dihitung dari sini ke alamat pembeli.",
+        "originMissing": "Belum diatur. Selama ini kosong, ongkir memakai tarif cadangan di bawah, bukan tarif per lokasi.",
+        "originSet": "Paket dikirim dari:",
+        "couriersTitle": "Kurir yang ditawarkan",
+        "couriersText": "Pembeli hanya melihat layanan dari kurir yang kamu centang dan yang menjangkau alamatnya.",
+        "feesTitle": "Biaya tambahan",
+        "freeMin": "Gratis ongkir mulai belanja (Rp)",
+        "freeMinHint": "Kosongkan bila tidak pernah gratis.",
+        "markup": "Tambahan ongkir per pesanan (Rp)",
+        "markupHint": "Ditambahkan ke ongkir dari kurir. Isi angka negatif (misalnya -2000) bila toko menanggung sebagian.",
+        "save": "Simpan pengaturan",
+        "saving": "Menyimpan…",
+        "saved": "Pengaturan ongkir disimpan",
+        "problems": {
+          "couriers": "Pilih paling sedikit satu kurir.",
+          "freeShippingMin": "Isi dengan angka bulat rupiah, atau kosongkan.",
+          "markup": "Isi dengan angka bulat rupiah antara -1.000.000 dan 1.000.000.",
+          "origin": "Asal pengiriman belum benar. Pilih lagi dari hasil pencarian."
+        },
+        "errors": {
+          "network": "Tidak bisa terhubung. Periksa koneksi lalu coba lagi.",
+          "forbidden": "Akun ini bukan admin, atau sesinya sudah berakhir. Masuk lagi sebagai admin.",
+          "invalid": "Ada isian yang tidak diterima database. Periksa lagi.",
+          "unknown": "Terjadi kesalahan. Coba lagi."
+        },
+        "methodsTitle": "Tarif cadangan",
+        "methodsText": "Dipakai bila kurir tidak bisa ditanya atau alamat pembeli diisi manual. Tetapkan angka yang masuk akal untuk seluruh Indonesia.",
+        "methodLabel": "Nama layanan",
+        "methodNote": "Keterangan",
+        "methodFee": "Tarif (Rp)",
+        "methodActive": "Aktif",
+        "methodSave": "Simpan",
+        "methodSaved": "Tarif {name} disimpan",
+        "methodNeedsLabel": "Nama layanan wajib diisi, paling banyak 60 huruf.",
+        "methodNeedsNote": "Keterangan paling banyak 120 huruf.",
+        "methodNeedsFee": "Tarif harus angka bulat rupiah antara 0 dan 10.000.000.",
+        "loading": "Memuat pengaturan ongkir…",
+        "loadError": "Pengaturan ongkir belum bisa dimuat.",
+        "retry": "Coba lagi"
+      }
     },
     "modal": {
       "saved": "Data berhasil disimpan",
