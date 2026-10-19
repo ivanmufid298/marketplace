@@ -126,8 +126,9 @@
         "toastDefault": "Alamat utama diganti"
       },
       "form": {
-        "label": "Nama alamat",
-        "labelPlaceholder": "Rumah, Kantor, …",
+        "label": "Label alamat",
+        "labelChoices": "Pilihan cepat untuk label",
+        "labelPlaceholder": "Misalnya Rumah, Kantor, Kos",
         "recipient": "Nama penerima",
         "phone": "Nomor telepon",
         "phonePlaceholder": "08xxxxxxxxxx",

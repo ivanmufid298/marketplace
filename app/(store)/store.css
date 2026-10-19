@@ -142,3 +142,9 @@
 .store .destination-text{display:grid;gap:1px;min-width:0;flex:1}.store .destination-text b{font-size:14px}.store .destination-text small{color:var(--muted);font-size:12px;line-height:1.35}
 .store .field .link-btn,.store .destination-chosen .link-btn{justify-self:start;font-size:13px}.store .destination-chosen .link-btn{flex:none}
 .store .field .co-note.full-row,.store .fields>.co-note{grid-column:1/-1;margin:0}
+.store .label-chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.store .label-chip{border:1px solid var(--line);background:#fff;color:var(--wine);border-radius:999px;padding:7px 16px;font:inherit;font-size:13px;font-weight:700;line-height:1.2;cursor:pointer;transition:background .15s,color .15s,border-color .15s}
+.store .label-chip:hover{background:var(--pink2);border-color:var(--rose)}.store .label-chip:focus-visible{outline:2px solid var(--wine);outline-offset:2px}
+.store .label-chip[aria-pressed=true]{background:var(--wine);border-color:var(--wine);color:#fff}
+.store .sub{color:var(--muted);font-size:12px;line-height:1.35}
+.store .address-form{display:block}

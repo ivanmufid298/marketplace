@@ -1,7 +1,7 @@
 // Run with `npm run test:ui`. Searching places as the buyer types: when it asks, how often, and what it shows meanwhile.
 import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { fetchDestinations, forgetDestinations, useDestinationSearch } from "./use-destination-search";
+import { DEBOUNCE_MS, fetchDestinations, forgetDestinations, useDestinationSearch } from "./use-destination-search";
 import type { Destination } from "./types";
 
 const place = (id: number): Destination => ({ id, label: `TEMPAT ${id}`, province: "P", city: "C", district: "D", subdistrict: "S", postcode: "12345" });
@@ -32,6 +32,28 @@ describe("fetchDestinations", () => {
   });
   it("says 'failed' when the connection fails", async () => {
     expect(await fetchDestinations("jakarta", asFetch(async () => { throw new Error("offline"); }))).toEqual({ ok: false, error: "failed" });
+  });
+});
+
+describe("how long it waits", () => {
+  it("is half a second of not typing before a search is sent, so one burst of typing spends one hit", async () => {
+    expect(DEBOUNCE_MS).toBe(500);
+    vi.useFakeTimers();
+    try {
+      const fetchImpl = vi.fn(answer({ destinations: [place(1)] }));
+      const view = renderHook(({ q }) => useDestinationSearch(q, { fetchImpl: asFetch(fetchImpl) }), { initialProps: { q: "saw" } });
+      await act(async () => { await vi.advanceTimersByTimeAsync(300); });
+      view.rerender({ q: "sawan" });
+      await act(async () => { await vi.advanceTimersByTimeAsync(300); });
+      view.rerender({ q: "sawangan" });
+      await act(async () => { await vi.advanceTimersByTimeAsync(DEBOUNCE_MS - 1); });
+      expect(fetchImpl).not.toHaveBeenCalled();
+      await act(async () => { await vi.advanceTimersByTimeAsync(1); });
+      expect(fetchImpl).toHaveBeenCalledTimes(1);
+      expect((fetchImpl.mock.calls[0] as unknown as [string])[0]).toContain("q=sawangan");
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 

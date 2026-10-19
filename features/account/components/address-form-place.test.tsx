@@ -17,7 +17,7 @@ function show(over: { initial?: SavedAddress } = {}) {
   return { onSave, onSaved };
 }
 const type = (label: string, value: string) => fireEvent.change(screen.getByLabelText(label), { target: { value } });
-const fillRest = () => { type("Nama alamat", "Rumah"); type("Nomor telepon", "0811000111"); type("Alamat lengkap", "Jl. Mawar 1"); };
+const fillRest = () => { type("Label alamat", "Rumah"); type("Nomor telepon", "0811000111"); type("Alamat lengkap", "Jl. Mawar 1"); };
 async function choosePlace(text = "kebayoran") {
   fireEvent.change(screen.getByRole("combobox"), { target: { value: text } });
   fireEvent.click(await screen.findByRole("option", { name: /Cipete Utara/ }));
@@ -25,6 +25,77 @@ async function choosePlace(text = "kebayoran") {
 
 beforeEach(() => forgetDestinations());
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
+
+describe("the order of the form", () => {
+  it("asks for the area before the street, the way a buyer thinks of it: who, which area, then the street and number", () => {
+    searchAnswers({ destinations: [] });
+    show();
+    const order = [...document.querySelectorAll("label")].map((l) => l.textContent?.replace(/\s+/g, " ").trim());
+    const where = order.findIndex((t) => t?.startsWith("Kecamatan, kelurahan"));
+    const street = order.findIndex((t) => t === "Alamat lengkap");
+    expect(order.findIndex((t) => t === "Nomor telepon")).toBeLessThan(where);
+    expect(where).toBeGreaterThan(-1);
+    expect(where).toBeLessThan(street);
+  });
+  it("keeps the city and postcode of an address filled in by hand between the area and the street", () => {
+    searchAnswers({ destinations: [] });
+    show();
+    fireEvent.click(screen.getByRole("button", { name: "Isi manual" }));
+    const order = [...document.querySelectorAll("label")].map((l) => l.textContent?.replace(/\s+/g, " ").trim());
+    expect(order.indexOf("Kode pos")).toBeGreaterThan(order.findIndex((t) => t?.startsWith("Kecamatan, kelurahan")));
+    expect(order.indexOf("Kode pos")).toBeLessThan(order.indexOf("Alamat lengkap"));
+  });
+});
+
+describe("the label of an address", () => {
+  const chip = (name: string) => screen.getByRole("button", { name });
+  it("is called a label, with Rumah and Kantor one tap away", () => {
+    searchAnswers({ destinations: [] });
+    show();
+    expect(screen.getByLabelText("Label alamat")).toBeTruthy();
+    expect(screen.queryByLabelText("Nama alamat")).toBeNull();
+    expect(screen.getByRole("group", { name: "Pilihan cepat untuk label" })).toBeTruthy();
+    expect(chip("Rumah").getAttribute("aria-pressed")).toBe("false");
+    expect(chip("Kantor").getAttribute("aria-pressed")).toBe("false");
+  });
+  it("is filled in by a tap on a choice, shown as chosen, and changed by another or by typing", () => {
+    searchAnswers({ destinations: [] });
+    show();
+    fireEvent.click(chip("Kantor"));
+    expect((screen.getByLabelText("Label alamat") as HTMLInputElement).value).toBe("Kantor");
+    expect(chip("Kantor").getAttribute("aria-pressed")).toBe("true");
+    expect(chip("Rumah").getAttribute("aria-pressed")).toBe("false");
+    fireEvent.click(chip("Rumah"));
+    expect((screen.getByLabelText("Label alamat") as HTMLInputElement).value).toBe("Rumah");
+    type("Label alamat", "Green Garda Residence 04");
+    expect(chip("Rumah").getAttribute("aria-pressed")).toBe("false");
+    expect(chip("Kantor").getAttribute("aria-pressed")).toBe("false");
+  });
+  it("counts spaces around the typed label as nothing when it shows which choice is on", () => {
+    searchAnswers({ destinations: [] });
+    show();
+    type("Label alamat", "  Rumah ");
+    expect(chip("Rumah").getAttribute("aria-pressed")).toBe("true");
+  });
+  it("clears the complaint that the label is missing as soon as a choice is tapped, and is saved as tapped", async () => {
+    searchAnswers({ destinations: [] });
+    const { onSave } = show();
+    fireEvent.click(screen.getByRole("button", { name: "Isi manual" }));
+    type("Nomor telepon", "0811000111"); type("Alamat lengkap", "Jl. Mawar 1"); type("Kota / kecamatan", "Jakarta"); type("Kode pos", "12345");
+    fireEvent.click(screen.getByRole("button", { name: "Simpan" }));
+    expect(screen.getAllByText("Wajib diisi.")).toHaveLength(1);
+    const input = screen.getByLabelText("Label alamat");
+    expect(input.getAttribute("aria-invalid")).toBe("true");
+    expect(input.getAttribute("aria-describedby")).toBe("t-label-problem");
+    expect(document.getElementById("t-label-problem")?.textContent).toBe("Wajib diisi.");
+    fireEvent.click(chip("Rumah"));
+    expect(screen.queryByText("Wajib diisi.")).toBeNull();
+    expect(input.getAttribute("aria-invalid")).toBeNull();
+    expect(input.getAttribute("aria-describedby")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Simpan" }));
+    await waitFor(() => expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ label: "Rumah" })));
+  });
+});
 
 describe("choosing a place", () => {
   it("fills the city and postcode from it, hides those fields, and shows the place with a way to change it", async () => {

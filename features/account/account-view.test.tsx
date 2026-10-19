@@ -117,7 +117,7 @@ describe("adding an address", () => {
     show([]);
     fireEvent.click(await screen.findByRole("button", { name: "Tambah alamat" }));
     byHand();
-    type("Nama alamat", "Rumah");
+    type("Label alamat", "Rumah");
     fireEvent.click(screen.getByRole("button", { name: "Simpan alamat" }));
     expect(document.activeElement).toBe(screen.getByLabelText("Nomor telepon"));
   });
@@ -126,7 +126,7 @@ describe("adding an address", () => {
     const repo = show([], { add: vi.fn(() => new Promise((resolve) => { finish = resolve as never; })) as never });
     fireEvent.click(await screen.findByRole("button", { name: "Tambah alamat" }));
     byHand();
-    type("Nama alamat", "Rumah"); type("Nomor telepon", "0811000111"); type("Alamat lengkap", "Jl"); type("Kota / kecamatan", "J"); type("Kode pos", "1");
+    type("Label alamat", "Rumah"); type("Nomor telepon", "0811000111"); type("Alamat lengkap", "Jl"); type("Kota / kecamatan", "J"); type("Kode pos", "1");
     const form = screen.getByRole("button", { name: "Simpan alamat" }).closest("form")!;
     fireEvent.submit(form);
     fireEvent.submit(form);
@@ -139,14 +139,14 @@ describe("adding an address", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Tambah alamat" }));
     fireEvent.click(screen.getByRole("button", { name: "Simpan alamat" }));
     const before = screen.getAllByText("Wajib diisi.").length;
-    type("Nama alamat", "Rumah");
+    type("Label alamat", "Rumah");
     expect(screen.getAllByText("Wajib diisi.").length).toBe(before - 1);
   });
   it("saves a complete address (trimmed), says so, and shows it in the list as the main one", async () => {
     const repo = show([]);
     fireEvent.click(await screen.findByRole("button", { name: "Tambah alamat" }));
     byHand();
-    type("Nama alamat", "  Rumah ");
+    type("Label alamat", "  Rumah ");
     type("Nomor telepon", "0811000111");
     type("Alamat lengkap", "Jl. Mawar 1");
     type("Kota / kecamatan", "Jakarta");
@@ -163,7 +163,7 @@ describe("adding an address", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Tambah alamat" }));
     expect(screen.getByRole("button", { name: "Batal" })).toBeTruthy();
     byHand();
-    type("Nama alamat", "Kantor"); type("Nomor telepon", "0811000111"); type("Alamat lengkap", "Jl. Kantor 2"); type("Kota / kecamatan", "Jakarta"); type("Kode pos", "12345");
+    type("Label alamat", "Kantor"); type("Nomor telepon", "0811000111"); type("Alamat lengkap", "Jl. Kantor 2"); type("Kota / kecamatan", "Jakarta"); type("Kode pos", "12345");
     fireEvent.click(screen.getByLabelText("Jadikan alamat utama"));
     fireEvent.click(screen.getByRole("button", { name: "Simpan alamat" }));
     await waitFor(() => expect(toast()).toBe("Alamat disimpan"));
@@ -181,12 +181,12 @@ describe("adding an address", () => {
     show([saved("a1", { isDefault: true })], { add: async () => ({ ok: false as const, error: "tooMany" as const }) });
     fireEvent.click(await screen.findByRole("button", { name: "Tambah alamat" }));
     byHand();
-    type("Nama alamat", "X"); type("Nomor telepon", "0811000111"); type("Alamat lengkap", "Jl"); type("Kota / kecamatan", "J"); type("Kode pos", "1");
+    type("Label alamat", "X"); type("Nomor telepon", "0811000111"); type("Alamat lengkap", "Jl"); type("Kota / kecamatan", "J"); type("Kode pos", "1");
     fireEvent.click(screen.getByRole("button", { name: "Simpan alamat" }));
     expect((await screen.findByRole("alert")).textContent).toBe("Alamat sudah mencapai batas 10. Hapus satu dulu.");
-    expect(screen.getByLabelText("Nama alamat")).toBeTruthy();
+    expect(screen.getByLabelText("Label alamat")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Batal" }));
-    expect(screen.queryByLabelText("Nama alamat")).toBeNull();
+    expect(screen.queryByLabelText("Label alamat")).toBeNull();
   });
   it("stops offering to add at the limit, and says why", async () => {
     show(Array.from({ length: MAX_ADDRESSES }, (_, i) => saved(`a${i + 1}`, { isDefault: i === 0 })));
@@ -201,8 +201,8 @@ describe("changing, choosing, and deleting", () => {
     const repo = show([saved("a1", { isDefault: true }), saved("a2")]);
     await screen.findByText("Alamat a2");
     fireEvent.click(within(card("Alamat a2")).getByRole("button", { name: "Ubah" }));
-    expect((screen.getByLabelText("Nama alamat") as HTMLInputElement).value).toBe("Alamat a2");
-    type("Nama alamat", "Kantor");
+    expect((screen.getByLabelText("Label alamat") as HTMLInputElement).value).toBe("Alamat a2");
+    type("Label alamat", "Kantor");
     type("Kota / kecamatan", "Bandung");
     fireEvent.click(screen.getByRole("button", { name: "Simpan perubahan" }));
     await waitFor(() => expect(toast()).toBe("Alamat diperbarui"));

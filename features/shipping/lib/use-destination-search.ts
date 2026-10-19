@@ -7,6 +7,9 @@ import type { Destination } from "./types";
 export type SearchError = "signIn" | "quota" | "unavailable" | "notConfigured" | "failed";
 export type DestinationSearch = { status: "idle" | "loading" | "ready" | "error"; results: Destination[]; error: SearchError | null };
 
+/** How long the buyer must stop typing before a search is sent: every distinct search spends one of the day's free hits. */
+export const DEBOUNCE_MS = 500;
+
 type Options = { fetchImpl?: typeof fetch; debounceMs?: number };
 
 // What this browser has already been told, so typing the same words again costs nothing.
@@ -32,7 +35,7 @@ export async function fetchDestinations(query: string, fetchImpl: typeof fetch, 
 }
 
 /** Searches places as the buyer types: waits for a pause, asks once per distinct search, and never shows an answer to an older one. */
-export function useDestinationSearch(query: string, { fetchImpl, debounceMs = 350 }: Options = {}): DestinationSearch {
+export function useDestinationSearch(query: string, { fetchImpl, debounceMs = DEBOUNCE_MS }: Options = {}): DestinationSearch {
   const normalized = normalizeQuery(query);
   const [answer, setAnswer] = useState<{ for: string; result: { ok: true; value: Destination[] } | { ok: false; error: SearchError } } | null>(null);
 

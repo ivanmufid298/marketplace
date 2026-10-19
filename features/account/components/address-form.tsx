@@ -24,6 +24,9 @@ type AddressFormProps = {
   onCancel?: () => void;
 };
 
+/** The names most people give an address, offered as one tap. */
+const LABEL_CHOICES = ["Rumah", "Kantor"] as const;
+
 const problemText = (field: AddressField, problems: AddressProblems) => {
   const problem = problems[field];
   if (!problem) return null;
@@ -111,13 +114,17 @@ export function AddressForm({ initial, defaultName = "", offerDefault = false, i
   return (
     <form className="address-form" onSubmit={submit} noValidate>
       <div className="fields">
-        {field("label", t("store.account.form.label"), { placeholder: t("store.account.form.labelPlaceholder"), full: true })}
+        <Field full label={t("store.account.form.label")} htmlFor={`${idPrefix}-label`}>
+          <input id={`${idPrefix}-label`} value={values.label} placeholder={t("store.account.form.labelPlaceholder")} aria-invalid={problems.label ? true : undefined} aria-describedby={problems.label ? `${idPrefix}-label-problem` : undefined} onChange={(e) => set("label", e.target.value)} />
+          <span className="label-chips" role="group" aria-label={t("store.account.form.labelChoices")}>
+            {LABEL_CHOICES.map((choice) => (
+              <button key={choice} type="button" className="label-chip" aria-pressed={values.label.trim() === choice} onClick={() => set("label", choice)}>{choice}</button>
+            ))}
+          </span>
+          {problemText("label", problems) && <small id={`${idPrefix}-label-problem`} className="login-error" role="alert">{problemText("label", problems)}</small>}
+        </Field>
         {field("recipientName", t("store.account.form.recipient"), { autoComplete: "name" })}
         {field("phone", t("store.account.form.phone"), { placeholder: t("store.account.form.phonePlaceholder"), inputMode: "tel", autoComplete: "tel" })}
-        <Field full label={t("store.account.form.address")} htmlFor={`${idPrefix}-address`}>
-          <textarea id={`${idPrefix}-address`} value={values.address} placeholder={t("store.account.form.addressPlaceholder")} aria-invalid={addressProblem ? true : undefined} aria-describedby={addressProblem ? `${idPrefix}-address-problem` : undefined} onChange={(e) => set("address", e.target.value)} />
-          {addressProblem && <small id={`${idPrefix}-address-problem`} className="login-error" role="alert">{addressProblem}</small>}
-        </Field>
         <Field full label={t("store.shipping.picker.label")} htmlFor={`${idPrefix}-where`}>
           <DestinationPicker
             id={`${idPrefix}-where`}
@@ -133,6 +140,10 @@ export function AddressForm({ initial, defaultName = "", offerDefault = false, i
         {showFields && <p className="co-note full-row">{t("store.account.form.manualNote")}</p>}
         {showFields && field("city", t("store.account.form.city"), { autoComplete: "address-level2" })}
         {showFields && field("postcode", t("store.account.form.postcode"), { inputMode: "numeric", autoComplete: "postal-code" })}
+        <Field full label={t("store.account.form.address")} htmlFor={`${idPrefix}-address`}>
+          <textarea id={`${idPrefix}-address`} value={values.address} placeholder={t("store.account.form.addressPlaceholder")} aria-invalid={addressProblem ? true : undefined} aria-describedby={addressProblem ? `${idPrefix}-address-problem` : undefined} onChange={(e) => set("address", e.target.value)} />
+          {addressProblem && <small id={`${idPrefix}-address-problem`} className="login-error" role="alert">{addressProblem}</small>}
+        </Field>
         <Field full htmlFor={`${idPrefix}-note`} label={<>{t("store.account.form.note")} <span style={{ fontWeight: 400, color: "var(--muted)" }}>{t("store.account.form.optional")}</span></>}>
           <input id={`${idPrefix}-note`} value={values.note} placeholder={t("store.account.form.notePlaceholder")} aria-invalid={noteProblem ? true : undefined} aria-describedby={noteProblem ? `${idPrefix}-note-problem` : undefined} onChange={(e) => set("note", e.target.value)} />
           {noteProblem && <small id={`${idPrefix}-note-problem`} className="login-error" role="alert">{noteProblem}</small>}

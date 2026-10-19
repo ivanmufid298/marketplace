@@ -64,7 +64,7 @@ const next = () => within(stepOne()).getByRole("button", { name: "Pilih pengirim
 const type = (label: string, value: string) => fireEvent.change(within(stepOne()).getByLabelText(label), { target: { value } });
 const byHand = () => fireEvent.click(within(stepOne()).getByRole("button", { name: "Isi manual" }));
 const fillNew = (label = "Kantor") => {
-  byHand(); type("Nama alamat", label); type("Nomor telepon", "0811000111"); type("Alamat lengkap", "Jl. Kantor 2"); type("Kota / kecamatan", "Jakarta"); type("Kode pos", "12345"); };
+  byHand(); type("Label alamat", label); type("Nomor telepon", "0811000111"); type("Alamat lengkap", "Jl. Kantor 2"); type("Kota / kecamatan", "Jakarta"); type("Kode pos", "12345"); };
 
 beforeEach(() => { Element.prototype.scrollTo = vi.fn() as never; window.localStorage.clear(); vi.unstubAllEnvs(); vi.stubEnv("NODE_ENV", "development"); vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", ""); });
 afterEach(cleanup);
@@ -142,14 +142,14 @@ describe("a buyer with saved addresses", () => {
     fireEvent.click(within(stepOne()).getByRole("button", { name: "Simpan alamat" }));
     await waitFor(() => expect(state().selected).toBe("n4"));
     expect(repo.add).toHaveBeenCalledTimes(1);
-    expect(within(stepOne()).queryByLabelText("Nama alamat")).toBeNull();
+    expect(within(stepOne()).queryByLabelText("Label alamat")).toBeNull();
     expect(within(stepOne()).getAllByRole("radio")).toHaveLength(4);
   });
   it("can back out of adding one", async () => {
     await open(book);
     fireEvent.click(within(stepOne()).getByRole("button", { name: "Tambah alamat baru" }));
     fireEvent.click(within(stepOne()).getByRole("button", { name: "Batal" }));
-    expect(within(stepOne()).queryByLabelText("Nama alamat")).toBeNull();
+    expect(within(stepOne()).queryByLabelText("Label alamat")).toBeNull();
     expect(state().selected).toBe("a2");
   });
   it("offers the address book page, and leaves the checkout when the buyer goes there", async () => {
