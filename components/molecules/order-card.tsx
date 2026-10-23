@@ -11,11 +11,12 @@ import { Button } from "../atoms/button";
 import { OrderItemLine } from "./order-item-line";
 import { UploadField } from "./upload-field";
 
-const STATUS_TONE: Record<BuyerStatus, PillTone> = {
+const STATUS_TONE: Record<BuyerStatus | "processing", PillTone> = {
   awaiting_payment: "pending",
   verifying: "progress",
   rejected: "danger",
   expired: "danger",
+  processing: "progress",
   shipping: "progress",
   completed: "success",
   cancelled: "danger",
@@ -50,7 +51,9 @@ export function OrderCard({ order, products, reviews, onSaveReview, onComplete, 
     );
   };
   const status = deriveStatus(order);
-  const label = buyerStatus(order);
+  // Paid but not yet handed to the courier (no tracking number): being prepared, not on its way.
+  const buyerLabel = buyerStatus(order);
+  const label = buyerLabel === "shipping" && !order.tracking ? "processing" : buyerLabel;
   // A database order carries a copy of each product as it was bought, which is what the order should show. A sample
   // order uses the catalog; either way the price shown is the one paid, not today's.
   const lines = order.items.flatMap((item) => {

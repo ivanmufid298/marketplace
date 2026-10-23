@@ -407,6 +407,7 @@
         "verifying": "Sedang diverifikasi",
         "rejected": "Pembayaran ditolak",
         "expired": "Kedaluwarsa",
+        "processing": "Pembayaran diterima, pesanan disiapkan",
         "shipping": "Barang sedang dikirim",
         "completed": "Selesai",
         "cancelled": "Dibatalkan"
@@ -866,7 +867,7 @@
         "customer": "Pelanggan",
         "address": "Alamat pengiriman",
         "statusHeading": "Status pesanan",
-        "statusHint": "Status berubah otomatis: menjadi \"Barang sedang dikirim\" saat pembayaran diterima di menu Pembayaran, dan \"Selesai\" saat pembeli menandai pesanan selesai.",
+        "statusHint": "Status berubah otomatis: menjadi \"Barang sedang dikirim\" saat pembayaran diterima di menu Pembayaran, dan \"Selesai\" saat pembeli menandai pesanan selesai. Pembeli membaca \"Pembayaran diterima, pesanan disiapkan\" sampai nomor resi dicatat, lalu \"Barang sedang dikirim\".",
         "openPayments": "Buka Pembayaran",
         "items": "Barang",
         "shippingLine": "{method} · ongkir {fee}",

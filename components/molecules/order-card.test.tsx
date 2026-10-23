@@ -63,8 +63,21 @@ describe("the status on an order card", () => {
     show(order({ payment: "failed" }));
     expect(screen.getByText("Pembayaran ditolak")).toBeTruthy();
   });
-  it("says the goods are on their way, done, or cancelled", () => {
+  it("says a paid order is being prepared until it has a tracking number, then that it is on its way", () => {
     show(order({ payment: "success" }));
+    expect(screen.getByText("Pembayaran diterima, pesanan disiapkan")).toBeTruthy();
+    expect(screen.queryByText("Barang sedang dikirim")).toBeNull();
+    cleanup();
+    show(order({ payment: "success", tracking: "JP1234567890" }));
+    expect(screen.getByText("Barang sedang dikirim")).toBeTruthy();
+    expect(screen.queryByText("Pembayaran diterima, pesanan disiapkan")).toBeNull();
+  });
+  it("still lets the buyer finish a paid order that is being prepared", () => {
+    show(order({ payment: "success" }));
+    expect(screen.getByRole("button", { name: "Pesanan selesai" })).toBeTruthy();
+  });
+  it("says the goods are on their way, done, or cancelled", () => {
+    show(order({ payment: "success", tracking: "JP1234567890" }));
     expect(screen.getByText("Barang sedang dikirim")).toBeTruthy();
     cleanup();
     show(order({ payment: "success", received: true }));
