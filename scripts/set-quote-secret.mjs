@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Puts SHIPPING_QUOTE_SECRET (from .env.local) into the Supabase Vault of the project linked in another folder, without ever printing it.
+// Puts SHIPPING_QUOTE_SECRET (from .env.secrets.local, else .env.local) into the Supabase Vault of the project linked in another folder, without ever printing it.
 // The database checks the shipping quotes the server signed with this secret (place_order); the server uses the same value from its own
 // environment. Usage:
 //
@@ -85,9 +85,13 @@ function main(argv) {
     return described ? 0 : 1;
   }
   const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-  const secret = readEnvValue(fs.readFileSync(path.join(repoRoot, ".env.local"), "utf8"), "SHIPPING_QUOTE_SECRET");
+  // Kept in .env.secrets.local, a file Next.js does not know (`npm run dev` loads it itself): Next.js and OpenNext bake every .env* file they know into the Worker.
+  const secret = [".env.secrets.local", ".env.local"]
+    .map((name) => path.join(repoRoot, name))
+    .map((file) => (fs.existsSync(file) ? readEnvValue(fs.readFileSync(file, "utf8"), "SHIPPING_QUOTE_SECRET") : null))
+    .find(Boolean);
   if (!secret || secret.length < MIN_SECRET_LENGTH) {
-    console.error(`SHIPPING_QUOTE_SECRET in .env.local is missing or shorter than ${MIN_SECRET_LENGTH} characters.`);
+    console.error(`SHIPPING_QUOTE_SECRET (in .env.secrets.local or .env.local) is missing or shorter than ${MIN_SECRET_LENGTH} characters.`);
     return 1;
   }
   const answer = run(dir, buildVaultSql(secret));
