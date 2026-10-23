@@ -44,3 +44,10 @@ test("reads the check's answer from the CLI's JSON, with or without notices arou
 test("says nothing it cannot read: no JSON, no rows, or rows without the two numbers", () => {
   for (const output of ["", "no braces here", "{ not json }", JSON.stringify({ rows: [] }), JSON.stringify({}), JSON.stringify({ rows: [{ secrets: 1 }] }), JSON.stringify({ rows: [{ secrets: "x", length: 2 }] })]) assert.equal(describeCheck(output), null);
 });
+
+test("reads the check's answer from the table the CLI prints in a terminal", () => {
+  const table = "Project: x\n┌─────────┬────────┐\n│ secrets │ length │\n├─────────┼────────┤\n│ 1       │ 64     │\n└─────────┴────────┘\n";
+  assert.equal(describeCheck(table), "secrets: 1  length: 64");
+  assert.equal(describeCheck(table.replace("│ 1       │ 64     │", "│ 0       │ 0      │")), "secrets: 0  length: 0");
+  assert.equal(describeCheck("┌─────────┬────────┐\n│ secrets │ length │\n└─────────┴────────┘"), null);
+});

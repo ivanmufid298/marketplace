@@ -40,8 +40,13 @@ export function buildVaultSql(secret) {
 
 export const CHECK_SQL = "select count(*) as secrets, coalesce(max(length(decrypted_secret)), 0) as length from vault.decrypted_secrets where name = 'shipping_quote_secret';\n";
 
-/** "secrets: 1  length: 64" from what the CLI printed for CHECK_SQL (JSON, possibly with notices around it); null when it cannot be read. */
+/**
+ * "secrets: 1  length: 64" from what the CLI printed for CHECK_SQL: JSON when the output is piped (possibly with notices around it), or a
+ * table when it is a terminal. Null when it cannot be read.
+ */
 export function describeCheck(output) {
+  const table = /│\s*(\d+)\s*│\s*(\d+)\s*│/.exec(output);
+  if (table) return `secrets: ${Number(table[1])}  length: ${Number(table[2])}`;
   const start = output.indexOf("{");
   const end = output.lastIndexOf("}");
   if (start === -1 || end < start) return null;
