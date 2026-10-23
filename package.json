@@ -13,7 +13,7 @@
     "cf:preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "cf:deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "monitor:supabase": "supabase db query --linked -f supabase/monitor.sql",
-    "test:sql": "node supabase/tests/profiles.test.mjs && node supabase/tests/catalog.test.mjs && node supabase/tests/reviews.test.mjs && node supabase/tests/orders.test.mjs && node supabase/tests/orders-admin.test.mjs && node supabase/tests/reviews-orders.test.mjs && node supabase/tests/notifications.test.mjs && node supabase/tests/expiry-reminders.test.mjs && node supabase/tests/admin-notifications.test.mjs && node supabase/tests/addresses.test.mjs && node supabase/tests/shop-settings.test.mjs && node supabase/tests/shipping-quotes.test.mjs && node supabase/tests/order-tracking.test.mjs"
+    "test:sql": "node supabase/tests/profiles.test.mjs && node supabase/tests/catalog.test.mjs && node supabase/tests/reviews.test.mjs && node supabase/tests/orders.test.mjs && node supabase/tests/orders-admin.test.mjs && node supabase/tests/reviews-orders.test.mjs && node supabase/tests/notifications.test.mjs && node supabase/tests/expiry-reminders.test.mjs && node supabase/tests/admin-notifications.test.mjs && node supabase/tests/addresses.test.mjs && node supabase/tests/shop-settings.test.mjs && node supabase/tests/shipping-quotes.test.mjs && node supabase/tests/order-tracking.test.mjs && node supabase/tests/order-to-ship.test.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

@@ -53,6 +53,15 @@ describe("describeNotification", () => {
     expect(describeNotification(n("payment_submitted", { number: "100002", recipient: "Ana", total: 1 }, true)).urgent).toBe(false);
     expect(describeNotification(n("payment_submitted", { number: "100002", recipient: "Ana" })).body).toBe("Ana mengirim bukti transfer . Periksa lalu terima atau tolak.");
   });
+  it("tells an admin a paid order waits to be sent, with who it is for and the courier, and offers to enter the tracking number", () => {
+    expect(describeNotification(n("order_to_ship", { number: "100002", recipient: "Ana Putri", courier: "SICEPAT REG" }))).toEqual({
+      title: "Pesanan #100002 perlu dikirim",
+      body: "Ana Putri, SICEPAT REG. Serahkan ke kurir lalu isi nomor resi.",
+      actionLabel: "Isi resi",
+      urgent: true,
+    });
+    expect(describeNotification(n("order_to_ship", { number: "100002", recipient: "Ana", courier: "JNE" }, true)).urgent).toBe(false);
+  });
   it("tells that a payment was accepted, with nothing to do", () => {
     expect(describeNotification(n("payment_accepted", { number: "100002" }))).toEqual({ title: "Pembayaran #100002 diterima", body: "Pesananmu sedang diproses dan dikirim.", actionLabel: null, urgent: false });
   });
@@ -75,7 +84,7 @@ describe("describeNotification", () => {
     expect(describeNotification(n("payment_accepted", { number: "1" }, false)).urgent).toBe(false);
   });
   it("copes with missing facts without writing 'undefined'", () => {
-    for (const kind of ["payment_needed", "payment_rejected", "payment_accepted", "order_cancelled", "refund_done", "order_expired", "review_invite", "payment_expiring", "payment_submitted"] as const) {
+    for (const kind of ["payment_needed", "payment_rejected", "payment_accepted", "order_cancelled", "refund_done", "order_expired", "review_invite", "payment_expiring", "payment_submitted", "order_shipped", "order_to_ship"] as const) {
       const view = describeNotification(n(kind, {}));
       expect(`${view.title} ${view.body}`).not.toContain("undefined");
       expect(`${view.title} ${view.body}`).not.toContain("null");

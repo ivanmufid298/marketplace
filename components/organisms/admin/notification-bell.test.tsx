@@ -70,6 +70,24 @@ describe("the admin bell", () => {
     expect(within(item).getByRole("link").getAttribute("href")).toBe("/admin/payments");
   });
 
+  it("lists a paid order to send, with the recipient and the courier service, and opens the orders page from it", async () => {
+    const toShip: AppNotification = { ...submitted(7), kind: "order_to_ship", payload: { number: "100007", recipient: "Budi", courier: "SICEPAT REG" } };
+    const repo = show([toShip]);
+    await waitFor(() => expect(bell().getAttribute("aria-label")).toBe("Notifikasi, 1 belum dibaca"));
+    fireEvent.click(bell());
+    const item = within(screen.getByRole("dialog")).getByRole("listitem");
+    expect(item.textContent).toContain("Pesanan #100007 perlu dikirim");
+    expect(item.textContent).toContain("Budi, SICEPAT REG. Serahkan ke kurir lalu isi nomor resi.");
+    expect(within(item).getByRole("link").getAttribute("href")).toBe("/admin/orders");
+    fireEvent.click(within(item).getByRole("link"));
+    expect(repo.markRead).toHaveBeenCalledWith([7]);
+  });
+
+  it("counts payments to check and orders to send together", async () => {
+    show([submitted(1), { ...submitted(2), kind: "order_to_ship", payload: { number: "2" } }, { ...submitted(3), kind: "order_shipped", payload: { number: "3" } }]);
+    await waitFor(() => expect(bell().getAttribute("aria-label")).toBe("Notifikasi, 2 belum dibaca"));
+  });
+
   it("marks an unread one so, and opens the payments page from it, closing the panel", async () => {
     const repo = show([submitted(1), submitted(2, { read: true })]);
     await flush();
@@ -120,7 +138,7 @@ describe("the admin bell", () => {
     show([]);
     await flush();
     fireEvent.click(bell());
-    expect(screen.getByText("Tidak ada pembayaran yang menunggu. Bukti transfer baru akan muncul di sini.")).toBeTruthy();
+    expect(screen.getByText("Tidak ada yang menunggu. Bukti transfer baru dan pesanan yang perlu dikirim akan muncul di sini.")).toBeTruthy();
     cleanup();
 
     show(() => new Promise(() => {}));

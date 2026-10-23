@@ -27,6 +27,9 @@ export function describeNotification(n: AppNotification): NotificationView {
       return { title: t("store.notifications.kinds.payment_submitted.title", base), body: t("store.notifications.kinds.payment_submitted.body", { recipient: text(n.payload.recipient), total: typeof n.payload.total === "number" ? money(n.payload.total) : "" }), actionLabel: t("store.notifications.kinds.payment_submitted.action"), urgent };
     case "payment_accepted":
       return { title: t("store.notifications.kinds.payment_accepted.title", base), body: t("store.notifications.kinds.payment_accepted.body"), actionLabel: null, urgent };
+    case "order_to_ship":
+      // For an admin: a paid order waits to be handed to the courier and given its tracking number.
+      return { title: t("store.notifications.kinds.order_to_ship.title", base), body: t("store.notifications.kinds.order_to_ship.body", { recipient: text(n.payload.recipient), courier: text(n.payload.courier) }), actionLabel: t("store.notifications.kinds.order_to_ship.action"), urgent };
     case "order_shipped":
       return { title: t("store.notifications.kinds.order_shipped.title", base), body: t(n.payload.updated === true ? "store.notifications.kinds.order_shipped.bodyUpdated" : "store.notifications.kinds.order_shipped.body", { courier: text(n.payload.courier), tracking: text(n.payload.tracking) }), actionLabel: null, urgent };
     case "order_cancelled":

@@ -15,8 +15,8 @@ const agoText = (iso: string) => {
 };
 
 /**
- * The bell in the admin top bar: payments whose transfer proof is waiting to be checked. A number counts what this admin has not
- * read; choosing one opens the payments page. Where the panel keeps no notifications (the demo) it is the plain bell it always was.
+ * The bell in the admin top bar: payments whose transfer proof is waiting to be checked, and paid orders waiting to be sent. A number counts what this admin has not
+ * read; choosing one opens the page where it is handled (payments, or orders). Where the panel keeps no notifications (the demo) it is the plain bell it always was.
  */
 export function AdminNotificationBell() {
   const { user } = useAuth();
@@ -24,8 +24,8 @@ export function AdminNotificationBell() {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
   const { status, reload, markRead, markAllRead } = notifications;
-  // Only payments to check belong here; whatever else this account may have been told is the shop's business.
-  const list = notifications.notifications.filter((n) => n.kind === "payment_submitted");
+  // Only what the admin has to act on belongs here; whatever else this account may have been told is the shop's business.
+  const list = notifications.notifications.filter((n) => n.kind === "payment_submitted" || n.kind === "order_to_ship");
   const unread = list.filter((n) => !n.read).length;
 
   useEffect(() => {
@@ -82,7 +82,7 @@ export function AdminNotificationBell() {
                 const view = describeNotification(n);
                 return (
                   <li key={n.id} className={n.read ? "" : "unread"}>
-                    <Link href="/admin/payments" onClick={() => { void markRead(n.id); setOpen(false); }}>
+                    <Link href={n.kind === "order_to_ship" ? "/admin/orders" : "/admin/payments"} onClick={() => { void markRead(n.id); setOpen(false); }}>
                       <b>{view.title}</b>
                       <span>{view.body}</span>
                       <small>{agoText(n.createdAt)}</small>
