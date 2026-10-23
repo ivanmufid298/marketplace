@@ -39,6 +39,36 @@ export const subtotal = (order: Order) => order.items.reduce((sum, i) => sum + i
 export const total = (order: Order) => subtotal(order) + order.shippingFee;
 export const itemCount = (order: Order) => order.items.reduce((sum, i) => sum + i.qty, 0);
 
+/** What the admin's dashboard counts: the money in, and the orders that wait for the admin to do something. */
+export type OrderSummary = {
+  /** The total of the orders that were paid and not cancelled (what the shop has really sold). */
+  sales: number;
+  /** How many orders make up `sales`. */
+  paidCount: number;
+  /** Transfer proofs waiting for the admin to accept or reject. */
+  toReview: number;
+  /** Paid orders with no tracking number yet, still to hand to the courier. */
+  toShip: number;
+  /** Cancelled paid orders whose money has not been given back yet. */
+  refundsPending: number;
+};
+
+export function summarizeOrders(orders: Order[]): OrderSummary {
+  const summary: OrderSummary = { sales: 0, paidCount: 0, toReview: 0, toShip: 0, refundsPending: 0 };
+  for (const order of orders) {
+    if (order.refund === "pending") summary.refundsPending += 1;
+    if (isCancelled(order)) continue;
+    if (order.payment === "success") {
+      summary.sales += total(order);
+      summary.paidCount += 1;
+      if (!order.received && !order.tracking) summary.toShip += 1;
+    } else if (order.payment === "pending" && !order.awaitingProof) {
+      summary.toReview += 1;
+    }
+  }
+  return summary;
+}
+
 /** The payments table shows one row per order. */
 export const toPayment = (order: Order): Payment => ({
   id: `MKP-${order.number}`,

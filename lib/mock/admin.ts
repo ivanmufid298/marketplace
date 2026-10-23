@@ -79,13 +79,6 @@ export const VISIT_STATS = {
 
 export const PRODUCT_CATEGORIES = ["Rumah", "Fashion", "Elektronik", "Kecantikan"];
 
-export const DASHBOARD_METRICS = [
-  { key: "sales", icon: "rp", value: "Rp128,4 jt", trend: "↑ 12,8% dari bulan lalu", down: false },
-  { key: "orders", icon: "bag", value: "1.284", trend: "↑ 8,3% dari bulan lalu", down: false },
-  { key: "pending", icon: "clock", value: "18", trend: "Perlu ditinjau admin", down: true },
-  { key: "products", icon: "products", value: "246", trend: "↑ 14 produk baru", down: false },
-] as const;
-
 const MONTH_LABELS = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun"];
 const YEAR_LABELS = ["2021", "2022", "2023", "2024", "2025", "2026"];
 

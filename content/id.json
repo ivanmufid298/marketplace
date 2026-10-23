@@ -621,9 +621,18 @@
     "dashboard": {
       "metrics": {
         "sales": "Total penjualan",
-        "orders": "Pesanan",
+        "salesNote": "Dari {count} pesanan yang sudah dibayar",
         "pending": "Menunggu verifikasi",
-        "products": "Produk aktif"
+        "pendingNote": "Periksa bukti transfernya",
+        "pendingNone": "Tidak ada yang menunggu",
+        "toShip": "Perlu dikirim",
+        "toShipNote": "Serahkan ke kurir, lalu isi resi",
+        "toShipNone": "Semua sudah punya resi",
+        "refunds": "Refund tertunda",
+        "refundsNote": "Kembalikan dana ke pembeli",
+        "refundsNone": "Tidak ada refund",
+        "loading": "Memuat pesanan…",
+        "loadFailed": "Pesanan belum bisa dimuat"
       },
       "chart": {
         "title": "Statistik penjualan",
