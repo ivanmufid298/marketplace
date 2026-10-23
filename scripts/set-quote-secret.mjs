@@ -40,6 +40,19 @@ export function buildVaultSql(secret) {
 
 export const CHECK_SQL = "select count(*) as secrets, coalesce(max(length(decrypted_secret)), 0) as length from vault.decrypted_secrets where name = 'shipping_quote_secret';\n";
 
+/** "secrets: 1  length: 64" from what the CLI printed for CHECK_SQL (JSON, possibly with notices around it); null when it cannot be read. */
+export function describeCheck(output) {
+  const start = output.indexOf("{");
+  const end = output.lastIndexOf("}");
+  if (start === -1 || end < start) return null;
+  try {
+    const row = JSON.parse(output.slice(start, end + 1)).rows?.[0];
+    return row && Number.isFinite(Number(row.secrets)) && Number.isFinite(Number(row.length)) ? `secrets: ${Number(row.secrets)}  length: ${Number(row.length)}` : null;
+  } catch {
+    return null;
+  }
+}
+
 function run(dir, sql) {
   const file = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "quote-secret-")), "query.sql");
   fs.writeFileSync(file, sql, { mode: 0o600 });
@@ -65,8 +78,11 @@ function main(argv) {
   const ref = fs.readFileSync(path.join(dir, "supabase", ".temp", "project-ref"), "utf8").trim();
   console.log(`Project: ${ref}`);
   if (check) {
-    console.log(run(dir, CHECK_SQL).match(/"(secrets|length)": \d+/g)?.join("  ") ?? "no answer");
-    return 0;
+    const output = run(dir, CHECK_SQL);
+    const described = describeCheck(output);
+    // CHECK_SQL asks only for a count and a length, so what the CLI printed is safe to show when it cannot be read.
+    console.log(described ?? `Could not read the answer. The CLI said:\n${output.trim()}`);
+    return described ? 0 : 1;
   }
   const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
   const secret = readEnvValue(fs.readFileSync(path.join(repoRoot, ".env.local"), "utf8"), "SHIPPING_QUOTE_SECRET");

@@ -3,7 +3,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 // @ts-expect-error a plain .mjs script with no type declarations
-import { buildVaultSql, CHECK_SQL, MIN_SECRET_LENGTH, readEnvValue } from "./set-quote-secret.mjs";
+import { buildVaultSql, CHECK_SQL, describeCheck, MIN_SECRET_LENGTH, readEnvValue } from "./set-quote-secret.mjs";
 
 test("reads a value from an env file, with or without quotes", () => {
   assert.equal(readEnvValue("A=1\nSHIPPING_QUOTE_SECRET=abc==\nB=2", "SHIPPING_QUOTE_SECRET"), "abc==");
@@ -33,4 +33,14 @@ test("the check reads only how many secrets there are and how long, never the va
   assert.match(CHECK_SQL, /count\(\*\) as secrets/);
   assert.match(CHECK_SQL, /length\(decrypted_secret\)/);
   assert.equal(MIN_SECRET_LENGTH, 32);
+});
+
+test("reads the check's answer from the CLI's JSON, with or without notices around it, and numbers or text for the counts", () => {
+  const json = JSON.stringify({ boundary: "b", rows: [{ length: 64, secrets: 1 }], warning: "w" }, null, 2);
+  assert.equal(describeCheck(json), "secrets: 1  length: 64");
+  assert.equal(describeCheck(`Initialising login role...\n${json}\nA new version is available`), "secrets: 1  length: 64");
+  assert.equal(describeCheck(JSON.stringify({ rows: [{ length: "0", secrets: "0" }] })), "secrets: 0  length: 0");
+});
+test("says nothing it cannot read: no JSON, no rows, or rows without the two numbers", () => {
+  for (const output of ["", "no braces here", "{ not json }", JSON.stringify({ rows: [] }), JSON.stringify({}), JSON.stringify({ rows: [{ secrets: 1 }] }), JSON.stringify({ rows: [{ secrets: "x", length: 2 }] })]) assert.equal(describeCheck(output), null);
 });
