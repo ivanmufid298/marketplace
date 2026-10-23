@@ -31,6 +31,8 @@ export type OrderErrorKind =
   | "invalidItems"
   | "invalidAddress"
   | "invalidShipping"
+  | "invalidTracking"
+  | "notShippable"
   | "shippingQuoteChanged"
   | "shippingQuoteUnavailable"
   | "tooManyPending"

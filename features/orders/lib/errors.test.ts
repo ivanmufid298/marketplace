@@ -5,7 +5,7 @@ import { mapOrderError } from "./errors";
 describe("mapOrderError", () => {
   it("maps each code the order functions raise", () => {
     const cases: [string, string][] = [
-      ["not_signed_in", "notSignedIn"], ["invalid_items", "invalidItems"], ["invalid_address", "invalidAddress"], ["invalid_shipping", "invalidShipping"],
+      ["not_signed_in", "notSignedIn"], ["invalid_items", "invalidItems"], ["invalid_address", "invalidAddress"], ["invalid_shipping", "invalidShipping"], ["invalid_tracking", "invalidTracking"], ["not_shippable", "notShippable"],
       ["invalid_quote", "shippingQuoteChanged"], ["quote_stale", "shippingQuoteChanged"], ["quote_mismatch", "shippingQuoteChanged"], ["quote_unavailable", "shippingQuoteUnavailable"],
       ["too_many_pending", "tooManyPending"], ["order_not_found", "orderNotFound"], ["not_payable", "notPayable"], ["invalid_proof", "invalidProof"],
       ["not_reviewable", "notReviewable"], ["reason_required", "reasonRequired"], ["note_required", "noteRequired"], ["not_cancellable", "notCancellable"],

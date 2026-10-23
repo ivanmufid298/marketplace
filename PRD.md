@@ -326,7 +326,7 @@ Status diturunkan dari data, bukan diedit manual:
 | Status | Label | Kapan |
 |---|---|---|
 | `pending` | Pending (buyer: Menunggu pembayaran) | Default. Pembayaran belum diterima admin: bukti belum diunggah, sedang diperiksa, atau ditolak. |
-| `shipping` | Barang sedang dikirim | Otomatis saat admin menerima pembayaran di menu Pembayaran. |
+| `shipping` | Barang sedang dikirim | Otomatis saat admin menerima pembayaran di menu Pembayaran. Admin kemudian mencatat nomor resi kurir pada pesanan itu (dicatat di riwayat, pembeli diberi tahu dan melihatnya di Pesanan saya); resi tidak mengubah status. |
 | `completed` | Selesai | Saat buyer menekan "Pesanan selesai". Hanya bisa dilakukan jika status sudah `shipping`. |
 | `cancelled` | Dibatalkan | Admin membatalkan dengan catatan wajib, sebelum buyer menandai selesai. |
 

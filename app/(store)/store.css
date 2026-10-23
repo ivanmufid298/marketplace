@@ -49,6 +49,9 @@
 .store .my-review-head{display:flex;justify-content:space-between;align-items:center;font-weight:750;color:var(--wine)}
 .store .my-review p{margin:6px 0 8px;color:#624c54}
 .store .link-btn{border:0;background:transparent;padding:0;color:var(--wine);font-weight:800;font-size:13px;text-decoration:underline}
+.store .order-tracking{margin:10px 0 0;background:var(--ivory);border-radius:14px;padding:10px 14px;font-size:13px;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;color:#624c54}
+.store .order-tracking b{color:var(--wine);letter-spacing:.02em;word-break:break-all}
+.store .order-tracking .link-btn{margin-left:auto}
 .store .order-complete{margin-top:12px;border-top:1px solid var(--line);padding-top:12px}
 .store .order-complete>button{width:100%}
 .store .order-complete p{margin:0 0 10px;font-weight:700;color:var(--wine)}

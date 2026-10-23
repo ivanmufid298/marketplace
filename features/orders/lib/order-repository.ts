@@ -38,7 +38,7 @@ export type OrderRepositoryDeps = {
 };
 
 const ORDER_COLUMNS =
-  "id, number, recipient_name, phone, address, city, postcode, shipping_label, shipping_fee, payment_status, expires_at, payment_rejection_reason, reupload_until, received_at, cancel_note, refund_status, created_at, order_items(id, product_id, product_name, product_slug, image_key, unit_price, quantity)";
+  "id, number, recipient_name, phone, address, city, postcode, shipping_label, shipping_fee, payment_status, expires_at, payment_rejection_reason, reupload_until, received_at, tracking_number, cancel_note, refund_status, created_at, order_items(id, product_id, product_name, product_slug, image_key, unit_price, quantity)";
 
 const ADMIN_COLUMNS = `${ORDER_COLUMNS}, buyer_id, order_status_history(event, actor_name, note, created_at), payment_proofs(object_key, mime_type, size_bytes, created_at)`;
 
@@ -160,6 +160,9 @@ export function createOrderRepository({ db, storage, photoFor, newId, now = Date
 
     /** An admin records that the refund was paid. */
     markRefunded: (orderId: string) => action("mark_refunded", { p_order_id: orderId }),
+
+    /** An admin enters (or corrects) the courier's tracking number of a paid order; the buyer is told. */
+    setTrackingNumber: (orderId: string, tracking: string) => action("set_tracking_number", { p_order_id: orderId, p_tracking: tracking }),
 
     /** A short-lived link to open a private proof. Only an admin or the order's buyer is allowed one. */
     async proofLink(objectKey: string): Promise<Outcome<string>> {

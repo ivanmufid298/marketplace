@@ -16,7 +16,7 @@ const okNull = async (): Promise<Outcome<null>> => ({ ok: true, value: null });
 function fake(over: Partial<AdminOrderServices["repo"]> = {}) {
   const repo = {
     listAllOrders: vi.fn(async (): Promise<Outcome<Order[]>> => ({ ok: true, value: [order()] })),
-    acceptPayment: vi.fn(okNull), rejectPayment: vi.fn(okNull), cancelOrder: vi.fn(okNull), markRefunded: vi.fn(okNull),
+    acceptPayment: vi.fn(okNull), rejectPayment: vi.fn(okNull), cancelOrder: vi.fn(okNull), markRefunded: vi.fn(okNull), setTrackingNumber: vi.fn(okNull),
     proofLink: vi.fn(async (): Promise<Outcome<string>> => ({ ok: true, value: "https://signed.test/x" })),
     ...over,
   };
@@ -76,6 +76,7 @@ describe("actions in the database", () => {
     ["rejecting a payment", "rejectPayment", (a, o) => a.rejectPayment(o, "  Nominal salah "), ["o-1", "Nominal salah"]],
     ["cancelling an order", "cancelOrder", (a, o) => a.cancelOrder(o, " Barang rusak "), ["o-1", "Barang rusak"]],
     ["marking a refund", "markRefunded", (a, o) => a.markRefunded(o), ["o-1"]],
+    ["entering a tracking number", "setTrackingNumber", (a, o) => a.setTrackingNumber(o, "  JP1234567890 "), ["o-1", "JP1234567890"]],
   ];
   for (const [name, method, run, args] of cases) {
     it(`${name} goes to the database with the order's id, then the list is read again`, async () => {
@@ -107,6 +108,17 @@ describe("actions in the database", () => {
       expect(repo[method]).not.toHaveBeenCalled();
     });
   }
+  it("refuses a tracking number of the wrong shape without asking the database", async () => {
+    const { services, repo } = fake();
+    const view = renderHook(() => useAdminOrders(services));
+    await waitFor(() => expect(repo.listAllOrders).toHaveBeenCalledTimes(1));
+    for (const bad of ["", "   ", "AB12", "JP 1234567890", "JP1234567890!", "A".repeat(41)]) {
+      let result: Outcome<unknown> | undefined;
+      await act(async () => { result = await view.result.current.setTrackingNumber(order(), bad); });
+      expect(result).toEqual({ ok: false, error: { kind: "invalidTracking" } });
+    }
+    expect(repo.setTrackingNumber).not.toHaveBeenCalled();
+  });
   it("needs a reason to reject and a reason to cancel, without asking the database", async () => {
     const { services, repo } = fake();
     const view = renderHook(() => useAdminOrders(services));
@@ -182,6 +194,17 @@ describe("in this browser (the sample store)", () => {
     expect(rejected).toEqual({ ok: true, value: null });
     expect(sample(view, "837301")).toMatchObject({ payment: "failed", rejectionReason: "Nominal salah" });
     expect(sample(view, "837301").history.at(-1)).toMatchObject({ event: "payment_rejected", note: "Nominal salah" });
+  });
+  it("enters a tracking number on a paid order, trimmed, and refuses one that is not paid", async () => {
+    const view = renderHook(() => useAdminOrders());
+    let unpaid: Outcome<unknown> | undefined, saved: Outcome<unknown> | undefined;
+    await act(async () => { unpaid = await view.result.current.setTrackingNumber(sample(view, "837312"), "JP1234567890"); });
+    expect(unpaid).toEqual({ ok: false, error: { kind: "notShippable" } });
+    await act(async () => { await view.result.current.acceptPayment(sample(view, "837312")); });
+    await act(async () => { saved = await view.result.current.setTrackingNumber(sample(view, "837312"), "  JP1234567890 "); });
+    expect(saved).toEqual({ ok: true, value: null });
+    expect(sample(view, "837312").tracking).toBe("JP1234567890");
+    expect(sample(view, "837312").history.at(-1)).toMatchObject({ event: "shipped", note: "JP1234567890" });
   });
   it("needs a reason to reject, and a note to cancel", async () => {
     const view = renderHook(() => useAdminOrders());

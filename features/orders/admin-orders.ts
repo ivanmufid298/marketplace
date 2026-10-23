@@ -5,6 +5,7 @@ import type { Order } from "@/lib/mock/orders";
 import { databaseConfigured } from "@/features/catalog";
 import * as localOrders from "@/lib/orders-store";
 import { createBrowserAdminOrderServices, type AdminOrderServices } from "./lib/services";
+import { cleanTracking } from "./lib/tracking";
 import type { OrderError, Outcome } from "./lib/types";
 import type { OrdersStatus } from "./orders-provider";
 
@@ -22,6 +23,8 @@ export type AdminOrders = {
   rejectPayment: (order: Order, reason: string) => Promise<Outcome<null>>;
   cancelOrder: (order: Order, note: string) => Promise<Outcome<null>>;
   markRefunded: (order: Order) => Promise<Outcome<null>>;
+  /** Enters or corrects the courier's tracking number of a paid order. The buyer is told. */
+  setTrackingNumber: (order: Order, tracking: string) => Promise<Outcome<null>>;
   /** A short-lived link to a transfer proof (the newest by default). `null` when the order has none (the sample store keeps no files). */
   proofLink: (order: Order, index?: number) => Promise<Outcome<string | null>>;
   /** Puts the sample orders back (the sample store only). */
@@ -106,6 +109,16 @@ export function useAdminOrders(provided?: AdminOrderServices): AdminOrders {
     [act, fromDatabase],
   );
 
+  const setTrackingNumber = useCallback(
+    async (order: Order, tracking: string) => {
+      const clean = cleanTracking(tracking);
+      if (!clean) return refused("invalidTracking");
+      if (!fromDatabase) return localOrders.setTracking(order.number, clean) ? DONE : refused("notShippable");
+      return needsId(order) ?? act((repo) => repo.setTrackingNumber(order.id as string, clean));
+    },
+    [act, fromDatabase],
+  );
+
   const proofLink = useCallback(
     async (order: Order, index?: number): Promise<Outcome<string | null>> => {
       const proof = order.proofs?.[index ?? (order.proofs?.length ?? 0) - 1];
@@ -124,6 +137,7 @@ export function useAdminOrders(provided?: AdminOrderServices): AdminOrders {
     rejectPayment,
     cancelOrder,
     markRefunded,
+    setTrackingNumber,
     proofLink,
     resetSample: localOrders.resetOrders,
   };

@@ -136,7 +136,14 @@ await verifyFails("an expired quote is refused", sign(quote({ x: NOW - 1 })), /i
 await verifyFails("a quote that expires this very second is refused", sign(quote({ x: NOW })), /invalid_quote/);
 const signed = sign(quote());
 await verifyFails("a quote with a space in it is refused", `${signed.slice(0, 6)} ${signed.slice(6)}`, /invalid_quote/);
-await verifyFails("a quote written with the usual base64 characters is refused", signed.replace(/-/g, "+").replace(/_/g, "/").replace(/\./, "."), /invalid_quote/);
+// A genuinely signed quote whose text is written in ordinary base64 (with + and /), not in the url-safe form the server writes.
+let ordinary = null;
+for (let k = 1; k < 60 && !ordinary; k++) {
+  const body = Buffer.from(JSON.stringify(quote({ e: "?>".repeat(k) }))).toString("base64").replace(/=+$/, "");
+  if (/[+/]/.test(body)) ordinary = `${body}.${crypto.createHmac("sha256", SECRET).update(body).digest("base64url")}`;
+}
+check("(the test found a quote that needs + or / to be written in ordinary base64)", ordinary !== null);
+await verifyFails("a quote written with the usual base64 characters is refused", ordinary, /invalid_quote/);
 await verifyFails("an empty quote is refused", "", /invalid_quote/);
 await verifyFails("a quote without a signature is refused", signed.split(".")[0], /invalid_quote/);
 await verifyFails("a quote with three parts is refused", `${signed}.${signed.split(".")[1]}`, /invalid_quote/);

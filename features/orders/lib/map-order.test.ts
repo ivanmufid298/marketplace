@@ -11,6 +11,16 @@ const row = (over: Partial<OrderRow> = {}): OrderRow => ({
 });
 const map = (over: Partial<OrderRow> = {}) => toOrder(row(over), "buyer-1", photoFor, NOW);
 
+describe("the tracking number", () => {
+  it("carries the courier's tracking number when the order has one", () => {
+    expect(map({ payment_status: "paid", tracking_number: "JP1234567890" }).tracking).toBe("JP1234567890");
+  });
+  it("has none when the row has none, or does not say", () => {
+    expect(map({ tracking_number: null })).not.toHaveProperty("tracking");
+    expect(map()).not.toHaveProperty("tracking");
+  });
+});
+
 describe("the details", () => {
   it("carries the number, buyer, phone, shipping, and a joined address", () => {
     expect(map()).toMatchObject({ id: "o-1", number: "100002", buyerId: "buyer-1", buyer: "Ana Putri", phone: "0811000111", address: "Jl. Mawar 1, Jakarta, 12345", shippingMethod: "Express", shippingFee: 32000 });

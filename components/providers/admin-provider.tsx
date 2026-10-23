@@ -48,6 +48,8 @@ type AdminContextValue = {
   /** Cancels an order. Returns false (with a toast) when the reason is empty or the order can no longer be cancelled. */
   cancelOrder: (orderNumber: string, note: string) => Promise<boolean>;
   markRefunded: (orderNumber: string) => Promise<void>;
+  /** Enters or corrects the courier's tracking number of a paid order; the buyer is told. Returns false (with a toast) when it is refused. */
+  setTracking: (orderNumber: string, tracking: string) => Promise<boolean>;
   resetData: () => void;
   modal: ModalType | null;
   openModal: (type: ModalType) => void;
@@ -220,6 +222,18 @@ export function AdminProvider({ children, orderServices, reviewServices }: Admin
     [failure, orderActions, orderByNumber, showToast],
   );
 
+  const setTracking = useCallback(
+    async (orderNumber: string, tracking: string) => {
+      const order = orderByNumber(orderNumber);
+      if (!order) return false;
+      const result = await orderActions.setTrackingNumber(order, tracking);
+      if (result.ok) showToast(t("admin.orders.toast.trackingSaved"));
+      else failure(result.error);
+      return result.ok;
+    },
+    [failure, orderActions, orderByNumber, showToast],
+  );
+
   const resetData = useCallback(() => {
     orderActions.resetSample();
     showToast(t("admin.shell.resetDone"));
@@ -229,7 +243,7 @@ export function AdminProvider({ children, orderServices, reviewServices }: Admin
     <AdminContext.Provider
       value={{
         payments, acceptPayment, rejectPayment, viewProof, interactions, activeInteractionId, selectInteraction, toggleInteractionStatus, replyInteraction,
-        reviews, reviewsDatabase: dbReviews.database, reviewsStatus: dbReviews.status, reloadReviews: dbReviews.reload, toggleReview, deleteReview, orders, ordersDatabase, ordersStatus, reloadOrders, cancelOrder, markRefunded, resetData, modal, openModal: setModal, closeModal: () => setModal(null), sidebarOpen, setSidebarOpen, toast, showToast,
+        reviews, reviewsDatabase: dbReviews.database, reviewsStatus: dbReviews.status, reloadReviews: dbReviews.reload, toggleReview, deleteReview, orders, ordersDatabase, ordersStatus, reloadOrders, cancelOrder, markRefunded, setTracking, resetData, modal, openModal: setModal, closeModal: () => setModal(null), sidebarOpen, setSidebarOpen, toast, showToast,
       }}
     >
       {children}

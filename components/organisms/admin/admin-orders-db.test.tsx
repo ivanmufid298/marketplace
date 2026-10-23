@@ -24,7 +24,7 @@ const okNull = async () => ({ ok: true as const, value: null });
 function fake(orders: Order[], over: Partial<AdminOrderServices["repo"]> = {}) {
   const repo = {
     listAllOrders: vi.fn<AdminOrderServices["repo"]["listAllOrders"]>(async () => ({ ok: true as const, value: orders })),
-    acceptPayment: vi.fn(okNull), rejectPayment: vi.fn(okNull), cancelOrder: vi.fn(okNull), markRefunded: vi.fn(okNull),
+    acceptPayment: vi.fn(okNull), rejectPayment: vi.fn(okNull), cancelOrder: vi.fn(okNull), markRefunded: vi.fn(okNull), setTrackingNumber: vi.fn(okNull),
     proofLink: vi.fn(async () => ({ ok: true as const, value: "https://signed.test/proof" })),
     ...over,
   };
@@ -375,6 +375,74 @@ describe("the order screen", () => {
     fireEvent.click(within(document.querySelector(".modal.wide") as HTMLElement).getByRole("button", { name: "Tandai sudah direfund" }));
     await waitFor(() => expect(repo.markRefunded).toHaveBeenCalledWith("o-c"));
     await waitFor(() => expect(toast()).toBe("Refund dicatat"));
+  });
+});
+
+describe("the tracking number in the order's details", () => {
+  const open = async (orders: Order[], over: Partial<AdminOrderServices["repo"]> = {}) => {
+    const made = fake(orders, over);
+    show(made.services, <OrdersManager />);
+    fireEvent.click(await screen.findByRole("button", { name: /Detail|Lihat/ }));
+    return { ...made, modal: document.querySelector(".modal.wide") as HTMLElement };
+  };
+  it("is asked for on a paid order, and saved trimmed, then the buyer's notification is mentioned to the admin", async () => {
+    const { modal, repo } = await open([paid]);
+    const save = within(modal).getByRole("button", { name: "Simpan resi" }) as HTMLButtonElement;
+    expect(save.disabled).toBe(true);
+    fireEvent.change(within(modal).getByLabelText("Nomor resi"), { target: { value: "  JP1234567890 " } });
+    expect(save.disabled).toBe(false);
+    fireEvent.click(save);
+    await waitFor(() => expect(repo.setTrackingNumber).toHaveBeenCalledWith("o-c", "JP1234567890"));
+    await waitFor(() => expect(toast()).toBe("Nomor resi disimpan, pembeli diberi tahu"));
+  });
+  it("cannot be saved while the number is the wrong shape", async () => {
+    const { modal, repo } = await open([paid]);
+    const save = within(modal).getByRole("button", { name: "Simpan resi" }) as HTMLButtonElement;
+    for (const bad of ["AB12", "JP 1234567890", "JP1234567890!"]) {
+      fireEvent.change(within(modal).getByLabelText("Nomor resi"), { target: { value: bad } });
+      expect(save.disabled).toBe(true);
+    }
+    fireEvent.click(save);
+    expect(repo.setTrackingNumber).not.toHaveBeenCalled();
+  });
+  it("shows the number already entered and offers to change it", async () => {
+    const { modal, repo } = await open([{ ...paid, tracking: "JP1234567890" }]);
+    expect(within(modal).getByText("Nomor resi: JP1234567890 (Reguler)")).toBeTruthy();
+    expect(within(modal).queryByRole("button", { name: "Simpan resi" })).toBeNull();
+    fireEvent.change(within(modal).getByLabelText("Ganti nomor resi"), { target: { value: "JP9999999999" } });
+    fireEvent.click(within(modal).getByRole("button", { name: "Perbarui resi" }));
+    await waitFor(() => expect(repo.setTrackingNumber).toHaveBeenCalledWith("o-c", "JP9999999999"));
+  });
+  it("is cleared after it is saved, and kept when the database says no", async () => {
+    const { modal } = await open([paid], { setTrackingNumber: async () => ({ ok: false, error: { kind: "notShippable" } }) as never });
+    const input = within(modal).getByLabelText("Nomor resi") as HTMLInputElement;
+    fireEvent.change(input, { target: { value: "JP1234567890" } });
+    fireEvent.click(within(modal).getByRole("button", { name: "Simpan resi" }));
+    await waitFor(() => expect(toast()).toBe("Resi hanya bisa diisi untuk pesanan yang sudah dibayar, belum dibatalkan, dan belum diterima pembeli. Muat ulang daftar."));
+    expect(input.value).toBe("JP1234567890");
+  });
+  it("is not offered for an order that is not paid, was cancelled, or was received", async () => {
+    for (const o of [reviewable, { ...paid, cancelNote: "Rusak" }, { ...paid, received: true }]) {
+      const { modal } = await open([o]);
+      expect(within(modal).queryByLabelText(/nomor resi/i)).toBeNull();
+      expect(within(modal).queryByText("Pengiriman")).toBeNull();
+      cleanup();
+    }
+  });
+  it("starts every order with an empty field", async () => {
+    const view = render(<AdminProvider><OrderDetailModal order={paid} onClose={() => {}} /></AdminProvider>);
+    fireEvent.change(screen.getByLabelText("Nomor resi"), { target: { value: "JP1234567890" } });
+    expect((screen.getByLabelText("Nomor resi") as HTMLInputElement).value).toBe("JP1234567890");
+    view.rerender(<AdminProvider><OrderDetailModal order={{ ...paid, number: "100099" }} onClose={() => {}} /></AdminProvider>);
+    expect((screen.getByLabelText("Nomor resi") as HTMLInputElement).value).toBe("");
+  });
+  it("empties the field once the number is saved", async () => {
+    const { modal } = await open([paid]);
+    const input = within(modal).getByLabelText("Nomor resi") as HTMLInputElement;
+    fireEvent.change(input, { target: { value: "JP1234567890" } });
+    fireEvent.click(within(modal).getByRole("button", { name: "Simpan resi" }));
+    await waitFor(() => expect(toast()).toBe("Nomor resi disimpan, pembeli diberi tahu"));
+    await waitFor(() => expect(input.value).toBe(""));
   });
 });
 

@@ -6,6 +6,18 @@ import type { AppNotification, NotificationKind } from "./types";
 const n = (kind: NotificationKind, payload: Record<string, unknown> = {}, read = false): AppNotification => ({ id: 1, kind, orderId: "o", payload, createdAt: "2026-10-13T11:00:00Z", read, resolved: false });
 
 describe("describeNotification", () => {
+  it("tells the buyer the order was shipped, with the courier's service and the tracking number", () => {
+    expect(describeNotification(n("order_shipped", { number: "100002", courier: "SICEPAT REG", tracking: "JP1234567890", updated: false }))).toEqual({
+      title: "Pesanan #100002 dikirim",
+      body: "Lewat SICEPAT REG. Nomor resi: JP1234567890.",
+      actionLabel: null,
+      urgent: false,
+    });
+  });
+  it("says so when the tracking number was corrected", () => {
+    expect(describeNotification(n("order_shipped", { number: "100002", courier: "SICEPAT REG", tracking: "JP9999999999", updated: true })).body).toBe("Nomor resi diperbarui: JP9999999999 (SICEPAT REG).");
+  });
+
   it("asks for payment with the deadline in Jakarta time, and offers the upload", () => {
     expect(describeNotification(n("payment_needed", { number: "100002", expires_at: "2026-10-13T08:30:00Z" }))).toEqual({
       title: "Selesaikan pembayaran pesanan #100002",

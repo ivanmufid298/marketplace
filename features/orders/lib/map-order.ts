@@ -18,6 +18,7 @@ export type OrderRow = {
   payment_status: "awaiting_payment" | "under_review" | "paid" | "rejected" | "expired";
   expires_at: string;
   received_at: string | null;
+  tracking_number?: string | null;
   cancel_note: string | null;
   refund_status: "pending" | "done" | null;
   created_at: string;
@@ -86,6 +87,7 @@ export function toOrder(row: OrderRow, buyerId: string, photoFor: (imageKey: str
     ...(canSendProof ? { canSendProof: true, payBefore: deadline as string } : {}),
     ...(row.payment_status === "rejected" && row.payment_rejection_reason ? { rejectionReason: row.payment_rejection_reason } : {}),
     ...(expired ? { expired: true } : {}),
+    ...(row.tracking_number ? { tracking: row.tracking_number } : {}),
     ...(row.cancel_note !== null ? { cancelNote: row.cancel_note } : {}),
     ...(row.refund_status ? { refund: row.refund_status } : {}),
     ...(proofs ? { proofs } : {}),

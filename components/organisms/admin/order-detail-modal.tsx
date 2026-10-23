@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { cleanTracking } from "@/features/orders";
 import { money } from "@/lib/format";
 import { t } from "@/lib/i18n";
 import type { Order } from "@/lib/mock/orders";
@@ -21,14 +22,16 @@ type OrderDetailModalProps = {
 };
 
 export function OrderDetailModal({ order, onClose }: OrderDetailModalProps) {
-  const { cancelOrder, markRefunded, viewProof } = useAdmin();
+  const { cancelOrder, markRefunded, setTracking, viewProof } = useAdmin();
   const [cancelling, setCancelling] = useState(false);
   const [note, setNote] = useState("");
+  const [tracking, setTrackingText] = useState("");
 
   // Start every order from a closed cancel form.
   useEffect(() => {
     setCancelling(false);
     setNote("");
+    setTrackingText("");
   }, [order?.number]);
 
   useEffect(() => {
@@ -90,6 +93,20 @@ export function OrderDetailModal({ order, onClose }: OrderDetailModalProps) {
                 )}
                 {order.refund === "done" && <div className="notice-box">{t("admin.orders.modal.refundDone")}</div>}
               </div>
+
+              {status === "shipping" && (
+                <div className="order-block">
+                  <h3>{t("admin.orders.modal.trackingHeading")}</h3>
+                  {order.tracking && <div className="notice-box">{t("admin.orders.modal.trackingCurrent", { tracking: order.tracking, method: order.shippingMethod })}</div>}
+                  <Field label={t(order.tracking ? "admin.orders.modal.trackingChange" : "admin.orders.modal.trackingLabel")} htmlFor="trackingNumber">
+                    <input id="trackingNumber" value={tracking} placeholder={t("admin.orders.modal.trackingPlaceholder")} autoComplete="off" maxLength={60} onChange={(e) => setTrackingText(e.target.value)} />
+                  </Field>
+                  <span className="sub" style={{ display: "block", margin: "6px 0 10px" }}>{t("admin.orders.modal.trackingHint")}</span>
+                  <AdminButton variant="primary" small disabled={cleanTracking(tracking) === null} onClick={() => void setTracking(order.number, tracking).then((saved) => saved && setTrackingText(""))}>
+                    {t(order.tracking ? "admin.orders.modal.trackingUpdate" : "admin.orders.modal.trackingSave")}
+                  </AdminButton>
+                </div>
+              )}
 
               {order.proofs && (
                 <div className="order-block">

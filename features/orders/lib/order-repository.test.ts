@@ -170,6 +170,13 @@ describe("listMyOrders", () => {
     expect(selects[0].table).toBe("orders");
     expect(selects[0].ops.filter(([o]) => o === "order").map(([, a]) => a)).toEqual([["created_at", { ascending: false }], ["number", { ascending: false }]]);
   });
+  it("asks for the tracking number along with the rest, for the buyer and for the admin, and shows it", async () => {
+    const { repo, selects } = fakes({ select: [{ data: [{ ...row, tracking_number: "JP1234567890" }] }, { data: [] }] });
+    const mine = await repo.listMyOrders("buyer-1");
+    expect(mine.ok && mine.value[0].tracking).toBe("JP1234567890");
+    await repo.listAllOrders();
+    for (const call of selects) expect(String(call.ops.find(([o]) => o === "select")?.[1][0])).toContain("tracking_number");
+  });
   it("counts an unpaid order past its deadline as expired by the repository's clock", async () => {
     const { repo } = fakes({ select: [{ data: [{ ...row, payment_status: "awaiting_payment", expires_at: "2026-10-13T11:59:00Z" }] }] });
     const result = await repo.listMyOrders("buyer-1");
@@ -188,6 +195,7 @@ describe("order actions", () => {
     ["reject a payment", (r) => r.rejectPayment("o-1", "Nominal salah"), "reject_payment", { p_order_id: "o-1", p_reason: "Nominal salah" }],
     ["cancel an order", (r) => r.cancelOrder("o-1", "Barang rusak"), "cancel_order", { p_order_id: "o-1", p_note: "Barang rusak" }],
     ["mark a refund", (r) => r.markRefunded("o-1"), "mark_refunded", { p_order_id: "o-1" }],
+    ["enter a tracking number", (r) => r.setTrackingNumber("o-1", "JP1234567890"), "set_tracking_number", { p_order_id: "o-1", p_tracking: "JP1234567890" }],
   ];
   for (const [name, run, fn, args] of cases) {
     it(`can ${name}: calls ${fn} with the order's id and reports success`, async () => {

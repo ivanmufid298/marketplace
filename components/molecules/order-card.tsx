@@ -38,6 +38,17 @@ const timeOf = (iso: string) => formatDateTime(new Date(iso)).split(", ")[1] ?? 
 
 export function OrderCard({ order, products, reviews, onSaveReview, onComplete, onSendProof, sendingProof = false }: OrderCardProps) {
   const [confirming, setConfirming] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const copyTracking = () => {
+    // Copying is a convenience: with no clipboard (an insecure page, a blocked permission) the number is still on screen to select.
+    void navigator.clipboard?.writeText(order.tracking ?? "").then(
+      () => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      },
+      () => undefined,
+    );
+  };
   const status = deriveStatus(order);
   const label = buyerStatus(order);
   // A database order carries a copy of each product as it was bought, which is what the order should show. A sample
@@ -74,6 +85,14 @@ export function OrderCard({ order, products, reviews, onSaveReview, onComplete, 
         <span>{t("store.orders.shipping")} {money(order.shippingFee)}</span>
         <span>{t("store.orders.total")} <b>{money(total(order))}</b></span>
       </div>
+      {order.tracking && (
+        <p className="order-tracking">
+          <span>{t("store.orders.tracking.label")}</span>
+          <b>{order.tracking}</b>
+          <small>{order.shippingMethod}</small>
+          <button type="button" className="link-btn" onClick={copyTracking}>{copied ? t("store.orders.tracking.copied") : t("store.orders.tracking.copy")}</button>
+        </p>
+      )}
       {label === "rejected" && order.rejectionReason && <p className="order-rejection">{t("store.orders.proof.rejected", { reason: order.rejectionReason })}</p>}
       {order.canSendProof && onSendProof && (
         <div className="order-proof">

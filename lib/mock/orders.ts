@@ -19,7 +19,7 @@ export type OrderItem = {
   photos?: ProductPhoto[];
 };
 
-export type HistoryEvent = "created" | "payment_submitted" | "payment_accepted" | "payment_rejected" | "expired" | "received" | "cancelled" | "refunded";
+export type HistoryEvent = "created" | "payment_submitted" | "payment_accepted" | "payment_rejected" | "expired" | "received" | "cancelled" | "refunded" | "shipped" | "tracking_updated";
 
 /** One transfer proof of an order (database orders). Every proof is kept; the newest is the last. */
 export type OrderProof = { objectKey: string; mime: string; size: number; at: string };
@@ -51,6 +51,8 @@ export type Order = {
   proofs?: OrderProof[];
   /** The order ran out of time without payment, so its stock went back on sale. */
   expired?: boolean;
+  /** The courier's tracking number (nomor resi), once the admin has entered it. */
+  tracking?: string;
   /** Set when the buyer taps "Pesanan selesai". */
   received: boolean;
   /** Present when the order was cancelled; holds the admin's reason. */

@@ -99,6 +99,13 @@ export const cancelOrder = (number: string, note: string) =>
 export const markRefunded = (number: string) =>
   update(number, (o) => (o.refund === "pending" ? { ...o, refund: "done", history: [...o.history, entry("refunded", ADMIN)] } : null));
 
+/** Admin entered (or corrected) the tracking number of a paid order that is still on its way. */
+export const setTracking = (number: string, tracking: string) =>
+  update(number, (o) => {
+    if (o.payment !== "success" || o.received || isCancelled(o) || o.tracking === tracking) return null;
+    return { ...o, tracking, history: [...o.history, entry(o.tracking ? "tracking_updated" : "shipped", ADMIN, tracking)] };
+  });
+
 export type NewOrder = {
   buyerId: string;
   buyer: string;

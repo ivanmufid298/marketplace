@@ -216,6 +216,11 @@
           "title": "Pembayaran #{number} diterima",
           "body": "Pesananmu sedang diproses dan dikirim."
         },
+        "order_shipped": {
+          "title": "Pesanan #{number} dikirim",
+          "body": "Lewat {courier}. Nomor resi: {tracking}.",
+          "bodyUpdated": "Nomor resi diperbarui: {tracking} ({courier})."
+        },
         "order_cancelled": {
           "title": "Pesanan #{number} dibatalkan",
           "body": "Alasan: {note}",
@@ -252,6 +257,8 @@
       "invalidItems": "Keranjang tidak valid. Muat ulang halaman lalu coba lagi.",
       "invalidAddress": "Alamat pengiriman belum lengkap atau terlalu panjang.",
       "invalidShipping": "Layanan pengiriman ini tidak tersedia. Pilih yang lain.",
+      "invalidTracking": "Nomor resi tidak valid.",
+      "notShippable": "Pesanan ini tidak bisa dikirim.",
       "shippingQuoteChanged": "Ongkos kirim perlu dihitung ulang karena isi keranjang, alamat, atau pengaturan toko berubah. Pilih layanan pengiriman lagi.",
       "shippingQuoteUnavailable": "Ongkos kirim otomatis sedang tidak bisa dipakai. Pilih tarif toko, atau coba lagi nanti.",
       "tooManyPending": "Kamu punya 3 pesanan yang belum dibayar. Selesaikan salah satunya dulu, atau tunggu sampai kedaluwarsa.",
@@ -403,6 +410,11 @@
         "shipping": "Barang sedang dikirim",
         "completed": "Selesai",
         "cancelled": "Dibatalkan"
+      },
+      "tracking": {
+        "label": "Nomor resi",
+        "copy": "Salin",
+        "copied": "Tersalin"
       },
       "complete": {
         "button": "Pesanan selesai",
@@ -865,6 +877,14 @@
         "historyEmpty": "Belum ada perubahan status.",
         "by": "oleh {actor}",
         "cancelOrder": "Batalkan pesanan",
+        "trackingHeading": "Pengiriman",
+        "trackingLabel": "Nomor resi",
+        "trackingChange": "Ganti nomor resi",
+        "trackingPlaceholder": "mis. JP1234567890",
+        "trackingHint": "Isi setelah paket diserahkan ke kurir. Pembeli diberi tahu dan bisa melihat nomor ini di Pesanan saya.",
+        "trackingSave": "Simpan resi",
+        "trackingUpdate": "Perbarui resi",
+        "trackingCurrent": "Nomor resi: {tracking} ({method})",
         "cancelHeading": "Alasan pembatalan",
         "cancelPlaceholder": "Tulis alasan pembatalan (wajib)",
         "cancelConfirm": "Ya, batalkan pesanan",
@@ -879,6 +899,8 @@
         "invalidItems": "Data pesanan tidak valid.",
         "invalidAddress": "Data pesanan tidak valid.",
         "invalidShipping": "Data pesanan tidak valid.",
+        "invalidTracking": "Nomor resi harus 5 sampai 40 karakter: huruf, angka, atau tanda hubung (-), tanpa spasi.",
+        "notShippable": "Resi hanya bisa diisi untuk pesanan yang sudah dibayar, belum dibatalkan, dan belum diterima pembeli. Muat ulang daftar.",
         "shippingQuoteChanged": "Data pesanan tidak valid.",
         "shippingQuoteUnavailable": "Data pesanan tidak valid.",
         "tooManyPending": "Data pesanan tidak valid.",
@@ -928,9 +950,12 @@
         "payment_rejected": "Pembayaran ditolak",
         "received": "Pesanan ditandai selesai oleh pembeli",
         "cancelled": "Pesanan dibatalkan",
-        "refunded": "Refund dicatat"
+        "refunded": "Refund dicatat",
+        "shipped": "Pesanan dikirim, nomor resi dicatat",
+        "tracking_updated": "Nomor resi diperbarui"
       },
       "toast": {
+        "trackingSaved": "Nomor resi disimpan, pembeli diberi tahu",
         "cancelled": "Pesanan dibatalkan",
         "needNote": "Isi alasan pembatalan dulu",
         "refunded": "Refund dicatat"

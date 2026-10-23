@@ -8,7 +8,7 @@ import { createSupabaseProofStorage } from "./proof-storage";
 export type OrderServices = { repo: Pick<OrderRepository, "listShippingMethods" | "placeOrder" | "sendProof" | "listMyOrders" | "confirmReceived"> };
 
 /** What the admin screens need: every order, the actions on it, and a link to a proof. */
-export type AdminOrderServices = { repo: Pick<OrderRepository, "listAllOrders" | "acceptPayment" | "rejectPayment" | "cancelOrder" | "markRefunded" | "proofLink"> };
+export type AdminOrderServices = { repo: Pick<OrderRepository, "listAllOrders" | "acceptPayment" | "rejectPayment" | "cancelOrder" | "markRefunded" | "setTrackingNumber" | "proofLink"> };
 
 function createBrowserRepository(): OrderRepository {
   const client = getSupabaseBrowserClient();

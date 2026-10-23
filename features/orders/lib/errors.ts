@@ -10,6 +10,8 @@ const BY_MESSAGE: Record<string, OrderError["kind"]> = {
   invalid_items: "invalidItems",
   invalid_address: "invalidAddress",
   invalid_shipping: "invalidShipping",
+  invalid_tracking: "invalidTracking",
+  not_shippable: "notShippable",
   invalid_quote: "shippingQuoteChanged",
   quote_stale: "shippingQuoteChanged",
   quote_mismatch: "shippingQuoteChanged",
