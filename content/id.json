@@ -19,6 +19,7 @@
       "searchPlaceholder": "Cari produk, kategori, atau toko…",
       "account": "Akun",
       "orders": "Pesanan saya",
+      "ordersToComplete": "Pesanan saya, {count} menunggu kamu tandai selesai",
       "openCart": "Buka keranjang"
     },
     "hero": {

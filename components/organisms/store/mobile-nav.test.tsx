@@ -40,7 +40,7 @@ describe("the bottom navigation", () => {
     mount();
     await tap("Kategori");
     await tap(/Keranjang/);
-    await tap("Pesanan");
+    await tap(/Pesanan/);
     expect(state().open.sort()).toEqual(["categorySheet", "drawer", "orders"]);
   });
 
@@ -64,8 +64,8 @@ describe("the bottom navigation", () => {
 
   it("marks the tab of the open panel as the active one", async () => {
     mount();
-    await tap("Pesanan");
-    expect(screen.getByRole("button", { name: "Pesanan" }).className).toContain("active");
+    await tap(/Pesanan/);
+    expect(screen.getByRole("button", { name: /Pesanan/ }).className).toContain("active");
     expect(screen.getByRole("button", { name: "Home" }).className).not.toContain("active");
   });
 
@@ -74,7 +74,7 @@ describe("the bottom navigation", () => {
     await tap("Wishlist");
     expect(screen.getByRole("button", { name: "Wishlist" }).className).toContain("active");
     expect(screen.getByRole("button", { name: "Home" }).className).not.toContain("active");
-    await tap("Pesanan");
+    await tap(/Pesanan/);
     expect(screen.getByRole("button", { name: "Wishlist" }).className).not.toContain("active");
   });
 });

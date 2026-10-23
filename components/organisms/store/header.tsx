@@ -9,11 +9,13 @@ import { useCatalog } from "@/features/catalog";
 import { useUi } from "@/shared/ui-state/ui-provider";
 import { AccountMenu } from "./account-menu";
 import { NotificationBell } from "./notification-bell";
+import { useOrdersToComplete } from "./use-orders-to-complete";
 
 export function Header() {
   const { query, setQuery } = useCatalog();
   const { openPanel } = useUi();
   const { cartCount } = useCart();
+  const toComplete = useOrdersToComplete();
   return (
     <>
       <div className="notice">{t("store.header.notice")}</div>
@@ -36,7 +38,10 @@ export function Header() {
           <div className="actions">
             <AccountMenu />
             <NotificationBell />
-            <IconButton label={t("store.header.orders")} onClick={() => openPanel("orders")}><Icon name="package" /></IconButton>
+            <IconButton label={toComplete > 0 ? t("store.header.ordersToComplete", { count: toComplete }) : t("store.header.orders")} onClick={() => openPanel("orders")}>
+              <Icon name="package" />
+              {toComplete > 0 && <span className="count">{toComplete > 9 ? "9+" : toComplete}</span>}
+            </IconButton>
             <IconButton label={t("store.header.openCart")} onClick={() => openPanel("drawer")}>
               <Icon name="cart" />
               <span className="count">{cartCount}</span>

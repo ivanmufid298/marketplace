@@ -6,6 +6,7 @@ import { Icon } from "../../atoms/icon";
 import { MobileTab } from "../../molecules/mobile-tab";
 import { useCatalog } from "@/features/catalog";
 import { useUi } from "@/shared/ui-state/ui-provider";
+import { useOrdersToComplete } from "./use-orders-to-complete";
 
 type MobileNavMode = "home" | "category" | "saved" | "orders" | "cart";
 
@@ -13,6 +14,7 @@ export function MobileNav() {
   const { panels, setPanel } = useUi();
   const { savedOnly, showSaved, showAll } = useCatalog();
   const { cartCount } = useCart();
+  const toComplete = useOrdersToComplete();
   const mobileNav = (mode: MobileNavMode) => {
     if (mode === "category") return setPanel("categorySheet", true);
     if (mode === "cart") return setPanel("drawer", true);
@@ -27,7 +29,7 @@ export function MobileNav() {
       <MobileTab label={t("store.mobileNav.home")} icon={<Icon name="home" />} active={!overlayOpen && !savedOnly} onClick={() => mobileNav("home")} />
       <MobileTab label={t("store.mobileNav.category")} icon={<Icon name="grid" />} active={panels.categorySheet} onClick={() => mobileNav("category")} />
       <MobileTab label={t("store.mobileNav.wishlist")} icon={<Icon name="heart" />} active={!overlayOpen && savedOnly} onClick={() => mobileNav("saved")} />
-      <MobileTab label={t("store.mobileNav.orders")} icon={<Icon name="package" />} active={panels.orders} onClick={() => mobileNav("orders")} />
+      <MobileTab label={t("store.mobileNav.orders")} icon={<Icon name="package" />} active={panels.orders} badge={toComplete > 0 ? toComplete : undefined} onClick={() => mobileNav("orders")} />
       <MobileTab label={t("store.mobileNav.cart")} icon={<Icon name="cart" />} active={panels.drawer} badge={cartCount} onClick={() => mobileNav("cart")} />
     </nav>
   );
