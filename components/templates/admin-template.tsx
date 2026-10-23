@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { AuthProvider } from "@/features/auth";
+import { BrandProvider } from "@/features/brand";
 import { authMode } from "@/features/auth/server";
 import { NotificationsProvider } from "@/features/notifications";
 import { AdminModal } from "../organisms/admin/admin-modal";
@@ -13,6 +14,7 @@ import { AdminProvider } from "../providers/admin-provider";
 export function AdminTemplate({ children }: { children: ReactNode }) {
   return (
     <AuthProvider>
+    <BrandProvider>
     <NotificationsProvider>
     <AdminProvider>
       <div className="app">
@@ -27,6 +29,7 @@ export function AdminTemplate({ children }: { children: ReactNode }) {
       <AdminToast />
     </AdminProvider>
     </NotificationsProvider>
+    </BrandProvider>
     </AuthProvider>
   );
 }

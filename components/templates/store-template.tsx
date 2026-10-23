@@ -13,6 +13,7 @@ import { OrdersPanel } from "../organisms/store/orders-panel";
 import { StoreToast } from "../organisms/store/store-toast";
 import { AddressesProvider } from "@/features/account";
 import { AuthProvider } from "@/features/auth";
+import { BrandProvider } from "@/features/brand";
 import { CartProvider } from "@/features/cart";
 import { CatalogProvider } from "@/features/catalog";
 import { CheckoutProvider } from "@/features/checkout";
@@ -26,6 +27,7 @@ export function StoreTemplate({ children }: { children: ReactNode }) {
   return (
     <div className="store">
       <AuthProvider>
+        <BrandProvider>
         <UiProvider>
           <CatalogProvider>
             <OrdersProvider>
@@ -55,6 +57,7 @@ export function StoreTemplate({ children }: { children: ReactNode }) {
             </OrdersProvider>
           </CatalogProvider>
         </UiProvider>
+        </BrandProvider>
       </AuthProvider>
     </div>
   );

@@ -15,6 +15,7 @@ export const ALLOWED: Record<string, string[]> = {
   chat: ["auth"],
   cart: ["auth", "catalog"],
   shipping: [],
+  brand: [],
   account: ["auth", "shipping"],
   checkout: ["auth", "catalog", "cart", "orders", "account", "shipping"],
 };

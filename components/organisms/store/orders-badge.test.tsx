@@ -3,6 +3,7 @@
 import { act, cleanup, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { acceptPayment, cancelOrder, confirmReceived, createOrder, resetOrders } from "@/lib/orders-store";
+import { BrandProvider } from "@/features/brand";
 import { Storefront } from "../../providers/storefront-test-support";
 import { Header } from "./header";
 import { MobileNav } from "./mobile-nav";
@@ -15,7 +16,7 @@ const paid = (buyerId = "zoe") => { const n = make(buyerId); acceptPayment(n); r
 beforeEach(() => { window.localStorage.clear(); resetOrders(); window.localStorage.setItem(SESSION_KEY, JSON.stringify(ZOE)); vi.unstubAllEnvs(); vi.stubEnv("NODE_ENV", "development"); });
 afterEach(cleanup);
 
-const mount = () => render(<Storefront><Header /><MobileNav /></Storefront>);
+const mount = () => render(<Storefront><BrandProvider><Header /><MobileNav /></BrandProvider></Storefront>);
 const headerOrders = () => document.querySelector(".header .actions") as HTMLElement;
 const badge = () => headerOrders().querySelector('button[aria-label^="Pesanan saya"] .count')?.textContent ?? null;
 const tabBadge = () => [...document.querySelectorAll(".mobile-tab")].find((t) => t.textContent?.includes("Pesanan"))?.querySelector(".mobile-count")?.textContent ?? null;

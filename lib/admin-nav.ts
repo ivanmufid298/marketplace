@@ -39,6 +39,9 @@ export const ADMIN_NAV: AdminNavGroup[] = [
   },
   {
     section: "admin.nav.sectionSettings",
-    items: [{ href: "/admin/shipping", label: "admin.nav.shipping", title: "admin.titles.shipping", icon: "shipping" }],
+    items: [
+      { href: "/admin/profile", label: "admin.nav.profile", title: "admin.titles.profile", icon: "home" },
+      { href: "/admin/shipping", label: "admin.nav.shipping", title: "admin.titles.shipping", icon: "shipping" },
+    ],
   },
 ];

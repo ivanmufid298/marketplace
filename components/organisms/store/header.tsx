@@ -1,5 +1,6 @@
 "use client";
 
+import { useBrand } from "@/features/brand";
 import { useCart } from "@/features/cart";
 import { t } from "@/lib/i18n";
 import { Icon } from "../../atoms/icon";
@@ -16,6 +17,7 @@ export function Header() {
   const { openPanel } = useUi();
   const { cartCount } = useCart();
   const toComplete = useOrdersToComplete();
+  const brand = useBrand();
   return (
     <>
       <div className="notice">{t("store.header.notice")}</div>
@@ -24,8 +26,8 @@ export function Header() {
           {/* On a phone the actions are in the bottom bar, but the bell has no place there, so it sits at the top right. */}
           <NotificationBell className="notif-bell-mobile" />
           <a className="brand" href="#">
-            <span className="brand-mark">M</span>
-            <span className="brand-name">{t("common.brand")}</span>
+            {brand.logoUrl ? <img className="brand-logo" src={brand.logoUrl} alt="" width={38} height={38} /> : <span className="brand-mark">M</span>}
+            <span className="brand-name">{brand.name}</span>
           </a>
           <SearchField
             variant="store"

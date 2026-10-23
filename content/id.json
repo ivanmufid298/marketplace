@@ -1,6 +1,6 @@
 {
   "common": {
-    "brand": "BRAND NAME",
+    "brand": "Market by Kith",
     "close": "Tutup",
     "back": "Kembali",
     "cancel": "Batal",
@@ -604,7 +604,8 @@
       "vouchers": "Voucher",
       "content": "Banner & Popup",
       "sectionSettings": "Pengaturan",
-      "shipping": "Ongkir"
+      "shipping": "Ongkir",
+      "profile": "Profil toko"
     },
     "titles": {
       "dashboard": "Dashboard",
@@ -616,12 +617,48 @@
       "promos": "Promo & Scheduler",
       "vouchers": "Voucher",
       "content": "Banner & Popup",
-      "shipping": "Pengaturan Ongkir"
+      "shipping": "Pengaturan Ongkir",
+      "profile": "Profil Toko"
     },
     "status": {
       "pending": "Menunggu",
       "success": "Diterima",
       "failed": "Ditolak"
+    },
+    "profile": {
+      "title": "Profil toko",
+      "text": "Nama dan logo toko. Tampil di header toko, panel admin ini, dan nanti di email dan invoice.",
+      "loading": "Memuat profil…",
+      "loadError": "Profil belum bisa dimuat.",
+      "retry": "Coba lagi",
+      "demo": "Profil toko tersimpan di database, jadi baru bisa diubah setelah toko terhubung ke Supabase. Selama mode contoh, nama dan logo bawaan yang dipakai.",
+      "nameTitle": "Nama toko",
+      "nameText": "Dipakai di header, footer, dan panel admin. Maksimal 60 karakter.",
+      "nameLabel": "Nama toko",
+      "nameCount": "{count} dari {max} karakter",
+      "nameSave": "Simpan nama",
+      "nameSaved": "Nama toko disimpan",
+      "logoTitle": "Logo toko",
+      "logoText": "Dikecilkan otomatis dan disimpan sebagai PNG (sisi terpanjang 512 px). Gambar persegi atau berlatar transparan paling cocok. Logo ini juga yang nanti tampil di header email.",
+      "logoPreview": "Logo toko saat ini",
+      "logoNone": "Belum ada logo. Tanda M bawaan dipakai sampai kamu mengunggah logo.",
+      "logoPick": "Pilih gambar…",
+      "logoChange": "Ganti logo…",
+      "logoBusy": "Mengunggah…",
+      "logoRemove": "Hapus logo",
+      "logoRemoved": "Logo dihapus",
+      "logoSaved": "Logo disimpan",
+      "logoHint": "PNG, JPG, atau WebP, maksimal 10 MB.",
+      "errors": {
+        "invalidName": "Nama toko wajib diisi dan maksimal 60 karakter.",
+        "logoType": "Logo harus berupa gambar PNG, JPG, atau WebP.",
+        "logoSize": "Gambar terlalu besar. Pilih yang maksimal 10 MB.",
+        "logoUnreadable": "Gambar tidak bisa dibaca. Coba gambar lain.",
+        "logoEncode": "Browser ini tidak bisa mengolah gambar itu. Coba gambar lain.",
+        "forbidden": "Hanya admin yang bisa mengubah profil toko. Coba masuk ulang.",
+        "network": "Tidak bisa terhubung. Periksa koneksi lalu coba lagi.",
+        "unknown": "Terjadi kesalahan. Coba lagi."
+      }
     },
     "dashboard": {
       "metrics": {

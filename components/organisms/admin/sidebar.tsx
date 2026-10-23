@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ADMIN_NAV } from "@/lib/admin-nav";
 import { authMode, getAuthClient } from "@/features/auth";
+import { useBrand } from "@/features/brand";
 import { t } from "@/lib/i18n";
 import { Icon } from "../../atoms/icon";
 import { SidebarLink } from "../../molecules/sidebar-link";
@@ -13,13 +14,14 @@ export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { sidebarOpen, setSidebarOpen, interactions, resetData } = useAdmin();
+  const brand = useBrand();
   const unread = interactions.filter((i) => i.status === "open" && i.unread > 0).length;
 
   return (
     <aside className={`sidebar${sidebarOpen ? " open" : ""}`} id="sidebar">
       <div className="logo">
-        <span className="logo-mark">M</span>
-        <div>{t("common.brand")}<small>{t("admin.shell.panel")}</small></div>
+        {brand.logoUrl ? <img className="logo-img" src={brand.logoUrl} alt="" width={40} height={40} /> : <span className="logo-mark">M</span>}
+        <div>{brand.name}<small>{t("admin.shell.panel")}</small></div>
       </div>
       <nav className="nav">
         {ADMIN_NAV.map((group, i) => (
