@@ -75,6 +75,18 @@ describe("the shop's name", () => {
     await waitFor(() => expect(nameBox().value).toBe("Kith Store"));
     expect(saveName().disabled).toBe(true);
   });
+  it("disables the save button while it is saving", async () => {
+    const { services, repo } = fake();
+    let finish: (r: BrandResult<null>) => void = () => undefined;
+    repo.saveName.mockImplementation(() => new Promise((resolve) => { finish = resolve; }));
+    show(services);
+    await waitFor(() => expect(nameBox().value).toBe("Market by Kith"));
+    fireEvent.change(nameBox(), { target: { value: "Kith Store" } });
+    expect(saveName().disabled).toBe(false);
+    fireEvent.click(saveName());
+    await waitFor(() => expect(saveName().disabled).toBe(true));
+    await act(async () => finish(ok));
+  });
   it("saves with the Enter key too", async () => {
     const { services, repo } = fake();
     show(services);
@@ -156,6 +168,25 @@ describe("the logo", () => {
     expect(fileBox().disabled).toBe(true);
     await act(async () => { finish(); });
     await waitFor(() => expect(screen.getByRole("button", { name: /Ganti logo/ })).toBeTruthy());
+  });
+  it("takes no second picture while one is uploading, even if the browser still delivers it", async () => {
+    const { services, storage } = fake();
+    let finish: () => void = () => undefined;
+    storage.upload.mockImplementation(() => new Promise<undefined>((resolve) => { finish = () => resolve(undefined); }));
+    show(services);
+    await screen.findByRole("button", { name: "Pilih gambar…" });
+    await pickFile(png());
+    await pickFile(png());
+    expect(storage.upload).toHaveBeenCalledTimes(1);
+    await act(async () => { finish(); });
+  });
+  it("empties the picker after each pick, so choosing the same file again is noticed", async () => {
+    show(fake().services);
+    await screen.findByRole("button", { name: "Pilih gambar…" });
+    const assigned: string[] = [];
+    Object.defineProperty(fileBox(), "value", { configurable: true, get: () => "", set: (v: string) => { assigned.push(v); } });
+    await pickFile(png());
+    await waitFor(() => expect(assigned).toEqual([""]));
   });
   it("ignores a picker that was closed without a choice", async () => {
     const { services, storage } = fake();

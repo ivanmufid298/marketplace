@@ -90,6 +90,14 @@ describe("reading the profile", () => {
     expect(m.b().status).toBe("ready");
     expect(repo.get).toHaveBeenCalledTimes(2);
   });
+  it("keeps saying it is ready while it reads again, instead of going back to loading", async () => {
+    const { services, repo } = fake();
+    const m = mount(services);
+    await waitFor(() => expect(m.b().status).toBe("ready"));
+    repo.get.mockImplementationOnce(() => new Promise(() => undefined));
+    await act(async () => m.b().reload());
+    expect(m.b().status).toBe("ready");
+  });
   it("keeps working when the browser blocks its storage", async () => {
     const spy = vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => { throw new Error("blocked"); });
     const m = mount(fake({ name: "Kith Store", logoKey: null }).services);

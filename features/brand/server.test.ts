@@ -51,6 +51,7 @@ describe("loadLogo", () => {
     ["a key that is not text", () => json([{ logo_key: 5 }])],
     ["an answer that is not a list", () => json({ logo_key: KEY })],
     ["a refused read", () => json({ message: "no" }, 401)],
+    ["a refused read, even if its body looks like a profile", () => json([{ logo_key: KEY }], 500)],
     ["a read that fails", () => Promise.reject(new Error("offline"))],
     ["an answer that is not JSON", () => Promise.resolve(new Response("<html>", { status: 200 }))],
   ])("gives the default for %s", async (_why, profile) => {
