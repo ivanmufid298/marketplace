@@ -2,7 +2,7 @@
 
 Prototype UI/UX toko online **single seller** untuk produk ready stock, jastip, dan pre-order barang impor. Repository ini memuat halaman customer serta dashboard admin dengan tampilan responsif untuk mobile dan desktop.
 
-> Status saat ini: UI sudah dimigrasikan ke **Next.js App Router** (roadmap langkah 1), tetapi masih memakai data contoh di memori browser yang kembali ke kondisi awal saat halaman dimuat ulang. Belum ada database, object storage, maupun proses pembayaran sungguhan. Autentikasi memakai Supabase Auth jika variabel lingkungan diisi (lihat bagian Autentikasi), atau login demo jika kosong. Pengecualian: pesanan disimpan di `localStorage` browser dan dibaca bersama oleh storefront dan admin, jadi alur pembayaran diterima → barang dikirim → pesanan selesai bisa dicoba dari awal sampai akhir. Tombol "Reset data contoh" di sidebar admin mengembalikan data awal. Prototype HTML statis yang asli disimpan di folder `prototype/` sebagai referensi visual.
+> **Status (29 Oktober 2026):** toko **sudah tayang** di https://market.kithz.workers.dev (Cloudflare Workers, Supabase produksi) dengan akun, katalog, keranjang, checkout, ongkir dinamis RajaOngkir, pesanan transfer manual dengan bukti, nomor resi, notifikasi, panel admin (produk, pesanan, pembayaran, ulasan, ongkir, profil toko), dan dashboard dengan angka asli. Tanpa kredensial Supabase aplikasi berjalan dalam **mode demo** (data contoh di browser, hanya di `npm run dev`). Belum ada: pembayaran otomatis (QRIS), email bertema dan invoice (menunggu domain untuk Brevo), dan admin pertama di produksi. **Panduan untuk Claude Code ada di [CLAUDE.md](CLAUDE.md)**; catatan perubahan di [PROGRESS.md](PROGRESS.md).
 
 ## Fitur prototype
 
@@ -61,7 +61,7 @@ npm run test:sql # tes migrasi SQL di Postgres sungguhan (PGlite)
 
 ## Struktur project
 
-> Kode sedang dipecah per fitur (modul). `features/auth` sudah pindah; sisanya masih per lapisan di `components/` dan `lib/`. Rencana, aturan batas impor, dan status tiap modul ada di [ARCHITECTURE.md](ARCHITECTURE.md).
+> Kode dipecah per fitur (modul) di `features/` (auth, catalog, cart, checkout, orders, reviews, chat, notifications, account, shipping, brand); `components/` dan `lib/` memuat tampilan dan kode bersama. Rencana, aturan batas impor, dan status tiap modul ada di [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ```text
 app/
@@ -78,7 +78,9 @@ app/
     └── (panel)/          # semua halaman panel, dilindungi
         ├── layout.tsx    # pengecekan akses admin di server (lapisan kedua)
         └── page.tsx, products/, orders/, payments/, interactions/,
-            reviews/, promos/, vouchers/, content/, shipping/
+            reviews/, promos/, vouchers/, content/, profile/, shipping/
+├── api/shipping/         # Route Handler: destinations (cari lokasi) dan quote (tarif per kurir bertanda tangan); hanya pembeli masuk
+└── brand/logo/           # PNG logo toko yang publik (logo aktif atau tanda M bawaan); dipakai header email nanti
 proxy.ts                  # guard /admin di setiap request + refresh sesi (pengganti middleware.ts di Next 16)
 features/                 # modul per fitur; kode luar hanya boleh mengimpor index.ts atau server.ts sebuah modul
 ├── auth/                 # login, daftar, lupa kata sandi, guard admin, adapter Supabase/demo, tes
@@ -87,10 +89,14 @@ features/                 # modul per fitur; kode luar hanya boleh mengimpor ind
 │   ├── auth-provider.tsx
 │   ├── components/       # LoginDialog, ForgotPasswordView, ResetPasswordView, AdminLoginView
 │   └── lib/              # config.ts (pemilihan mode), adapter Supabase/demo, admin-guard.ts, safe-next.ts, tes
+├── catalog, cart, checkout, orders, reviews, chat, notifications, account, shipping, brand/   # modul lain, pola sama (index.ts, server.ts bila perlu, lib/)
 └── architecture.test.mts # tes yang menjaga aturan batas impor antar modul
 supabase/
-├── migrations/           # SQL: profiles, role, RLS, is_admin(), pencabutan EXECUTE rls_auto_enable(); katalog (kategori, produk, foto) dan bucket product-images
-└── tests/                # tes migrasi di Postgres sungguhan (PGlite)
+├── migrations/           # SQL berurutan waktu (24 per 29 Okt 2026): profil dan peran, katalog, pesanan, notifikasi, alamat, pengaturan toko, tarif bertanda tangan, resi, profil toko; aman dijalankan dua kali
+├── tests/                # tes migrasi di Postgres sungguhan (PGlite), dirangkai di `npm run test:sql`
+└── monitor.sql           # pemantauan pemakaian Supabase Free
+workers/keepalive/        # Worker terjadwal agar project Supabase Free tidak dijeda (belum dipasang)
+scripts/                  # dev.mjs (peluncur `npm run dev`), set-quote-secret.mjs (rahasia tarif ke Vault tanpa mencetaknya)
 components/               # atomic design
 ├── atoms/                # Icon, Button, Chip, Switch, Toast, badge, dll.
 ├── molecules/            # ProductCard, CartRow, Field, Select, PaymentRow, dll.
@@ -109,7 +115,7 @@ lib/
 ├── order-flow.ts         # status pesanan (pending, shipping, completed, cancelled) dan total
 └── format.ts, admin-nav.ts
 public/assets/            # sprite foto produk demo
-prototype/                # prototype HTML statis asli (referensi visual)
+prototype/                # prototype HTML statis asli (arsip referensi visual; tidak dipakai aplikasi, jangan diubah)
 ```
 
 ### Konvensi komponen (atomic design)

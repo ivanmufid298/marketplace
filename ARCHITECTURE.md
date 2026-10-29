@@ -49,7 +49,7 @@ features/<nama>/
 
 1. **Impor lewat pintu publik.** Kode di luar modul hanya boleh mengimpor `@/features/<nama>` atau `@/features/<nama>/server`, tidak boleh `@/features/<nama>/components/...`.
    - `server.ts` ada karena `index.ts` mengekspor komponen React dan hook. Kode seperti `proxy.ts` tidak boleh ikut membawa itu.
-2. **Arah dependensi satu arah:** `auth` dan `catalog` paling bawah; lalu `cart`; lalu `checkout`; lalu `orders`. `reviews` dan `chat` bergantung pada `auth`. `admin` boleh membaca modul lain lewat API publiknya. Modul bawah tidak boleh mengimpor modul di atasnya.
+2. **Arah dependensi satu arah**, persis seperti peta `ALLOWED` di `features/architecture.test.mts` (per 29 Okt 2026): `auth`, `catalog`, `reviews`, `shipping`, `brand` tidak bergantung modul lain; `orders` → `auth`, `catalog`; `notifications` dan `chat` → `auth`; `cart` → `auth`, `catalog`; `account` → `auth`, `shipping`; `checkout` → `auth`, `catalog`, `cart`, `orders`, `account`, `shipping`. Layar admin (di `components/organisms/admin`) boleh membaca modul lain lewat API publiknya. Modul bawah tidak boleh mengimpor modul di atasnya; **bila peta berubah, ubah tes itu dan baris ini bersama**.
 3. **`shared` tidak mengimpor `features`.**
 4. **State lintas modul** (panel yang terbuka, toast) ada di satu provider kecil di `shared`, bukan di salah satu modul.
 5. **Kebutuhan database** ditulis sebagai migrasi di `supabase/migrations/` dan disebut di README modul pemiliknya. Satu tabel punya satu modul pemilik.

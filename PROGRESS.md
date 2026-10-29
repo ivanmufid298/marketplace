@@ -105,6 +105,14 @@ Belum ada item yang berstatus Selesai karena backend (Supabase, R2) belum dikerj
 
 ## Sedang dan berikutnya
 
+**Posisi per 29 Oktober 2026 (ringkas; daftar bernomor di bawahnya adalah sejarah rencana awal dan sebagian sudah usang).** Toko **tayang** di https://market.kithz.workers.dev (Cloudflare Workers + Supabase produksi, 24 migrasi). Selesai: modul per fitur, database dan RLS, pesanan dan bukti transfer, notifikasi, alamat tersimpan, ongkir dinamis RajaOngkir dengan tarif bertanda tangan, nomor resi, dashboard dengan angka asli, profil toko (nama dan logo). Panduan kerja untuk Claude Code ada di [CLAUDE.md](CLAUDE.md). **Berikutnya (urut):**
+
+1. Pemilik: jadikan akunnya admin di produksi (SQL di SQL Editor produksi), pasang secret Cloudflare (`SHIPPING_QUOTE_SECRET`, `RAJAONGKIR_API_KEY`) bila belum, isi Site URL dan Redirect URLs Auth produksi, putuskan "Confirm email", dan buat ulang kunci RajaOngkir.
+2. Pemilik: isi Asal pengiriman dan ganti tarif cadangan contoh di `/admin/shipping`; isi nama dan logo di `/admin/profile`; tambah produk pertama; uji belanja sampai selesai di toko tayang (butir uji manual README 22 sampai 37).
+3. Email dan invoice bertema lewat **Brevo** (menunggu domain terverifikasi); email Auth lewat Supabase "Send Email hook" ke Worker; logo dari `/brand/logo`.
+4. Pasang `workers/keepalive`; hapus Worker lama `marketplace` di dashboard Cloudflare.
+5. Lainnya: nama toko di `<title>`/SEO, tautan lacak per kurir, grafik dashboard dari data nyata, pembayaran QRIS otomatis, rate limiting, ukur CPU Worker di Cloudflare sungguhan.
+
 Urutan mengikuti dependensi teknis:
 
 1. **Menutup pekerjaan Auth** sebelum pindah ke data:
